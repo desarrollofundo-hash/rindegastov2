@@ -4,6 +4,7 @@ import 'package:flu2/widgets/informes_auditoria_list.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:flu2/app/app.dart';
 import '../widgets/nuevo_informe_fab.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/profile_modal.dart';
@@ -27,7 +28,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   int _selectedIndex = 0;
   int _notificaciones = 5;
   final TextEditingController _searchController = TextEditingController();
@@ -69,9 +70,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route != null) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void didPushNext() {
+    // Se abrió una nueva ruta encima (por ejemplo un modal): ocultar el FAB overlay
+    _removeFabOverlay();
+  }
+
+  @override
+  void didPopNext() {
+    // Volvimos a esta ruta tras cerrar la que estaba encima: restaurar el FAB si aplica
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateFabOverlay());
+  }
+
+  @override
   void dispose() {
     // Remover overlay si está presente
     _removeFabOverlay();
+
+    // Cancelar suscripción al RouteObserver
+    try {
+      routeObserver.unsubscribe(this);
+    } catch (_) {}
 
     _apiService.dispose();
     CompanyService().removeListener(_onCompanyChanged);

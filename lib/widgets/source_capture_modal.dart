@@ -59,7 +59,16 @@ class _SourceCaptureModalState extends State<SourceCaptureModal> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          top: 16,
+          // Añadir espacio inferior dinámico: padding del sistema (safe area) + inset del teclado + 16px
+          bottom:
+              MediaQuery.of(context).viewPadding.bottom +
+              MediaQuery.of(context).viewInsets.bottom +
+              16,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -84,47 +93,124 @@ class _SourceCaptureModalState extends State<SourceCaptureModal> {
 
             // Previsualización
             if (_selectedFile != null) ...[
-              if (_selectedType == 'image')
-                SizedBox(
-                  height: 200,
-                  child: Image.file(_selectedFile!, fit: BoxFit.contain),
-                )
-              else
-                Column(
-                  children: [
-                    const Icon(
-                      Icons.insert_drive_file,
-                      size: 64,
-                      color: Colors.indigo,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _selectedFile!.path.split(Platform.pathSeparator).last,
-                    ),
-                  ],
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Calcular altura responsiva según ancho disponible
+                  double maxWidth = constraints.maxWidth;
+                  double height = (maxWidth * 0.6).clamp(120.0, 420.0);
+                  if (_selectedType == 'image') {
+                    return SizedBox(
+                      height: height,
+                      child: Center(
+                        child: Image.file(
+                          _selectedFile!,
+                          fit: BoxFit.contain,
+                          width: double.infinity,
+                        ),
+                      ),
+                    );
+                  }
+
+                  // Documento: icon + nombre, con tamaño relativo
+                  return Column(
+                    children: [
+                      Icon(
+                        Icons.insert_drive_file,
+                        size: (height * 0.3).clamp(48.0, 96.0),
+                        color: Colors.indigo,
+                      ),
+                      const SizedBox(height: 8),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxWidth * 0.9),
+                        child: Text(
+                          _selectedFile!.path
+                              .split(Platform.pathSeparator)
+                              .last,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
               const SizedBox(height: 12),
             ],
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: _pickFromCamera,
-                  icon: const Icon(Icons.camera_alt),
-                  label: const Text('Tomar foto'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _pickFromGallery,
-                  icon: const Icon(Icons.photo),
-                  label: const Text('Elegir foto'),
-                ),
-                ElevatedButton.icon(
-                  onPressed: _pickDocument,
-                  icon: const Icon(Icons.insert_drive_file),
-                  label: const Text('Documento'),
-                ),
-              ],
+            // Botones de selección (camera/gallery/document) - adaptativos
+            LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth > 520) {
+                  // en pantallas anchas usar Row y Expanded para distribuir uniformemente
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _pickFromCamera,
+                          icon: const Icon(Icons.camera_alt),
+                          label: const Text('Tomar foto'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _pickFromGallery,
+                          icon: const Icon(Icons.photo),
+                          label: const Text('Elegir foto'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: _pickDocument,
+                          icon: const Icon(Icons.insert_drive_file),
+                          label: const Text('Documento'),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+
+                // pantallas pequeñas: Wrap para que los botones fluyan y no se recorten
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: constraints.maxWidth > 360
+                          ? constraints.maxWidth * 0.45
+                          : constraints.maxWidth * 0.9,
+                      child: ElevatedButton.icon(
+                        onPressed: _pickFromCamera,
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Tomar foto'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: constraints.maxWidth > 360
+                          ? constraints.maxWidth * 0.45
+                          : constraints.maxWidth * 0.9,
+                      child: ElevatedButton.icon(
+                        onPressed: _pickFromGallery,
+                        icon: const Icon(Icons.photo),
+                        label: const Text('Elegir foto'),
+                      ),
+                    ),
+                    SizedBox(
+                      width: constraints.maxWidth > 360
+                          ? constraints.maxWidth * 0.45
+                          : constraints.maxWidth * 0.9,
+                      child: ElevatedButton.icon(
+                        onPressed: _pickDocument,
+                        icon: const Icon(Icons.insert_drive_file),
+                        label: const Text('Documento'),
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
 
             const SizedBox(height: 12),

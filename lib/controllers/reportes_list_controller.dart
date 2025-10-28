@@ -143,6 +143,7 @@ class ReportesListController {
           );
         },
       );
+
       //antes de la previsualizacion  añadir esta funcionalidad
       //despues que tome la foto buscar en la foto el codigo qr y mostrar los campos que tiene ese codigo qr en un modal simple ,solo has eso y no modiques nada mas
 
@@ -152,8 +153,9 @@ class ReportesListController {
 
       if (sourceSelection == 'camera' || sourceSelection == 'gallery') {
         final picker = ImagePicker();
-        final source = sourceSelection == 'camera' ? 
-        ImageSource.camera : ImageSource.gallery;
+        final source = sourceSelection == 'camera'
+            ? ImageSource.camera
+            : ImageSource.gallery;
         try {
           final xfile = await picker.pickImage(
             source: source,
@@ -165,9 +167,9 @@ class ReportesListController {
           // Mostrar previsualización y confirmar
           //final confirmed = await _mostrarPrevisualizacionImagen(context, file);
           //if (confirmed == true) {
-            // Procesar con IA pasando la política seleccionada
+          // Procesar con IA pasando la política seleccionada
           //  await procesarFacturaConIA(context, file, seleccion);
-          //}          
+          //}
 
           final resultMap = await _mostrarPrevisualizacionImagen(context, file);
 
@@ -231,8 +233,6 @@ class ReportesListController {
               }
             }
           }
-
-          
         } catch (e) {
           if (mounted()) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -515,15 +515,11 @@ class ReportesListController {
           // Mostrar previsualización y confirmar
           //final confirmed = await _mostrarPrevisualizacionImagen(context, file);
           //if (confirmed == true) {
-            // Procesar con IA (o la acción que corresponda) usando política por defecto
+          // Procesar con IA (o la acción que corresponda) usando política por defecto
           //  await procesarFacturaConIA(context, file, 'GENERAL');
           //}
 
-          
-          final resultMap = await _mostrarPrevisualizacionImagen(
-            context,
-            file,
-          );
+          final resultMap = await _mostrarPrevisualizacionImagen(context, file);
 
           if (resultMap != null) {
             final qrRaw = resultMap['qr'] as String?;
@@ -585,7 +581,6 @@ class ReportesListController {
               }
             }
           }
-
         } catch (e) {
           if (mounted()) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -808,7 +803,6 @@ class ReportesListController {
       },
     );
   }
-
 
   // Muestra previsualización simple para documento (PDF)
   Future<Map<String, dynamic>?> _mostrarPrevisualizacionDocumento(
@@ -1055,8 +1049,6 @@ class ReportesListController {
       // Comprimir la imagen para que no supere 1MB antes de enviarla a OCR.space
       File imageToSend = imagenFactura;
 
-
-
       try {
         final originalSize = await imagenFactura.length();
         debugPrint(
@@ -1224,8 +1216,7 @@ class ReportesListController {
                 ocrMap = Map<String, String>.from(qrMap);
 
                 // Usar los valores del QR para poblar el mapa que se enviará
-                // al modal (sobrescribiendo donde exista información).                
-                
+                // al modal (sobrescribiendo donde exista información).
               }
             } catch (e) {
               debugPrint(
