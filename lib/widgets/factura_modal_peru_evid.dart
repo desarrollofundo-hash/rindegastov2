@@ -73,42 +73,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   bool _isFormValid = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeControllers();
-    // Si el modal recibió un archivo seleccionado, cargarlo en la sección de evidencia
-    if (widget.selectedFile != null) {
-      selectedFile = widget.selectedFile;
-      _selectedFileType =
-          widget.selectedFile!.path.toLowerCase().endsWith('.pdf')
-          ? 'pdf'
-          : 'image';
-      _selectedFileName = widget.selectedFile!.path
-          .split(RegExp(r'[\\/]'))
-          .last;
-    }
-    _loadCategorias();
-    _loadTiposGasto(); // Cargar tipos de gasto al inicializar
-    _addValidationListeners();
-    // Validar el formulario con el archivo pre-cargado (si aplica)
-    _validateForm();
-  }
-
-  /// Agregar listeners para validación en tiempo real
-  void _addValidationListeners() {
-    _rucController.addListener(_validateForm);
-    _rucClienteController.addListener(
-      _validateForm,
-    ); // ✅ Añadido listener para RUC cliente
-    _tipoComprobanteController.addListener(_validateForm);
-    _serieController.addListener(_validateForm);
-    _numeroController.addListener(_validateForm);
-    _fechaEmisionController.addListener(_validateForm);
-    _totalController.addListener(_validateForm);
-    _categoriaController.addListener(_validateForm);
-    _tipoGastoController.addListener(_validateForm);
-  }
+  // El modal de factura permite seleccionar algunos campos (tipo de gasto,
+  // categoría). Mantener _isEditMode = true para habilitar los dropdowns.
+  bool _isEditMode = true;
 
   /// Validar si el RUC del cliente (escaneado) coincide con la empresa seleccionada
   bool _isRucValid() {
@@ -121,6 +88,40 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
 
     return rucClienteEscaneado == rucEmpresaSeleccionada;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeControllers();
+
+    // Si el modal recibió un archivo seleccionado, cargarlo en la sección de evidencia
+    if (widget.selectedFile != null) {
+      selectedFile = widget.selectedFile;
+      _selectedFileType =
+          widget.selectedFile!.path.toLowerCase().endsWith('.pdf')
+          ? 'pdf'
+          : 'image';
+      _selectedFileName = widget.selectedFile!.path
+          .split(RegExp(r'[\\/]'))
+          .last;
+    }
+
+    // Añadir listeners para validación en tiempo real
+    _rucController.addListener(_validateForm);
+    _rucClienteController.addListener(_validateForm);
+    _tipoComprobanteController.addListener(_validateForm);
+    _serieController.addListener(_validateForm);
+    _numeroController.addListener(_validateForm);
+    _fechaEmisionController.addListener(_validateForm);
+    _totalController.addListener(_validateForm);
+    _categoriaController.addListener(_validateForm);
+    _tipoGastoController.addListener(_validateForm);
+
+    // Cargar datos iniciales
+    _loadCategorias();
+    _loadTiposGasto();
+    _validateForm();
   }
 
   /// Obtener mensaje de estado del RUC del cliente
@@ -169,7 +170,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Cargar categorías desde la API
   Future<void> _loadCategorias() async {
-    
     if (mounted) {
       setState(() {
         _isLoadingCategorias = true;
@@ -178,7 +178,27 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
 
     try {
-      final categorias = await CategoriaService.getCategoriasGeneral();
+      // Solicitar categorías según la política seleccionada.
+      final politica = _politicaController.text.trim().toLowerCase();
+      List<CategoriaModel> categorias;
+      if (politica.contains('movilidad')) {
+        categorias = await CategoriaService.getCategoriasMovilidad();
+      } else if (politica.contains('general')) {
+        categorias = await CategoriaService.getCategoriasGeneral();
+      } else {
+        // Por defecto obtener todas y luego filtrar si es necesario
+        categorias = await CategoriaService.getCategorias();
+      }
+      // Debug: mostrar lo que vino desde la API y la política usada
+      debugPrint(
+        '📥 _loadCategorias -> politica: $politica, recibidas: ${categorias.length}',
+      );
+      for (final c in categorias) {
+        debugPrint(
+          '   - categoria: ${c.categoria}, politica: ${c.politica}, estado: ${c.estado}',
+        );
+      }
+
       if (mounted) {
         setState(() {
           _categoriasGeneral = categorias;
@@ -229,8 +249,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     );
     _categoriaController = TextEditingController(text: '');
     _tipoGastoController = TextEditingController(
-        text: CompanyService().currentCompany?.tipogasto ?? '',
-        );
+      text: CompanyService().currentCompany?.tipogasto ?? '',
+    );
     _rucController = TextEditingController(
       text: widget.facturaData.rucEmisor ?? '',
     );
@@ -475,7 +495,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(10),
             margin: const EdgeInsets.symmetric(horizontal: 40),
             decoration: BoxDecoration(
               color: Colors.red,
@@ -822,7 +842,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                     const SizedBox(height: 20),
                     _buildNotesSection(),
                     const SizedBox(height: 12),
-                    //_buildRawDataSection(),
+                    /*                     _buildRawDataSection(),
+ */
                   ],
                 ),
               ),
@@ -850,7 +871,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
       child: Row(
         children: [
           const Icon(Icons.receipt_long, color: Colors.white, size: 28),
-          const SizedBox(width: 12),
+          const SizedBox(width: 6),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -883,7 +904,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   Widget _buildImageSection() {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -929,12 +950,22 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: _selectedFileType == 'image'
-                    ? Container(
-                        height: 200,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(selectedFile!, fit: BoxFit.cover),
-                        ),
+                    ? LayoutBuilder(
+                        builder: (context, constraints) {
+                          final h = MediaQuery.of(context).size.height;
+                          // Usar una altura relativa para ser responsive
+                          final imageHeight = (h * 0.25).clamp(120.0, 360.0);
+                          return SizedBox(
+                            height: imageHeight,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.file(
+                                selectedFile!,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          );
+                        },
                       )
                     : Container(
                         padding: const EdgeInsets.all(16),
@@ -1062,11 +1093,10 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     // Determinar las categorías disponibles según la política
     List<DropdownMenuItem<String>> items = [];
 
-    if (_politicaController.text.toLowerCase().contains('movilidad')) {
-      // Para política de movilidad, mantener las opciones hardcodeadas
-      items = const [];
-    } else if (_politicaController.text.toLowerCase().contains('general')) {
-      // Para política GENERAL, usar datos de la API
+    final politica = _politicaController.text.trim().toLowerCase();
+
+    // Si la política es movilidad o general, mostrar las categorías cargadas
+    if (politica.contains('movilidad') || politica.contains('general')) {
       if (_isLoadingCategorias) {
         return const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1124,7 +1154,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         );
       }
 
-      // Convertir categorías de la API a DropdownMenuItems
       items = _categoriasGeneral
           .map(
             (categoria) => DropdownMenuItem<String>(
@@ -1134,7 +1163,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           )
           .toList();
 
-      // Si no hay categorías, mostrar mensaje
       if (items.isEmpty) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1168,7 +1196,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         );
       }
     } else {
-      // Para otras políticas, usar categorías por defecto
       items = const [];
     }
 
@@ -1214,7 +1241,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         .join(' ');
   }
 
-  /// Construir la sección de tipo de gasto
+  /*   /// Construir la sección de tipo de gasto
   Widget _buildTipoGastoSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1303,6 +1330,101 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
       ],
     );
   }
+ */
+  /// Construir la sección de tipo de gasto
+  Widget _buildTipoGastoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tipo de Gasto',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+
+        // Si está cargando, mostrar indicador
+        if (_isLoadingTiposGasto)
+          const Column(
+            children: [
+              Center(child: CircularProgressIndicator()),
+              SizedBox(height: 8),
+              Text(
+                'Cargando tipos de gasto...',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          )
+        else if (_errorTiposGasto != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error al cargar tipos de gasto: $_errorTiposGasto',
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _loadTiposGasto,
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
+          )
+        else
+          AbsorbPointer(
+            absorbing: !_isEditMode,
+            child: DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: 'Tipo de Gasto *',
+                prefixIcon: Icon(Icons.attach_money),
+                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+              ),
+              value:
+                  _tipoGastoController.text.isNotEmpty &&
+                      _tiposGasto.any(
+                        (tipo) => tipo.value == _tipoGastoController.text,
+                      )
+                  ? _tipoGastoController.text
+                  : null,
+              items: _tiposGasto
+                  .map(
+                    (tipo) => DropdownMenuItem<String>(
+                      value: tipo.value,
+                      child: Text(tipo.value),
+                    ),
+                  )
+                  .toList(),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Tipo de gasto es obligatorio';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _tipoGastoController.text = value;
+                  });
+                  _validateForm(); // Validar cuando cambie el tipo de gasto
+                }
+              },
+            ),
+          ),
+      ],
+    );
+  }
 
   /// Construir la sección de datos de la factura
 
@@ -1367,58 +1489,114 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           ],
         ),
         const SizedBox(height: 12),
-        // Segunda fila: Serie y Número (solo lectura)
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                _serieController,
-                'Serie',
-                Icons.tag,
-                TextInputType.text,
-                isRequired: true,
-                readOnly: true,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                _numeroController,
-                'Número',
-                Icons.confirmation_number,
-                TextInputType.number,
-                isRequired: true,
-                readOnly: true,
-              ),
-            ),
-          ],
+        // Segunda fila: Serie y Número (solo lectura) - responsive
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 480) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      _serieController,
+                      'Serie',
+                      Icons.tag,
+                      TextInputType.text,
+                      isRequired: true,
+                      readOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField(
+                      _numeroController,
+                      'Número',
+                      Icons.confirmation_number,
+                      TextInputType.number,
+                      isRequired: true,
+                      readOnly: true,
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            // Pantallas pequeñas: columna
+            return Column(
+              children: [
+                _buildTextField(
+                  _serieController,
+                  'Serie',
+                  Icons.tag,
+                  TextInputType.text,
+                  isRequired: true,
+                  readOnly: true,
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  _numeroController,
+                  'Número',
+                  Icons.confirmation_number,
+                  TextInputType.number,
+                  isRequired: true,
+                  readOnly: true,
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 12),
 
-        // Cuarta fila: Total y Moneda (solo lectura)
-        Row(
-          children: [
-            Expanded(
-              child: _buildTextField(
-                _totalController,
-                'Total',
-                Icons.attach_money,
-                TextInputType.number,
-                isRequired: true,
-                readOnly: true,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildTextField(
-                _monedaController,
-                'Moneda',
-                Icons.currency_exchange,
-                TextInputType.text,
-                readOnly: true,
-              ),
-            ),
-          ],
+        // Cuarta fila: Total y Moneda (solo lectura) - responsive
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 480) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      _totalController,
+                      'Total',
+                      Icons.attach_money,
+                      TextInputType.number,
+                      isRequired: true,
+                      readOnly: true,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTextField(
+                      _monedaController,
+                      'Moneda',
+                      Icons.currency_exchange,
+                      TextInputType.text,
+                      readOnly: true,
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            return Column(
+              children: [
+                _buildTextField(
+                  _totalController,
+                  'Total',
+                  Icons.attach_money,
+                  TextInputType.number,
+                  isRequired: true,
+                  readOnly: true,
+                ),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  _monedaController,
+                  'Moneda',
+                  Icons.currency_exchange,
+                  TextInputType.text,
+                  readOnly: true,
+                ),
+              ],
+            );
+          },
         ),
         const SizedBox(height: 12),
 
@@ -1619,7 +1797,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   }
 
   /// Construir la sección de datos raw
-  Widget _buildRawDataSection() {
+  /*  Widget _buildRawDataSection() {
     return ExpansionTile(
       title: const Text('Datos Originales del QR'),
       leading: const Icon(Icons.qr_code),
@@ -1637,7 +1815,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         ),
       ],
     );
-  }
+  } */
 
   /// Construir los botones de acción
   Widget _buildActionButtons() {
@@ -1652,8 +1830,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           // Mensaje de campos obligatorios
           if (!_isFormValid)
             Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(8),
+              margin: const EdgeInsets.only(bottom: 6),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
@@ -1665,7 +1843,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'Por favor complete todos los campos obligatorios (*) e incluya un archivo de evidencia',
+                      'Por favor complete todos los campos',
                       style: TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.w500,
@@ -1712,7 +1890,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                         ? 'Guardando...'
                         : _isFormValid
                         ? 'Guardar Factura'
-                        : 'Complete los campos obligatorios',
+                        : 'Completar',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isFormValid
@@ -1727,6 +1905,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               ),
             ],
           ),
+          const SizedBox(height: 25),
         ],
       ),
     );

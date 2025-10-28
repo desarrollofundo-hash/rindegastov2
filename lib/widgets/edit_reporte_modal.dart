@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
-
 import '../models/reporte_model.dart';
 import '../models/categoria_model.dart';
 import '../models/dropdown_option.dart';
@@ -427,13 +425,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
         if (await file.exists()) {
           setState(() => _selectedImage = file);
           _validateForm();
-          print('📷 Imagen capturada exitosamente: ${file.path}');
         } else {
           throw Exception('El archivo de imagen no se pudo crear');
         }
       }
     } catch (e) {
-      print('🔴 Error al capturar imagen: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -466,13 +462,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
         if (await file.exists()) {
           setState(() => _selectedImage = file);
           _validateForm();
-          print('🖼️ Imagen seleccionada de galería: ${file.path}');
         } else {
           throw Exception('El archivo de imagen no se pudo crear');
         }
       }
     } catch (e) {
-      print('🔴 Error al seleccionar imagen de galería: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1024,6 +1018,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         .join(' ');
   }
 
+
   /// Construir la sección de tipo de gasto
   Widget _buildTipoGastoSection() {
     return Column(
@@ -1118,6 +1113,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
       ],
     );
   }
+
+
 
   /// Construir la sección de datos raw
   /* Widget _buildRawDataSection() {
