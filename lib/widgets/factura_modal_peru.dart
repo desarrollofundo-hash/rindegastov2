@@ -33,7 +33,6 @@ class FacturaModalPeru extends StatefulWidget {
 }
 
 class _FacturaModalPeruState extends State<FacturaModalPeru> {
-  
   // Controladores para cada campo
   late TextEditingController _politicaController;
   late TextEditingController _categoriaController;
@@ -48,13 +47,12 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   late TextEditingController _monedaController;
   late TextEditingController _rucClienteController;
   late TextEditingController _notaController;
-  
+
   // Campos específicos para movilidad
   late TextEditingController _origenController;
   late TextEditingController _destinoController;
   late TextEditingController _motivoViajeController;
   late TextEditingController _tipoTransporteController;
-
 
   File? _selectedImage;
   File? _selectedFile;
@@ -221,7 +219,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       text: widget.politicaSeleccionada,
     );
     _categoriaController = TextEditingController(text: '');
-    _tipoGastoController = TextEditingController(text: '');
+    _tipoGastoController = TextEditingController(
+      text: CompanyService().companyTipogasto,
+    );
     _rucController = TextEditingController(text: widget.facturaData.ruc ?? '');
     _tipoComprobanteController = TextEditingController(
       text: widget.facturaData.tipoComprobante ?? '',
@@ -710,17 +710,17 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       debugPrint('🆔 ID autogenerado obtenido: $idRend');
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
 
-      final driveId = await _apiService.subirArchivo(_selectedImage!.path);
-      debugPrint('ID de archivo en Drive: $driveId');
+      String nombreArchivo =
+          '${idRend.toString()}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
 
+      final driveId = await _apiService.subirArchivo(
+        _selectedImage!.path,
+        nombreArchivo: nombreArchivo,
+      );
       // ✅ SEGUNDO API: Guardar evidencia/archivo usando el idRend del primer API
       final facturaDataEvidencia = {
         "idRend": idRend, // ✅ Usar el ID autogenerado del API principal
-        "evidencia": _selectedFile != null
-            ? base64Encode(_selectedFile!.readAsBytesSync())
-            : (_selectedImage != null
-                  ? base64Encode(_selectedImage!.readAsBytesSync())
-                  : ""),
+        "evidencia":null,
         "obs": driveId,
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
@@ -733,8 +733,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
       // Usar el nuevo servicio API para guardar la evide ncia
 
-
-     
       final successEvidencia = await _apiService.saveRendicionGastoEvidencia(
         facturaDataEvidencia,
       );
@@ -1497,8 +1495,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
               ],
             ),
           ),
-
-          
       ],
     );
   }
@@ -1514,8 +1510,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   }
 
   /// Construir la sección de notas
-  
-  
+
   /// Construir la sección específica de movilidad
   Widget _buildMovilidadSection() {
     return Card(

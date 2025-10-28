@@ -2466,14 +2466,16 @@ class ApiService {
     }
   }
 
-  Future<String?> subirArchivo(String filePath) async {
+  Future<String?> subirArchivo(String filePath, {String? nombreArchivo}) async {
     debugPrint('🚀 Guardando archivo en servidor local...');
     debugPrint('📍 URL: $baseUrl/recibir/uploadlocal');
 
     try {
       final bytes = await File(filePath).readAsBytes();
       final base64Data = base64Encode(bytes);
-      final fileName = path.basename(filePath);
+
+      // Usa el nombre proporcionado o el original
+      final fileName = nombreArchivo ?? path.basename(filePath);
 
       final response = await http.post(
         Uri.parse('$baseUrl/recibir/uploadlocal'),
@@ -2485,17 +2487,15 @@ class ApiService {
         final data = jsonDecode(response.body);
 
         if (data['success'] == true) {
-          final fullPath = data['path']; // 👈 Aquí obtienes la ruta completa
+          final fullPath = data['path'];
           debugPrint('✅ Archivo guardado correctamente en: $fullPath');
           return fullPath;
         } else {
-          debugPrint(
-            '⚠️ El servidor respondió pero con error lógico: ${data['message']}',
-          );
+          debugPrint('⚠️ Error lógico del servidor: ${data['message']}');
         }
       } else {
         debugPrint('❌ Error HTTP: ${response.statusCode}');
-        debugPrint('Respuesta del servidor: ${response.body}');
+        debugPrint('Respuesta: ${response.body}');
       }
     } catch (e, stack) {
       debugPrint('🔥 Error subiendo archivo: $e');

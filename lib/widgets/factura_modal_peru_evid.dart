@@ -169,7 +169,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Cargar categorías desde la API
   Future<void> _loadCategorias() async {
-    
     if (mounted) {
       setState(() {
         _isLoadingCategorias = true;
@@ -229,8 +228,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     );
     _categoriaController = TextEditingController(text: '');
     _tipoGastoController = TextEditingController(
-        text: CompanyService().currentCompany?.tipogasto ?? '',
-        );
+      text: CompanyService().currentCompany?.tipogasto ?? '',
+    );
     _rucController = TextEditingController(
       text: widget.facturaData.rucEmisor ?? '',
     );
@@ -724,17 +723,19 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
       debugPrint('🆔 ID autogenerado obtenido: $idRend');
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
 
-      final driveId = await _apiService.subirArchivo(selectedFile!.path);
-      debugPrint('ID de archivo en Drive: $driveId');
+      String nombreArchivo =
+          '${idRend.toString()}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
+
+      final driveId = await _apiService.subirArchivo(
+        selectedFile!.path,
+        nombreArchivo: nombreArchivo,
+      );
+      //debugPrint('ID de archivo en Drive: $driveId');
 
       // ✅ SEGUNDO API: Guardar evidencia/archivo usando el idRend del primer API
       final facturaDataEvidencia = {
         "idRend": idRend, // ✅ Usar el ID autogenerado del API principal
-        "evidencia": selectedFile != null
-            ? base64Encode(selectedFile!.readAsBytesSync())
-            : (selectedFile != null
-                  ? base64Encode(selectedFile!.readAsBytesSync())
-                  : ""),
+        "evidencia": null,
         "obs": driveId,
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),

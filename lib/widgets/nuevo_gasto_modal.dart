@@ -99,7 +99,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _totalController = TextEditingController();
     _monedaController = TextEditingController(text: 'PEN'); // PEN por defecto
     _categoriaController = TextEditingController();
-    _tipoGastoController = TextEditingController();
+    _tipoGastoController = TextEditingController(
+      text: CompanyService().companyTipogasto,
+    );
     _rucProveedorController = TextEditingController();
     _serieFacturaController = TextEditingController();
     _numeroFacturaController = TextEditingController();
