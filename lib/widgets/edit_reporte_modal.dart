@@ -321,7 +321,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
     );
 
     // Nuevos controladores
-    _igvController = TextEditingController(text: widget.reporte.serie ?? '');
+    _igvController = TextEditingController(
+      text: widget.reporte.igv?.toString() ?? '',
+    );
     // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible
     final formattedFecha = _formatToIsoDate(widget.reporte.fecha);
     _fechaEmisionController = TextEditingController(text: formattedFecha);
@@ -1079,7 +1081,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
             child: DropdownButtonFormField<String>(
               decoration: InputDecoration(
                 labelText: 'Tipo de Gasto *',
-                prefixIcon: Icon(Icons.attach_money),
+                prefixIcon: Icon(Icons.abc),
                 border: OutlineInputBorder(),
                 filled: true,
                 fillColor: _isEditMode ? Colors.white : Colors.grey[100],
@@ -1148,6 +1150,48 @@ class _EditReporteModalState extends State<EditReporteModal> {
       ],
     );
   } */
+
+  Future<void> _cargarImagenServidor() async {
+    try {
+      final nombreArchivo =
+          '${widget.reporte.idrend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
+
+      debugPrint('🧩 Buscando imagen existente: $nombreArchivo');
+
+      final imagen = await _apiService.obtenerImagen(nombreArchivo);
+
+      if (imagen != null && mounted) {
+        setState(() {
+          _selectedImage = null; // por si hay una imagen local
+          _apiEvidencia = nombreArchivo;
+        });
+
+        // Muestra un diálogo o snackbar con la imagen
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('📸 Evidencia del servidor'),
+            content: imagen,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cerrar'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        debugPrint('⚠️ No se encontró la imagen en el servidor');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se encontró la imagen en el servidor'),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('🔥 Error cargando imagen del servidor: $e');
+    }
+  }
 
   /// Guardar factura mediante API
   Future<void> _updateFacturaAPI() async {
@@ -1404,7 +1448,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         // Tercera fila: IGV/Código y Fecha de Emisión
         _buildTextField(
           _igvController,
-          'IGV/Código',
+          'IGV',
           Icons.percent,
           TextInputType.text,
           readOnly: true,
@@ -1424,7 +1468,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _buildTextField(
           _totalController,
           'Total ',
-          Icons.attach_money,
+          Icons.money_rounded,
           TextInputType.numberWithOptions(decimal: true),
           isRequired: true,
           readOnly: true,
@@ -1433,7 +1477,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _buildTextField(
           _monedaController,
           'Moneda *',
-          Icons.monetization_on,
+          Icons.house,
           TextInputType.text,
           readOnly: true,
         ),

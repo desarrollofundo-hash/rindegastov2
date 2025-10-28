@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
+
 import '../models/reporte_model.dart';
 import '../services/api_service.dart';
 import '../services/company_service.dart';
@@ -185,14 +187,25 @@ class EditReporteController {
         "useElim": 0,
       };
 
-      final evidenciaString = selectedImage != null
+      final evidencia = selectedImage != null
           ? await convertImageToBase64(selectedImage)
           : (apiEvidencia ?? "");
+          
+      debugPrint('API EVIDENCIA: $apiEvidencia');
+      
+      String nombreArchivo =
+          '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}.png';
+
+      final driveId = await _apiService.subirArchivo(
+        evidencia,
+        nombreArchivo: nombreArchivo,
+      );
+      debugPrint('ID de archivo en Drive: $driveId');
 
       final facturaDataEvidencia = {
         "idRend": reporte.idrend,
-        "evidencia": evidenciaString,
-        "obs": nota.length > 1000 ? nota.substring(0, 1000) : nota,
+        "evidencia": null,
+        "obs": driveId,
         "estado": "S",
         "fecCre": DateTime.now().toIso8601String(),
         "useReg": reporte.iduser,

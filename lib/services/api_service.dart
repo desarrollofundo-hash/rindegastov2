@@ -4,6 +4,7 @@ import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/models/reporte_auditoria_detalle.dart';
 import 'package:flu2/models/reporte_informe_detalle.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import '../models/reporte_model.dart';
 import '../models/reporte_informe_model.dart';
@@ -2499,6 +2500,32 @@ class ApiService {
       }
     } catch (e, stack) {
       debugPrint('🔥 Error subiendo archivo: $e');
+      debugPrint(stack.toString());
+    }
+
+    return null;
+  }
+
+  // Método para obtener una imagen desde el servidor
+  Future<Image?> obtenerImagen(String fileName) async {
+    debugPrint('🚀 Obteniendo imagen desde el servidor...');
+
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/recibir/getimage/$fileName'),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('✅ Imagen obtenida correctamente');
+
+        // Convertir los bytes de la respuesta a una imagen
+        return Image.memory(Uint8List.fromList(response.bodyBytes));
+      } else {
+        debugPrint('❌ Error HTTP al obtener la imagen: ${response.statusCode}');
+        debugPrint('Respuesta: ${response.body}');
+      }
+    } catch (e, stack) {
+      debugPrint('🔥 Error obteniendo la imagen: $e');
       debugPrint(stack.toString());
     }
 
