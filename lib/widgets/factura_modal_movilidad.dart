@@ -203,6 +203,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     _politicaController = TextEditingController(
       text: widget.politicaSeleccionada,
     );
+    _tipoGastoController = TextEditingController(
+      text: CompanyService().companyTipogasto,
+    );
     _rucController = TextEditingController(text: widget.facturaData.ruc ?? '');
     _tipoComprobanteController = TextEditingController(
       text: widget.facturaData.tipoComprobante ?? '',
@@ -236,7 +239,6 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     _motivoViajeController = TextEditingController(text: '');
     _tipoTransporteController = TextEditingController(text: 'Taxi');
     _categoriaController = TextEditingController(text: '');
-    _tipoGastoController = TextEditingController(text: '');
   }
 
   @override
@@ -644,16 +646,20 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
       debugPrint('🆔 ID autogenerado obtenido: $idRend');
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
+
+      
+      String nombreArchivo =
+          '${idRend.toString()}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
+
+      final driveId = await _apiService.subirArchivo(
+        _selectedImage!.path, //_selectedFile!.path,
+        nombreArchivo: nombreArchivo,
+      );
+
       final facturaDataEvidencia = {
         "idRend": idRend, // ✅ Usar el ID autogenerado del API principal
-        "evidencia": _selectedFile != null
-            ? base64Encode(_selectedFile!.readAsBytesSync())
-            : (_selectedImage != null
-                  ? base64Encode(_selectedImage!.readAsBytesSync())
-                  : ""),
-        "obs": _notaController.text.length > 1000
-            ? _notaController.text.substring(0, 1000)
-            : _notaController.text,
+        "evidencia": null,
+        "obs": driveId,
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
         "useReg": UserService().currentUserCode, // Campo obligatorio
