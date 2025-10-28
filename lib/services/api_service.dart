@@ -2532,6 +2532,33 @@ class ApiService {
     return null;
   }
 
+  /// Obtener los bytes crudos de una imagen guardada en el servidor
+  /// Retorna null si no está disponible o ocurre un error.
+  Future<Uint8List?> obtenerImagenBytes(String fileName) async {
+    debugPrint('🚀 Descargando bytes de imagen desde servidor: $fileName');
+    try {
+      final response = await http
+          .get(Uri.parse('$baseUrl/recibir/getimage/$fileName'))
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint(
+          '✅ Bytes de imagen recibidos: ${response.bodyBytes.length} bytes',
+        );
+        return response.bodyBytes;
+      } else {
+        debugPrint(
+          '❌ Error HTTP al descargar bytes de imagen: ${response.statusCode}',
+        );
+        debugPrint('Respuesta: ${response.body}');
+      }
+    } catch (e, stack) {
+      debugPrint('🔥 Error descargando bytes de imagen: $e');
+      debugPrint(stack.toString());
+    }
+    return null;
+  }
+
   // Cerrar el cliente cuando ya no se necesite
   void dispose() {
     client.close();

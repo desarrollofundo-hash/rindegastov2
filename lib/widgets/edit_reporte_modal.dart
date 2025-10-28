@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:printing/printing.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/reporte_model.dart';
 import '../models/categoria_model.dart';
@@ -90,6 +92,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _loadTiposGasto();
     // Añadir listeners para validar formulario en tiempo real
     _addValidationListeners();
+    // Intentar cargar la evidencia que ya exista en el servidor para este reporte
+    // de modo que el campo de 'Agregar evidencia' muestre la imagen/PDF si existe.
+    _cargarImagenServidor();
   }
 
   /// Determina si el reporte está en estado 'EN INFORME'.
@@ -705,30 +710,33 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: _isPdfFile(_selectedImage!.path)
-                        ? Container(
-                            color: Colors.grey.shade100,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.picture_as_pdf,
-                                  size: 48,
-                                  color: Colors.red,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'PDF: ${_selectedImage!.path.split('/').last}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
+                    child: GestureDetector(
+                      onTap: _handleTapEvidencia,
+                      child: _isPdfFile(_selectedImage!.path)
+                          ? Container(
+                              color: Colors.grey.shade100,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.picture_as_pdf,
+                                    size: 48,
+                                    color: Colors.red,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
-                            ),
-                          )
-                        : Image.file(_selectedImage!, fit: BoxFit.cover),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'PDF: ${_selectedImage!.path.split('/').last}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : Image.file(_selectedImage!, fit: BoxFit.cover),
+                    ),
                   ),
                 )
               else if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty)
@@ -741,7 +749,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(8),
-                    child: _buildEvidenciaImage(_apiEvidencia!),
+                    child: GestureDetector(
+                      onTap: _handleTapEvidencia,
+                      child: _buildEvidenciaImage(_apiEvidencia!),
+                    ),
                   ),
                 )
               else
@@ -1020,7 +1031,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
         .join(' ');
   }
 
-
   /// Construir la sección de tipo de gasto
   Widget _buildTipoGastoSection() {
     return Column(
@@ -1116,8 +1126,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     );
   }
 
-
-
   /// Construir la sección de datos raw
   /* Widget _buildRawDataSection() {
     return ExpansionTile(
@@ -1156,27 +1164,28 @@ class _EditReporteModalState extends State<EditReporteModal> {
       debugPrint('🧩 Buscando imagen existente: $nombreArchivo');
 
       final imagen = await _apiService.obtenerImagen(nombreArchivo);
-
       if (imagen != null && mounted) {
-        setState(() {
-          _selectedImage = null; // por si hay una imagen local
-          _apiEvidencia = nombreArchivo;
-        });
+        // Obtener los bytes crudos para poder mostrarlos inline desde _buildEvidenciaImage
+        final bytes = await _apiService.obtenerImagenBytes(nombreArchivo);
+        if (bytes != null && mounted) {
+          final b64 = base64Encode(bytes);
+          setState(() {
+            _selectedImage = null; // por si hay una imagen local
+            _apiEvidencia =
+                b64; // ahora _buildEvidenciaImage la detectará como base64
+          });
 
-        // Muestra un diálogo o snackbar con la imagen
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('📸 Evidencia del servidor'),
-            content: imagen,
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cerrar'),
-              ),
-            ],
-          ),
-        );
+          // Opcional: mostrar un diálogo con la imagen descargada
+        } else {
+          debugPrint(
+            '⚠️ No se pudo obtener bytes de la imagen: $nombreArchivo',
+          );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No se encontró la imagen en el servidor'),
+            ),
+          );
+        }
       } else {
         debugPrint('⚠️ No se encontró la imagen en el servidor');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1187,6 +1196,194 @@ class _EditReporteModalState extends State<EditReporteModal> {
       }
     } catch (e) {
       debugPrint('🔥 Error cargando imagen del servidor: $e');
+    }
+  }
+
+  /// Mostrar un diálogo con los bytes de la imagen
+  Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Evidencia'),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.8,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(20),
+            minScale: 1.0,
+            maxScale: 5.0,
+            child: Image.memory(bytes, fit: BoxFit.contain),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Mostrar un PDF en un diálogo usando PdfPreview (paquete `printing` está en pubspec)
+  Future<void> _showPdfDialogFromBytes(Uint8List bytes, {String? title}) async {
+    if (!mounted) return;
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: Colors.grey.shade200,
+              width: double.infinity,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title ?? 'PDF',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.9,
+              height: MediaQuery.of(context).size.height * 0.8,
+              child: PdfPreview(
+                allowPrinting: true,
+                canChangePageFormat: false,
+                build: (format) async => bytes,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Handler cuando el usuario toca la evidencia en la UI.
+  /// Intenta obtener bytes desde la selección local, desde base64 en
+  /// `_apiEvidencia` o (si es una URL) intenta descargar bytes vía API.
+  Future<void> _handleTapEvidencia() async {
+    try {
+      // 1) Si hay un archivo local seleccionado
+      if (_selectedImage != null) {
+        final path = _selectedImage!.path;
+        final bytes = await _selectedImage!.readAsBytes();
+        if (_isPdfFile(path)) {
+          await _showPdfDialogFromBytes(bytes, title: path.split('/').last);
+          return;
+        } else {
+          await _showEvidenciaDialogFromBytes(bytes);
+          return;
+        }
+      }
+
+      // 2) Si tenemos evidencia en `_apiEvidencia`
+      if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty) {
+        final evidencia = _apiEvidencia!;
+        // Si es base64
+        if (_controller.isBase64(evidencia)) {
+          final bytes = base64Decode(evidencia);
+          // Detectar si es PDF por cabecera '%PDF'
+          final isPdf =
+              bytes.length >= 4 &&
+              bytes[0] == 0x25 &&
+              bytes[1] == 0x50 &&
+              bytes[2] == 0x44 &&
+              bytes[3] == 0x46;
+          if (isPdf) {
+            await _showPdfDialogFromBytes(bytes, title: 'Evidencia PDF');
+            return;
+          }
+          await _showEvidenciaDialogFromBytes(bytes);
+          return;
+        }
+
+        // Si es una URL válida, intentar descargar bytes usando el servicio
+        if (_controller.isValidUrl(evidencia)) {
+          try {
+            final uri = Uri.tryParse(evidencia);
+            String? fileName;
+            if (uri != null && uri.pathSegments.isNotEmpty) {
+              fileName = uri.pathSegments.last;
+            }
+
+            if (fileName != null) {
+              final bytes = await _apiService.obtenerImagenBytes(fileName);
+              if (bytes != null) {
+                // Si el filename indica PDF, abrir en visor PDF
+                if (fileName.toLowerCase().endsWith('.pdf')) {
+                  await _showPdfDialogFromBytes(bytes, title: fileName);
+                } else {
+                  await _showEvidenciaDialogFromBytes(bytes);
+                }
+                return;
+              }
+            }
+
+            // Fallback: si no se pudo obtener bytes, mostrar la imagen por URL
+            if (!mounted) return;
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('Evidencia'),
+                content: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: InteractiveViewer(
+                    panEnabled: true,
+                    boundaryMargin: const EdgeInsets.all(20),
+                    minScale: 1.0,
+                    maxScale: 5.0,
+                    child: Image.network(evidencia, fit: BoxFit.contain),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cerrar'),
+                  ),
+                ],
+              ),
+            );
+            return;
+          } catch (e) {
+            // continuar al fallback
+          }
+        }
+      }
+
+      // 3) Si es PDF o no hay datos, mostrar mensaje sencillo
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Evidencia'),
+          content: const Text('No hay imagen disponible para previsualizar.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error mostrando evidencia: ${e.toString()}')),
+      );
     }
   }
 
