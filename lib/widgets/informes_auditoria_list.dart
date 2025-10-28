@@ -1,10 +1,8 @@
-import 'dart:convert';
-
 import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/widgets/auditoria_detalle_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flu2/widgets/empty_state.dart';
-import 'package:flu2/widgets/informe_detalle_modal.dart'; // Cambié el nombre aquí
+// Nota: se eliminó import innecesario
 
 class InformesAuditoriaList extends StatelessWidget {
   final List<ReporteAuditoria> auditorias; // Cambié el tipo de la lista aquí
@@ -24,17 +22,30 @@ class InformesAuditoriaList extends StatelessWidget {
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
+    required List<ReporteAuditoria> auditoria,
   });
 
   @override
   Widget build(BuildContext context) {
     if (auditorias.isEmpty) {
       return RefreshIndicator(
+        // Personalizar indicador para que coincida con la apariencia de Auditoría
+        color: Colors.green,
+        backgroundColor: Colors.white,
+        strokeWidth: 2.5,
+        displacement: 40,
         onRefresh: onRefresh ?? () async {},
         child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.7,
+          // AlwaysScrollable + Bouncing ayuda a detectar el gesto incluso
+          // cuando hay pocos elementos o estamos dentro de un TabBarView.
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              // Garantiza suficiente área para que el gesto de pull se detecte
+              minHeight: MediaQuery.of(context).size.height * 0.7,
+            ),
             child: EmptyState(
               message: "No hay auditorías disponibles",
               buttonText: showEmptyStateButton ? "Agregar Auditoría" : null,
@@ -49,10 +60,19 @@ class InformesAuditoriaList extends StatelessWidget {
     }
 
     return RefreshIndicator(
+      // Personalizar indicador para que coincida con la apariencia de Auditoría
+      color: Colors.green,
+      backgroundColor: Colors.white,
+      strokeWidth: 2.5,
+      displacement: 40,
       onRefresh: onRefresh ?? () async {},
       child: ListView.builder(
+        key: const PageStorageKey('auditoria_list'),
         padding: const EdgeInsets.all(8),
-        physics: const AlwaysScrollableScrollPhysics(),
+        // Siempre scrollable y con rebote para mejorar la detección del pull
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         itemCount: auditorias.length,
         itemBuilder: (context, index) {
           final auditoria = auditorias[index];
@@ -215,15 +235,15 @@ class InformesAuditoriaList extends StatelessWidget {
       // Si hay error en el parseo, devolver la fecha original
     }
 
-    return fecha ?? 'Sin fecha';
+    return fecha;
   }
 
   Color _getStatusColor(String? estado) {
     switch (estado) {
-      case 'Borrador':
-        return Colors.orange;
-      case 'Enviado':
+      case 'EN AUDITORIA':
         return Colors.blue;
+      case 'Enviado':
+        return Colors.red;
       case 'Aprobado':
         return Colors.green;
       case 'Rechazado':

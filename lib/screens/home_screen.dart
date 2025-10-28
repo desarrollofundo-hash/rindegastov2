@@ -47,6 +47,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   // Datos para auditoria
   List<ReporteAuditoria> _auditoria = [];
+  // Este campo guarda el backup de auditoría (se usa para resetear búsquedas).
+  // Está definido intencionalmente aunque actualmente no se lea en todas partes.
+  // ignore: unused_field
   List<ReporteAuditoria> _allAuditoria = [];
   // Overlay para el FAB independiente de la barra inferior
   OverlayEntry? _fabOverlay;
@@ -234,6 +237,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     setState(() {
       _isLoading = true;
     });
+
+    // DEBUG: confirmar que el pull-to-refresh dispara la carga
+    debugPrint('Refreshing auditoria...');
 
     try {
       final auditoria = await _apiService.getReportesRendicionAuditoria(
@@ -429,6 +435,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           tabViews: [
             InformesAuditoriaList(
               auditorias: _auditoria,
+              auditoria: [],
               onAuditoriaUpdated: _actualizarAuditoria,
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,

@@ -66,145 +66,157 @@ class InformesReporteList extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      // Icono de la izquierda
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Barra lateral de color que indica el estado
+                        Container(
+                          width: 6,
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(inf.estadoActual),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
-                        child: Icon(
-                          Icons.description,
-                          color: Colors.grey[600],
-                          size: 24,
+                        const SizedBox(width: 12),
+                        // Icono de la izquierda
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            Icons.description,
+                            color: Colors.grey[600],
+                            size: 24,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Contenido principal
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Columna izquierda: Título, Creación, Gastos
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(width: 16),
+                        // Contenido principal
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Columna izquierda: Título, Creación, Gastos
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Título del informe
+                                    Text(
+                                      inf.titulo ?? 'Sin título',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    // Fecha de creación
+                                    Text(
+                                      'Creación: ${_formatDate(inf.fecCre)}',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Cantidad de gastos
+                                    Text(
+                                      '${inf.cantidad} gastos',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Columna derecha: Total, Estado, Aprobados/Desaprobados
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  // Título del informe
+                                  // Total en PEN
                                   Text(
-                                    inf.titulo ?? 'Sin título',
+                                    '${inf.total.toStringAsFixed(2)} PEN',
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.black87,
+                                      color: Colors.blue,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
-                                  // Fecha de creación
-                                  Text(
-                                    'Creación: ${_formatDate(inf.fecCre)}',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.grey[600],
+                                  // Estado
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(inf.estadoActual),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      inf.estadoActual ?? 'Sin estado',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  // Cantidad de gastos
-                                  Text(
-                                    '${inf.cantidad} gastos',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
+                                  // Aprobados y Desaprobados con colores (solo si hay cantidades > 0)
+                                  if (inf.cantidadAprobado > 0 ||
+                                      inf.cantidadDesaprobado > 0)
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          if (inf.cantidadAprobado > 0)
+                                            TextSpan(
+                                              text:
+                                                  '${inf.cantidadAprobado} Aprob.',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.green[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          if (inf.cantidadAprobado > 0 &&
+                                              inf.cantidadDesaprobado > 0)
+                                            TextSpan(
+                                              text: ' / ',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          if (inf.cantidadDesaprobado > 0)
+                                            TextSpan(
+                                              text:
+                                                  '${inf.cantidadDesaprobado} Desaprob.',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.red[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
-                            ),
-                            // Columna derecha: Total, Estado, Aprobados/Desaprobados
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                // Total en PEN
-                                Text(
-                                  '${inf.total.toStringAsFixed(2)} PEN',
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                // Estado
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(inf.estadoActual),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    inf.estadoActual ?? 'Sin estado',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                // Aprobados y Desaprobados con colores (solo si hay cantidades > 0)
-                                if (inf.cantidadAprobado > 0 ||
-                                    inf.cantidadDesaprobado > 0)
-                                  RichText(
-                                    text: TextSpan(
-                                      children: [
-                                        if (inf.cantidadAprobado > 0)
-                                          TextSpan(
-                                            text:
-                                                '${inf.cantidadAprobado} Aprob.',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.green[600],
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        if (inf.cantidadAprobado > 0 &&
-                                            inf.cantidadDesaprobado > 0)
-                                          TextSpan(
-                                            text: ' / ',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        if (inf.cantidadDesaprobado > 0)
-                                          TextSpan(
-                                            text:
-                                                '${inf.cantidadDesaprobado} Desaprob.',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.red[600],
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -252,10 +264,11 @@ class InformesReporteList extends StatelessWidget {
     return fecha;
   }
 
+  //COLORES DE ESTADO
   Color _getStatusColor(String? estado) {
     switch (estado) {
-      case 'Borrador':
-        return Colors.orange;
+      case 'EN AUDITORIA':
+        return Colors.blue;
       case 'Enviado':
         return Colors.blue;
       case 'Aprobado':

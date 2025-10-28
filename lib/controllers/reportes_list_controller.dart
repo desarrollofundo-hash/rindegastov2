@@ -1525,6 +1525,7 @@ class ReportesListController {
     if (s.contains('ANULADO') || s.contains('CANCEL'))
       return Colors.redAccent[100];
     if (s.contains('SYNC') || s == 'S') return Colors.teal[400];
+    if (s.contains('EN AUDITORIA')) return Colors.indigo[400];
 
     // Fallback
     return Colors.grey[400];
