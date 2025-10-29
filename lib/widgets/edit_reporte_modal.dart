@@ -114,7 +114,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
     for (final v in candidates) {
       if (v != null) {
         final value = v.trim().toUpperCase();
-        if (value.contains('EN INFORME') || value == 'EN AUDITORIA') {
+        if (value.contains('EN INFORME') ||
+            value == 'EN AUDITORIA' ||
+            value == 'EN REVISION' ||
+            value == 'APROBADO' ||
+            value == 'DESAPROBADO' ) {
           return true;
         }
       }
@@ -1416,7 +1420,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
   /// `_apiEvidencia` o (si es una URL) intenta descargar bytes vía API.
   Future<void> _handleTapEvidencia() async {
     try {
-      
       String nombreArchivo =
           '${_rucController.text}_${_serieController.text}_${_numeroController.text}';
 
