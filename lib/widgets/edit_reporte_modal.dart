@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:printing/printing.dart';
+import 'package:pdf_render/pdf_render.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/reporte_model.dart';
 import '../models/categoria_model.dart';
@@ -12,6 +13,9 @@ import '../services/api_service.dart';
 import '../services/company_service.dart';
 import '../controllers/edit_reporte_controller.dart';
 import '../screens/home_screen.dart';
+import 'package:path/path.dart' as p;
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
 class EditReporteModal extends StatefulWidget {
   final Reporte reporte;
@@ -819,8 +823,44 @@ class _EditReporteModalState extends State<EditReporteModal> {
   /// Renderizar evidencia cuando llega en base64 o como URL
   Widget _buildEvidenciaImage(String evidenciaBase64OrUrl) {
     try {
-      // Si parece una URL válida, mostrar como imagen de red
+      // 1) Si parece una URL válida
       if (_controller.isValidUrl(evidenciaBase64OrUrl)) {
+        final uri = Uri.tryParse(evidenciaBase64OrUrl);
+        final isPdf = uri != null && uri.path.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+          // Mostrar placeholder de PDF (clicable por el GestureDetector externo)
+          final fileName = uri.pathSegments.isNotEmpty
+              ? uri.pathSegments.last
+              : 'PDF';
+          return Container(
+            color: Colors.grey.shade100,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.picture_as_pdf,
+                    size: 48,
+                    color: Colors.red.shade700,
+                  ),
+                  const SizedBox(height: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 160),
+                    child: Text(
+                      fileName,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 12),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // No es PDF -> intentar mostrar como imagen de red
         return Image.network(
           evidenciaBase64OrUrl,
           fit: BoxFit.cover,
@@ -830,13 +870,49 @@ class _EditReporteModalState extends State<EditReporteModal> {
         );
       }
 
-      // Si parece base64, decodificar y mostrar
+      // 2) Si parece base64, decodificar y validar tipo
       if (_controller.isBase64(evidenciaBase64OrUrl)) {
-        final bytes = base64Decode(evidenciaBase64OrUrl);
+        Uint8List bytes;
+        try {
+          bytes = base64Decode(evidenciaBase64OrUrl);
+        } catch (e) {
+          return Center(child: Text('Evidencia inválida'));
+        }
+
+        // Detectar PDF por cabecera '%PDF'
+        final isPdf =
+            bytes.length >= 4 &&
+            bytes[0] == 0x25 &&
+            bytes[1] == 0x50 &&
+            bytes[2] == 0x44 &&
+            bytes[3] == 0x46;
+
+        if (isPdf) {
+          // Mostrar placeholder PDF en lugar de intentar Image.memory
+          return Container(
+            color: Colors.grey.shade100,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.picture_as_pdf,
+                    size: 48,
+                    color: Colors.red.shade700,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text('PDF', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // No es PDF -> mostrar imagen en memoria
         return Image.memory(bytes, fit: BoxFit.cover);
       }
 
-      // Si no es ninguno, mostrar placeholder
+      // 3) Si no es ninguno de los anteriores, mostrar placeholder
       return Center(child: Text('Evidencia no disponible'));
     } catch (e) {
       return Center(child: Text('Evidencia inválida'));
@@ -1158,44 +1234,83 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   Future<void> _cargarImagenServidor() async {
     try {
-      final nombreArchivo =
-          '${widget.reporte.idrend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
+      if (!mounted) return;
 
-      debugPrint('🧩 Buscando imagen existente: $nombreArchivo');
+      // Base para el nombre de archivo en el servidor
+      final baseName =
+          '${widget.reporte.idrend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}';
 
-      final imagen = await _apiService.obtenerImagen(nombreArchivo);
-      if (imagen != null && mounted) {
-        // Obtener los bytes crudos para poder mostrarlos inline desde _buildEvidenciaImage
-        final bytes = await _apiService.obtenerImagenBytes(nombreArchivo);
-        if (bytes != null && mounted) {
-          final b64 = base64Encode(bytes);
-          setState(() {
-            _selectedImage = null; // por si hay una imagen local
-            _apiEvidencia =
-                b64; // ahora _buildEvidenciaImage la detectará como base64
-          });
+      debugPrint('🧩 Buscando evidencia en servidor (base): $baseName');
 
-          // Opcional: mostrar un diálogo con la imagen descargada
-        } else {
+      // Si ya tenemos algo en _apiEvidencia y es base64, no hace falta descargar
+      if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty) {
+        final api = _apiEvidencia!;
+        if (_controller.isBase64(api)) {
           debugPrint(
-            '⚠️ No se pudo obtener bytes de la imagen: $nombreArchivo',
+            'ℹ️ _apiEvidencia ya contiene base64, no se descargará del servidor',
           );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No se encontró la imagen en el servidor'),
-            ),
-          );
+          return;
         }
-      } else {
-        debugPrint('⚠️ No se encontró la imagen en el servidor');
+      }
+
+      // Construir lista de extensiones candidatas. Si _apiEvidencia contiene
+      // una URL o filename con extensión, probar esa extensión primero.
+      final List<String> candidates = [];
+      if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty) {
+        final api = _apiEvidencia!;
+        try {
+          final ext = p.extension(api);
+          if (ext.isNotEmpty) candidates.add(ext);
+        } catch (_) {}
+      }
+
+      // Añadir extensiones comunes y un intento sin extensión
+      candidates.addAll(['.png', '.jpg', '.jpeg', '.pdf', '.gif', '']);
+
+      Uint8List? bytes;
+      String? triedName;
+      for (final ext in candidates) {
+        final name = ext.isNotEmpty ? '$baseName$ext' : baseName;
+        debugPrint('🔎 Intentando obtener: $name');
+        try {
+          bytes = await _apiService.obtenerImagenBytes(name);
+        } catch (e) {
+          bytes = null;
+        }
+        if (bytes != null) {
+          triedName = name;
+          break;
+        }
+      }
+
+      if (bytes != null && mounted) {
+        final b64 = base64Encode(bytes);
+        setState(() {
+          _selectedImage = null; // por si hay una imagen local
+          _apiEvidencia =
+              b64; // ahora _buildEvidenciaImage la detectará como base64
+        });
+        debugPrint('✅ Evidencia cargada desde servidor: $triedName');
+        return;
+      }
+
+      debugPrint(
+        '⚠️ No se encontró la evidencia en el servidor (probadas: ${candidates.join(', ')})',
+      );
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('No se encontró la imagen en el servidor'),
+            content: Text('No se encontró la evidencia en el servidor'),
           ),
         );
       }
     } catch (e) {
       debugPrint('🔥 Error cargando imagen del servidor: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error cargando evidencia: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -1225,6 +1340,26 @@ class _EditReporteModalState extends State<EditReporteModal> {
         ],
       ),
     );
+  }
+
+  Future<void> _abrirPdfExterno(Uint8List pdfBytes, String fileName) async {
+    try {
+      // Crea un archivo temporal en el almacenamiento del dispositivo
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = '${tempDir.path}/$fileName';
+
+      final file = File(tempPath);
+      await file.writeAsBytes(pdfBytes, flush: true);
+
+      // Abre el archivo con una app externa instalada en el teléfono
+      final result = await OpenFilex.open(tempPath);
+
+      if (result.type != ResultType.done) {
+        debugPrint('⚠️ No se pudo abrir el PDF: ${result.message}');
+      }
+    } catch (e, st) {
+      debugPrint('🔥 Error al abrir PDF externo: $e\n$st');
+    }
   }
 
   /// Mostrar un PDF en un diálogo usando PdfPreview (paquete `printing` está en pubspec)
@@ -1276,12 +1411,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
   /// `_apiEvidencia` o (si es una URL) intenta descargar bytes vía API.
   Future<void> _handleTapEvidencia() async {
     try {
-      // 1) Si hay un archivo local seleccionado
+      // 1️⃣ Si hay un archivo local seleccionado
       if (_selectedImage != null) {
         final path = _selectedImage!.path;
         final bytes = await _selectedImage!.readAsBytes();
+
         if (_isPdfFile(path)) {
-          await _showPdfDialogFromBytes(bytes, title: path.split('/').last);
+          await _abrirPdfExterno(bytes, path.split('/').last);
           return;
         } else {
           await _showEvidenciaDialogFromBytes(bytes);
@@ -1289,12 +1425,14 @@ class _EditReporteModalState extends State<EditReporteModal> {
         }
       }
 
-      // 2) Si tenemos evidencia en `_apiEvidencia`
+      // 2️⃣ Si tenemos evidencia almacenada en `_apiEvidencia`
       if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty) {
         final evidencia = _apiEvidencia!;
-        // Si es base64
+
+        // 👉 Si es base64
         if (_controller.isBase64(evidencia)) {
           final bytes = base64Decode(evidencia);
+
           // Detectar si es PDF por cabecera '%PDF'
           final isPdf =
               bytes.length >= 4 &&
@@ -1302,15 +1440,17 @@ class _EditReporteModalState extends State<EditReporteModal> {
               bytes[1] == 0x50 &&
               bytes[2] == 0x44 &&
               bytes[3] == 0x46;
+
           if (isPdf) {
-            await _showPdfDialogFromBytes(bytes, title: 'Evidencia PDF');
+            await _abrirPdfExterno(bytes, 'documento.pdf');
             return;
           }
+
           await _showEvidenciaDialogFromBytes(bytes);
           return;
         }
 
-        // Si es una URL válida, intentar descargar bytes usando el servicio
+        // 👉 Si es una URL válida
         if (_controller.isValidUrl(evidencia)) {
           try {
             final uri = Uri.tryParse(evidencia);
@@ -1322,9 +1462,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
             if (fileName != null) {
               final bytes = await _apiService.obtenerImagenBytes(fileName);
               if (bytes != null) {
-                // Si el filename indica PDF, abrir en visor PDF
                 if (fileName.toLowerCase().endsWith('.pdf')) {
-                  await _showPdfDialogFromBytes(bytes, title: fileName);
+                  await _abrirPdfExterno(bytes, fileName);
                 } else {
                   await _showEvidenciaDialogFromBytes(bytes);
                 }
@@ -1332,7 +1471,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
               }
             }
 
-            // Fallback: si no se pudo obtener bytes, mostrar la imagen por URL
+            // Fallback: mostrar imagen por URL directamente
             if (!mounted) return;
             showDialog(
               context: context,
@@ -1359,12 +1498,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
             );
             return;
           } catch (e) {
-            // continuar al fallback
+            debugPrint('⚠️ Error descargando evidencia: $e');
           }
         }
       }
 
-      // 3) Si es PDF o no hay datos, mostrar mensaje sencillo
+      // 3️⃣ Si no hay evidencia o es inválida
       if (!mounted) return;
       showDialog(
         context: context,
