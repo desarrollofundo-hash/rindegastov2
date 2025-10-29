@@ -649,9 +649,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Card(
+        color: Colors.white,
+
         elevation: 2,
         child: Padding(
-          padding: const EdgeInsets.all(6),
+          padding: const EdgeInsets.all(5),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -698,14 +700,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
               // Mostrar archivo: puede ser imagen o PDF
               if (_selectedImage != null)
                 Container(
                   height: 200,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(color: Colors.white),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: ClipRRect(
@@ -714,7 +715,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       onTap: _handleTapEvidencia,
                       child: _isPdfFile(_selectedImage!.path)
                           ? Container(
-                              color: Colors.grey.shade100,
+                              color: Colors.white,
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -728,7 +729,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                                     'PDF: ${_selectedImage!.path.split('/').last}',
                                     style: const TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey,
+                                      color: Colors.white,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -994,9 +995,24 @@ class _EditReporteModalState extends State<EditReporteModal> {
         decoration: InputDecoration(
           labelText: 'Categoría *',
           prefixIcon: Icon(Icons.category),
-          border: OutlineInputBorder(),
+          border: UnderlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.transparent, width: 0),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.grey, width: 1),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide(color: Colors.blue, width: 2),
+          ),
+          disabledBorder: UnderlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.white, width: 1),
+          ),
           filled: true,
-          fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+          fillColor: _isEditMode ? Colors.white : Colors.white,
         ),
         value: selectedValue,
         items: items,
@@ -1036,10 +1052,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Tipo de Gasto',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
+        const Text('Tipo de Gasto'),
         const SizedBox(height: 8),
 
         // Si está cargando, mostrar indicador
@@ -1087,9 +1100,27 @@ class _EditReporteModalState extends State<EditReporteModal> {
               decoration: InputDecoration(
                 labelText: 'Tipo de Gasto *',
                 prefixIcon: Icon(Icons.abc),
-                border: OutlineInputBorder(),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white, width: 1),
+                ),
                 filled: true,
-                fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                fillColor: _isEditMode ? Colors.white : Colors.white,
               ),
               value:
                   _tipoGastoController.text.isNotEmpty &&
@@ -1515,7 +1546,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   /// Construir el header del modal
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.red.shade700, Colors.red.shade400],
@@ -1528,7 +1559,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       child: Row(
         children: [
           const Icon(Icons.receipt_long, color: Colors.white, size: 28),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1585,10 +1616,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
         TextFormField(
           controller: _politicaController,
           enabled: false,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Política Seleccionada',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.policy),
+            border: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: Colors.blue, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            prefixIcon: const Icon(Icons.policy),
           ),
         ),
       ],
@@ -1633,7 +1679,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _buildTextField(
           _numeroController,
           'Número ',
-          Icons.confirmation_number,
+          Icons.numbers,
           TextInputType.number,
           isRequired: true,
           readOnly: true,
@@ -1652,7 +1698,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _buildTextField(
           _fechaEmisionController,
           'Fecha Emisión ',
-          Icons.calendar_today,
+          Icons.calendar_month_sharp,
           TextInputType.datetime,
           isRequired: true,
           readOnly: true,
@@ -1663,7 +1709,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _buildTextField(
           _totalController,
           'Total ',
-          Icons.money_rounded,
+          Icons.price_change,
           TextInputType.numberWithOptions(decimal: true),
           isRequired: true,
           readOnly: true,
@@ -1672,7 +1718,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _buildTextField(
           _monedaController,
           'Moneda *',
-          Icons.house,
+          Icons.monetization_on,
           TextInputType.text,
           readOnly: true,
         ),
@@ -1926,10 +1972,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
   Widget _buildActionButtons() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 50),
-      decoration: BoxDecoration(
+      /*  decoration: BoxDecoration(
         color: Colors.grey.shade50,
         border: Border(top: BorderSide(color: Colors.grey.shade300)),
-      ),
+      ), */
       child: Column(
         children: [
           // Mensaje de campos obligatorios
@@ -1944,14 +1990,14 @@ class _EditReporteModalState extends State<EditReporteModal> {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange.shade600),
+                  Icon(Icons.warning, color: Colors.orange.shade800),
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Text(
-                      'Por favor complete todos los campos ',
+                      'Por favor complete los campos ',
                       style: TextStyle(
                         color: Colors.orange,
-                        fontWeight: FontWeight.w500,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),

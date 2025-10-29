@@ -1,5 +1,8 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/models/reporte_revision_model.dart';
+import 'package:flu2/widgets/auditoria_list.dart';
 import 'package:flu2/widgets/informes_auditoria_list.dart';
+import 'package:flu2/widgets/informes_revision_list.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:flutter/material.dart';
@@ -19,6 +22,7 @@ import '../services/user_service.dart';
 import '../services/company_service.dart';
 import '../models/reporte_model.dart';
 import './informes/detalle_informe_screen.dart';
+import '../widgets/informes_revision_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,6 +55,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   // ignore: unused_field
   List<ReporteAuditoria> _allAuditoria = [];
   // Overlay para el FAB independiente de la barra inferior
+
+  List<ReporteRevision> _revision = [];
+  List<ReporteRevision> _allRevision = [];
+
   OverlayEntry? _fabOverlay;
 
   @override
@@ -62,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _loadReportes();
       _loadInformes();
       _loadAuditoria();
+      _loadRevision();
     }
 
     // Escuchar cambios en la empresa seleccionada para refrescar la pantalla
@@ -119,6 +128,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _loadReportes();
       _loadInformes();
       _loadAuditoria();
+      _loadRevision();
     } else {
       // Si no hay sesión, limpiar listas y forzar rebuild
       setState(() {
@@ -128,6 +138,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         _allInformes = [];
         _auditoria = [];
         _allAuditoria = [];
+        _revision = [];
+        _allRevision = [];
         _isLoading = false;
       });
       return;
@@ -279,6 +291,51 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
+  Future<void> _loadRevision() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final revision = await _apiService.getReportesRendicionAuditoria(
+        id: '1',
+        idad: '1',
+        user: UserService().currentUserCode,
+        ruc: CompanyService().companyRuc,
+      );
+      if (!mounted) return;
+/* 
+      setState(() {
+        _revision = _auditoria;
+        _allRevision = List.from(revision);
+        _isLoading = false;
+      }); */
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Mostrar error en SnackBar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar revisión: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Reintentar',
+              textColor: Colors.white,
+              onPressed: _loadRevision,
+            ),
+          ),
+        );
+      }
+    }
+  }
   // ========== MÉTODOS REUTILIZABLES ==========
 
   void _mostrarEditarPerfil(BuildContext context) {
@@ -329,6 +386,21 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void _eliminarAuditoria(ReporteAuditoria auditoria) {
     setState(() {
       _auditoria.remove(auditoria);
+    });
+  }
+
+  void _actualizarRevision(ReporteRevision revisionModel) {
+    setState(() {
+      final index = _informes.indexWhere((i) => i.idInf == revisionModel.idInf);
+      if (index != -1) {
+        _revision[index] = revisionModel;
+      }
+    });
+  }
+
+  void _eliminarRevision(ReporteRevision revision) {
+    setState(() {
+      _revision.remove(revision);
     });
   }
 
@@ -466,13 +538,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           tabLabels: const ["Todos"],
           tabColors: const [Colors.green],
           tabViews: [
-            InformesReporteList(
-              informes: _informes,
-              informe: [],
-              onInformeUpdated: _actualizarInforme,
-              onInformeDeleted: _eliminarInforme,
+            InformesRevisionList(
+              revisiones: _revision,
+              revision: [],
+              onRevisionUpdated: _actualizarRevision,
+              onRevisionDeleted: _eliminarRevision,
               showEmptyStateButton: false,
-              onRefresh: _loadInformes,
+              onRefresh: _loadRevision,
             ),
           ],
         ),

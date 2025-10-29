@@ -1,49 +1,46 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/models/reporte_revision_model.dart';
 import 'package:flu2/widgets/auditoria_detalle_modal.dart';
+import 'package:flu2/widgets/revision_detalle_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flu2/widgets/empty_state.dart';
-// Nota: se eliminó import innecesario
 
-class InformesAuditoriaList extends StatelessWidget {
-  final List<ReporteAuditoria> auditorias; // Cambié el tipo de la lista aquí
-  final Function(ReporteAuditoria)
-  onAuditoriaUpdated; // Cambié el tipo de la función aquí
-  final Function(ReporteAuditoria)
-  onAuditoriaDeleted; // Cambié el tipo de la función aquí
+// Nota: se eliminó import innecesario
+class InformesRevisionList extends StatelessWidget {
+  final List<ReporteRevision> revisiones;
+  final Function(ReporteRevision) onRevisionUpdated;
+  final Function(ReporteRevision)
+  onRevisionDeleted; // Cambié el tipo de la función aquí
   final bool showEmptyStateButton;
   final VoidCallback? onEmptyStateButtonPressed;
   final Future<void> Function()? onRefresh;
 
-  const InformesAuditoriaList({
+  const InformesRevisionList({
     super.key,
-    required this.auditorias,
-    required this.onAuditoriaUpdated,
-    required this.onAuditoriaDeleted,
+    required this.revisiones,
+    required this.onRevisionUpdated,
+    required this.onRevisionDeleted,
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
-    required List<ReporteAuditoria> auditoria,
+    required List<ReporteRevision> revision,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (auditorias.isEmpty) {
+    if (revisiones.isEmpty) {
       return RefreshIndicator(
-        // Personalizar indicador para que coincida con la apariencia de Auditoría
         color: Colors.green,
         backgroundColor: Colors.white,
-        strokeWidth: 2.5,
-        displacement: 40,
+        strokeWidth: 2.0,
+        displacement: 40.0,
         onRefresh: onRefresh ?? () async {},
         child: SingleChildScrollView(
-          // AlwaysScrollable + Bouncing ayuda a detectar el gesto incluso
-          // cuando hay pocos elementos o estamos dentro de un TabBarView.
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              // Garantiza suficiente área para que el gesto de pull se detecte
               minHeight: MediaQuery.of(context).size.height * 0.7,
             ),
             child: EmptyState(
@@ -67,15 +64,15 @@ class InformesAuditoriaList extends StatelessWidget {
       displacement: 40,
       onRefresh: onRefresh ?? () async {},
       child: ListView.builder(
-        key: const PageStorageKey('auditoria_list'),
+        key: const PageStorageKey('revision_list'),
         padding: const EdgeInsets.all(8),
         // Siempre scrollable y con rebote para mejorar la detección del pull
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        itemCount: auditorias.length,
+        itemCount: revisiones.length,
         itemBuilder: (context, index) {
-          final auditoria = auditorias[index];
+          final revision = revisiones[index];
           return AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
@@ -87,7 +84,7 @@ class InformesAuditoriaList extends StatelessWidget {
               ),
               margin: const EdgeInsets.symmetric(vertical: 2),
               child: InkWell(
-                onTap: () => _handleMenuAction(context, 'ver', auditoria),
+                onTap: () => _handleMenuAction(context, 'ver', revision),
                 borderRadius: BorderRadius.circular(12),
                 child: Padding(
                   padding: const EdgeInsets.all(8),
@@ -98,7 +95,7 @@ class InformesAuditoriaList extends StatelessWidget {
                         width: 4,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: _getStatusColor(auditoria.estadoActual),
+                          color: _getStatusColor(revision.estadoActual),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -131,7 +128,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                 children: [
                                   // Título de la auditoría (más compacto)
                                   Text(
-                                    auditoria.titulo ?? 'Sin título',
+                                    revision.titulo ?? 'Sin título',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
@@ -143,7 +140,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                   const SizedBox(height: 2),
                                   // Fecha de creación
                                   Text(
-                                    'Creación: ${_formatDate(auditoria.fecCre?.toIso8601String())}',
+                                    'Creación: ${_formatDate(revision.fecCre?.toIso8601String())}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey[600],
@@ -152,7 +149,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                   const SizedBox(height: 4),
                                   // Cantidad de detalles
                                   Text(
-                                    '${auditoria.cantidad} detalles',
+                                    '${revision.cantidad} detalles',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w500,
@@ -167,7 +164,7 @@ class InformesAuditoriaList extends StatelessWidget {
                               children: [
                                 // Total en PEN (más compacto)
                                 Text(
-                                  '${_getTotal(auditoria)} PEN',
+                                  '${_getTotal(revision as ReporteAuditoria)} PEN',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
@@ -183,12 +180,12 @@ class InformesAuditoriaList extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: _getStatusColor(
-                                      auditoria.estadoActual,
+                                      revision.estadoActual,
                                     ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    auditoria.estadoActual ?? 'Sin estado',
+                                    revision.estadoActual ?? 'Sin estado',
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
@@ -210,7 +207,6 @@ class InformesAuditoriaList extends StatelessWidget {
         },
       ),
     );
-    
   }
 
   String _formatDate(String? fecha) {
@@ -272,29 +268,29 @@ class InformesAuditoriaList extends StatelessWidget {
   void _handleMenuAction(
     BuildContext context,
     String action,
-    ReporteAuditoria auditoria, // Cambié el tipo aquí
+    ReporteRevision revision, // Cambié el tipo aquí
   ) {
     switch (action) {
       case 'ver':
         showDialog(
           context: context,
-          builder: (BuildContext context) => AuditoriaDetalleModal(
-            informe: auditoria,
+          builder: (BuildContext context) => RevisionDetalleModal(
+            revision: revision,
           ), // Usar el modal adecuado
         );
         break;
       case 'editar':
-        onAuditoriaUpdated(auditoria);
+        onRevisionUpdated(revision);
         break;
       case 'eliminar':
-        _showDeleteConfirmation(context, auditoria);
+        _showDeleteConfirmation(context, revision as ReporteAuditoria);
         break;
     }
   }
 
   void _showDeleteConfirmation(
     BuildContext context,
-    ReporteAuditoria auditoria,
+    ReporteAuditoria revision,
   ) {
     showDialog(
       context: context,
@@ -302,7 +298,7 @@ class InformesAuditoriaList extends StatelessWidget {
         return AlertDialog(
           title: const Text('Confirmar eliminación'),
           content: Text(
-            '¿Estás seguro de que quieres eliminar la auditoría "${auditoria.titulo}"?',
+            '¿Estás seguro de que quieres eliminar la auditoría "${revision.titulo}"?',
           ),
           actions: [
             TextButton(
@@ -312,7 +308,7 @@ class InformesAuditoriaList extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                onAuditoriaDeleted(auditoria);
+                onRevisionDeleted(revision as ReporteRevision);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Eliminar'),
