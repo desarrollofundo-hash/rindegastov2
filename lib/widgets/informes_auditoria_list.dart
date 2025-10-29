@@ -22,7 +22,7 @@ class InformesAuditoriaList extends StatelessWidget {
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
-    required List<ReporteAuditoria> auditoria,
+    List<ReporteAuditoria>? auditoria,
   });
 
   @override
@@ -75,138 +75,149 @@ class InformesAuditoriaList extends StatelessWidget {
         ),
         itemCount: auditorias.length,
         itemBuilder: (context, index) {
-          final auditoria = auditorias[index];
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            child: Card(
-              color: Colors.white,
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              child: InkWell(
-                onTap: () => _handleMenuAction(context, 'ver', auditoria),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    children: [
-                      // Barra lateral de color que indica el estado
-                      Container(
-                        width: 4,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(auditoria.estadoActual),
-                          borderRadius: BorderRadius.circular(2),
+          try {
+            final auditoria = auditorias[index];
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Card(
+                color: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                child: InkWell(
+                  onTap: () => _handleMenuAction(context, 'ver', auditoria),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        // Barra lateral de color que indica el estado
+                        Container(
+                          width: 4,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(auditoria.estadoActual),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Icono de la izquierda (más compacto)
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(6),
+                        const SizedBox(width: 8),
+                        // Icono de la izquierda (más compacto)
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.description,
+                            color: Colors.grey[600],
+                            size: 20,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.description,
-                          color: Colors.grey[600],
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Contenido principal
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Columna izquierda: Título, Creación, Auditoría
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(width: 12),
+                        // Contenido principal
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Columna izquierda: Título, Creación, Auditoría
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Título de la auditoría (más compacto)
+                                    Text(
+                                      auditoria.titulo ?? 'Sin título',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    // Fecha de creación
+                                    Text(
+                                      'Creación: ${_formatDate(auditoria.fecCre?.toIso8601String())}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Cantidad de detalles
+                                    Text(
+                                      '${auditoria.cantidad} detalles',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Columna derecha: Total, Estado
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  // Título de la auditoría (más compacto)
+                                  // Total en PEN (más compacto)
                                   Text(
-                                    auditoria.titulo ?? 'Sin título',
+                                    '${_getTotal(auditoria)} PEN',
                                     style: const TextStyle(
                                       fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
-                                  // Fecha de creación
-                                  Text(
-                                    'Creación: ${_formatDate(auditoria.fecCre?.toIso8601String())}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
+                                  // Estado
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  // Cantidad de detalles
-                                  Text(
-                                    '${auditoria.cantidad} detalles',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
+                                    decoration: BoxDecoration(
+                                      color: _getStatusColor(
+                                        auditoria.estadoActual,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      auditoria.estadoActual ?? 'Sin estado',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                            // Columna derecha: Total, Estado
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                // Total en PEN (más compacto)
-                                Text(
-                                  '${_getTotal(auditoria)} PEN',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                // Estado
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(
-                                      auditoria.estadoActual,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    auditoria.estadoActual ?? 'Sin estado',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
+            );
+          } catch (e, st) {
+            debugPrint('Error building auditoria item: $e\n$st');
+            return Card(
+              color: Colors.red.shade50,
+              child: ListTile(
+                title: const Text('Error al mostrar auditoría'),
+                subtitle: Text(e.toString()),
+              ),
+            );
+          }
         },
       ),
     );
@@ -276,12 +287,29 @@ class InformesAuditoriaList extends StatelessWidget {
   ) {
     switch (action) {
       case 'ver':
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => AuditoriaDetalleModal(
-            informe: auditoria,
-          ), // Usar el modal adecuado
-        );
+        try {
+          showDialog(
+            context: context,
+            builder: (BuildContext context) => AuditoriaDetalleModal(
+              informe: auditoria,
+            ), // Usar el modal adecuado
+          );
+        } catch (e, st) {
+          debugPrint('Error opening AuditoriaDetalleModal: $e\n$st');
+          showDialog(
+            context: context,
+            builder: (BuildContext ctx) => AlertDialog(
+              title: const Text('Error'),
+              content: Text('No se pudo abrir el detalle: $e'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
         break;
       case 'editar':
         onAuditoriaUpdated(auditoria);
