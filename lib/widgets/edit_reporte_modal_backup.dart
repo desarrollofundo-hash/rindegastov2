@@ -321,7 +321,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.receipt_long, color: Colors.white, size: 28),
+          const Icon(Icons.receipt_long, color: Colors.white, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -346,9 +346,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
           if (!_isEditMode)
             IconButton(
               onPressed: () {
-                print('📝 Activando modo edición');
-                print('Políticas disponibles: ${_politicas.length}');
-                print('Política actual: $_selectedPolitica');
                 setState(() {
                   _isEditMode = true;
                 });

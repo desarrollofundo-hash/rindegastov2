@@ -56,44 +56,46 @@ class InformesReporteList extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             child: Card(
-              elevation: 4,
+              color: Colors.white,
+              elevation: 2,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
-              margin: const EdgeInsets.symmetric(vertical: 4),
+              margin: const EdgeInsets.symmetric(vertical: 2),
               child: InkWell(
                 onTap: () => _handleMenuAction(context, 'ver', inf),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   child: IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Barra lateral de color que indica el estado
+                        // Barra lateral de color que indica el estado (más delgada)
                         Container(
-                          width: 6,
+                          width: 4,
                           decoration: BoxDecoration(
                             color: _getStatusColor(inf.estadoActual),
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(3),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        // Icono de la izquierda
+                        const SizedBox(width: 8),
+                        // Icono de la izquierda (más compacto)
                         Container(
-                          width: 40,
-                          height: 40,
+                          width: 36,
+                          height: 36,
                           decoration: BoxDecoration(
                             color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(6),
+                            backgroundBlendMode: BlendMode.multiply,
                           ),
                           child: Icon(
                             Icons.description,
                             color: Colors.grey[600],
-                            size: 24,
+                            size: 20,
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
                         // Contenido principal
                         Expanded(
                           child: Row(
@@ -105,12 +107,12 @@ class InformesReporteList extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Título del informe
+                                    // Título del informe (más compacto)
                                     Text(
                                       inf.titulo ?? 'Sin título',
                                       style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
                                         color: Colors.black87,
                                       ),
                                       maxLines: 1,
@@ -121,7 +123,7 @@ class InformesReporteList extends StatelessWidget {
                                     Text(
                                       'Creación: ${_formatDate(inf.fecCre)}',
                                       style: TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 12,
                                         color: Colors.grey[600],
                                       ),
                                     ),
@@ -130,7 +132,7 @@ class InformesReporteList extends StatelessWidget {
                                     Text(
                                       '${inf.cantidad} gastos',
                                       style: const TextStyle(
-                                        fontSize: 16,
+                                        fontSize: 14,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -141,11 +143,11 @@ class InformesReporteList extends StatelessWidget {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  // Total en PEN
+                                  // Total en PEN (más compacto)
                                   Text(
                                     '${inf.total.toStringAsFixed(2)} PEN',
                                     style: const TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.blue,
                                     ),

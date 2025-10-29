@@ -80,33 +80,44 @@ class InformesAuditoriaList extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             child: Card(
-              elevation: 4,
+              color: Colors.white,
+              elevation: 2,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
               ),
-              margin: const EdgeInsets.symmetric(vertical: 4),
+              margin: const EdgeInsets.symmetric(vertical: 2),
               child: InkWell(
                 onTap: () => _handleMenuAction(context, 'ver', auditoria),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(12),
                 child: Padding(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(8),
                   child: Row(
                     children: [
-                      // Icono de la izquierda
+                      // Barra lateral de color que indica el estado
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: 4,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(auditoria.estadoActual),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Icono de la izquierda (más compacto)
+                      Container(
+                        width: 36,
+                        height: 36,
                         decoration: BoxDecoration(
                           color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Icon(
                           Icons.description,
                           color: Colors.grey[600],
-                          size: 24,
+                          size: 20,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       // Contenido principal
                       Expanded(
                         child: Row(
@@ -118,12 +129,12 @@ class InformesAuditoriaList extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Título de la auditoría
+                                  // Título de la auditoría (más compacto)
                                   Text(
                                     auditoria.titulo ?? 'Sin título',
                                     style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
                                       color: Colors.black87,
                                     ),
                                     maxLines: 1,
@@ -134,7 +145,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                   Text(
                                     'Creación: ${_formatDate(auditoria.fecCre?.toIso8601String())}',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 12,
                                       color: Colors.grey[600],
                                     ),
                                   ),
@@ -143,7 +154,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                   Text(
                                     '${auditoria.cantidad} detalles',
                                     style: const TextStyle(
-                                      fontSize: 16,
+                                      fontSize: 14,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -154,11 +165,11 @@ class InformesAuditoriaList extends StatelessWidget {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                // Total en PEN
+                                // Total en PEN (más compacto)
                                 Text(
                                   '${_getTotal(auditoria)} PEN',
                                   style: const TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blue,
                                   ),

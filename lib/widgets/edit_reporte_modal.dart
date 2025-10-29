@@ -689,7 +689,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                                 (_apiEvidencia == null ||
                                     _apiEvidencia!.isEmpty))
                             ? 'Seleccionar'
-                            : 'Cambiar archivo',
+                            : 'Cambiar ',
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isEditMode ? Colors.red : Colors.grey,
@@ -1418,6 +1418,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         moneda: _monedaController.text,
         rucCliente: _rucClienteController.text,
         nota: _notaController.text,
+
         // Movilidad
         motivoViaje: _motivoViajeController.text,
         lugarOrigen: _origenController.text,
@@ -1729,8 +1730,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
   Widget _buildMovilidadSection() {
     final politica = _politicaController.text.toLowerCase();
     if (!politica.contains('movilidad')) return const SizedBox.shrink();
+    // Fondo y estilos para la sección de Movilidad
+    final Color sectionBg = Colors.white; // color de fondo de la sección
 
     return Card(
+      color: sectionBg,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: AbsorbPointer(
@@ -1740,8 +1746,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.directions_car, color: Colors.blue),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.directions_car, color: Colors.orange),
+                  const SizedBox(width: 14),
                   const Text(
                     'Detalles de Movilidad',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -1751,11 +1757,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   if (!_isEditMode)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
+                        horizontal: 14,
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
+                        color: sectionBg.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey.shade300),
                       ),
@@ -1775,7 +1781,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.place),
                   filled: true,
-                  fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                  fillColor: _isEditMode
+                      ? Colors.white
+                      : sectionBg.withOpacity(0.12),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1787,7 +1795,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.flag),
                   filled: true,
-                  fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                  fillColor: _isEditMode
+                      ? Colors.white
+                      : sectionBg.withOpacity(0.12),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1799,7 +1809,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.event_note),
                   filled: true,
-                  fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                  fillColor: _isEditMode
+                      ? Colors.white
+                      : sectionBg.withOpacity(0.12),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1811,7 +1823,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.directions_transit),
                   filled: true,
-                  fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                  fillColor: _isEditMode
+                      ? Colors.white
+                      : sectionBg.withOpacity(0.12),
                 ),
               ),
             ],
@@ -1820,6 +1834,41 @@ class _EditReporteModalState extends State<EditReporteModal> {
       ),
     );
   }
+  /* 
+  /// Construir un campo de texto personalizado
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label,
+    IconData icon,
+    TextInputType keyboardType, {
+    bool isRequired = false,
+    bool readOnly = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      decoration: InputDecoration(
+        labelText: isRequired ? '$label *' : label,
+        prefixIcon: Icon(icon),
+        border: const UnderlineInputBorder(),
+        filled: true,
+        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
+      ),
+      validator: isRequired
+          ? (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '$label es obligatorio';
+              }
+              if (label == 'Total' && double.tryParse(value) == null) {
+                return 'Ingrese un número válido';
+              }
+              return null;
+            }
+          : null,
+    );
+  }
+ */
 
   /// Construir un campo de texto personalizado
   Widget _buildTextField(
@@ -1837,9 +1886,27 @@ class _EditReporteModalState extends State<EditReporteModal> {
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
+        fillColor: readOnly ? Colors.white : Colors.white,
+
+        // 👇 aquí cambiamos a underline y personalizamos bordes
+        border: const UnderlineInputBorder(),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade400), // color normal
+          borderRadius: BorderRadius.circular(16),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          /* borderSide: BorderSide(
+            color: Colors.orange,
+            width: 2,
+          ), */
+          // color al enfocar
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(
+            color: Colors.white,
+          ), // color cuando es readOnly
+        ),
       ),
       validator: isRequired
           ? (value) {
