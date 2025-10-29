@@ -27,13 +27,13 @@
             "type": "dart",
             "program": "lib/main.dart",
             "deviceId": "onv845vkcivgwsmf"
-        },
+        }, /*
         {
             "name": "SM A1555M",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
             "deviceId": "RF8X20GFZFB"
-        },
+        },*/
     ]
 }

@@ -238,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     });
 
     // DEBUG: confirmar que el pull-to-refresh dispara la carga
-    debugPrint('Refreshing auditoria...');
 
     try {
       final auditoria = await _apiService.getReportesRendicionAuditoria(
@@ -376,6 +375,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.white,
+        
         appBar: CustomAppBar(
           hintText: "Buscar Informes...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
@@ -434,7 +434,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           tabViews: [
             InformesAuditoriaList(
               auditorias: _auditoria,
-              auditoria: [],
+                auditoria: [],
               onAuditoriaUpdated: _actualizarAuditoria,
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
