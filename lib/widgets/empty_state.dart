@@ -16,33 +16,34 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        const SizedBox(height: 100),
-        Center(
-          child: Column(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 64, color: Colors.grey),
-                const SizedBox(height: 16),
-              ],
-              Text(
-                message,
-                style: const TextStyle(color: Colors.grey, fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-              if (buttonText != null && onButtonPressed != null) ...[
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: Text(buttonText!),
-                  onPressed: onButtonPressed,
-                ),
-              ],
+    // Usar Column centrado en lugar de ListView para evitar anidar
+    // scrollables (causa de crash cuando el padre ya es un ScrollView).
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 64, color: Colors.grey),
+              const SizedBox(height: 16),
             ],
-          ),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.grey, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            if (buttonText != null && onButtonPressed != null) ...[
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add),
+                label: Text(buttonText!),
+                onPressed: onButtonPressed,
+              ),
+            ],
+          ],
         ),
-      ],
+      ),
     );
   }
 }
