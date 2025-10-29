@@ -194,7 +194,7 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Nuevo Informe',
+                        'NUEVO INFORME',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,

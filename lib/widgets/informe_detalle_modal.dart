@@ -194,7 +194,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text(
-              'Detalle informe',
+              'INFORME DETALLE',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -561,16 +561,18 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                       // Botón Editar
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => EditarInformeModal(
-                                  informe: widget.informe,
-                                  gastos: _detalles,
-                                ),
-                              ),
-                            );
-                          },
+                          onPressed: widget.informe.estadoActual == 'EN INFORME'
+                              ? () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) => EditarInformeModal(
+                                        informe: widget.informe,
+                                        gastos: _detalles,
+                                      ),
+                                    ),
+                                  );
+                                }
+                              : null, // 🔒 Deshabilitado si no está en estado 'Informe'
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
                               color: Colors.blue,
@@ -581,10 +583,12 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Editar informe',
                             style: TextStyle(
-                              color: Colors.blue,
+                              color: widget.informe.estadoActual == 'EN INFORME'
+                                  ? Colors.blue
+                                  : Colors.grey, // gris cuando está bloqueado
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -596,9 +600,14 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                       // Botón Enviar
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: _enviarInforme,
+                          onPressed: widget.informe.estadoActual == 'EN INFORME'
+                              ? _enviarInforme
+                              : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor:
+                                widget.informe.estadoActual == 'EN INFORME'
+                                ? Colors.green
+                                : Colors.grey, // gris si bloqueado
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
