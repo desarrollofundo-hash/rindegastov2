@@ -1,13 +1,8 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
-import 'package:flu2/models/reporte_model.dart';
-import 'package:flu2/screens/informes/detalle_informe_screen.dart';
 import 'package:flu2/widgets/editar_auditoria_modal.dart';
 import 'package:flutter/material.dart';
 import '../models/reporte_auditoria_detalle.dart';
 import '../services/api_service.dart';
-import '../services/user_service.dart';
-import '../services/company_service.dart';
-import 'editar_informe_modal.dart';
 
 class AuditoriaDetalleModal extends StatefulWidget {
   final ReporteAuditoria informe;

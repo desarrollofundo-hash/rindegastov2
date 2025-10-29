@@ -44,6 +44,15 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
     super.dispose();
   }
 
+  /// Maneja el cierre del modal asegurando que se retire el foco
+  /// para que no vuelva al campo de búsqueda de la pantalla padre.
+  void _handleCancel() {
+    // Retirar cualquier foco activo
+    FocusScope.of(context).unfocus();
+    // Delegar a la callback que cerrará el modal (normalmente Navigator.pop)
+    widget.onCancel();
+  }
+
   Future<void> _loadPoliticas() async {
     // Asegurar que el widget esté montado antes de llamar a setState
     if (!mounted) return;
@@ -115,7 +124,11 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
 
         widget.onInformeCreated(nuevoInforme);
         // Cerrar el modal una vez que el flujo se completó correctamente
-        if (mounted) Navigator.of(context).pop();
+        if (mounted) {
+          // Retirar foco antes de cerrar para evitar que vuelva al campo de búsqueda
+          FocusScope.of(context).unfocus();
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       // Sólo actualizar estado y mostrar errores si el State sigue montado
@@ -196,7 +209,7 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                   ),
                 ),
                 IconButton(
-                  onPressed: widget.onCancel,
+                  onPressed: _handleCancel,
                   icon: const Icon(Icons.close, color: Colors.white),
                 ),
               ],
@@ -219,7 +232,7 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _isCreatingInforme ? null : widget.onCancel,
+                    onPressed: _isCreatingInforme ? null : _handleCancel,
                     icon: const Icon(Icons.cancel),
                     label: const Text('Cancelar'),
                     style: OutlinedButton.styleFrom(

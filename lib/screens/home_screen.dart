@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/widgets/informes_auditoria_list.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -353,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         appBar: CustomAppBar(
-          hintText: "Buscar reportes...",
+          hintText: "Buscar Reportes...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
           notificationCount: _notificaciones,
           onNotificationPressed: _decrementarNotificaciones,
@@ -378,7 +377,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: CustomAppBar(
-          hintText: "Buscar informes...",
+          hintText: "Buscar Informes...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
           notificationCount: _notificaciones,
           onNotificationPressed: _decrementarNotificaciones,
