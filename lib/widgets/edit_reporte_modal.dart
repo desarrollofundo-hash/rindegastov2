@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:printing/printing.dart';
-import 'package:pdf_render/pdf_render.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/reporte_model.dart';
 import '../models/categoria_model.dart';
@@ -113,9 +112,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
       widget.reporte.glosa,
     ];
     for (final v in candidates) {
-      if (v != null && v.trim().toUpperCase().contains('EN INFORME'))
-        return true;
+      if (v != null) {
+        final value = v.trim().toUpperCase();
+        if (value.contains('EN INFORME') || value == 'EN AUDITORIA') {
+          return true;
+        }
+      }
     }
+    return false;
+
     return false;
   }
 
@@ -1411,6 +1416,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
   /// `_apiEvidencia` o (si es una URL) intenta descargar bytes vía API.
   Future<void> _handleTapEvidencia() async {
     try {
+      
+      String nombreArchivo =
+          '${_rucController.text}_${_serieController.text}_${_numeroController.text}';
+
       // 1️⃣ Si hay un archivo local seleccionado
       if (_selectedImage != null) {
         final path = _selectedImage!.path;
@@ -1442,7 +1451,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
               bytes[3] == 0x46;
 
           if (isPdf) {
-            await _abrirPdfExterno(bytes, 'documento.pdf');
+            await _abrirPdfExterno(bytes, nombreArchivo + '.pdf');
             return;
           }
 
