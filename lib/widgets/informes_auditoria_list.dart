@@ -221,6 +221,7 @@ class InformesAuditoriaList extends StatelessWidget {
         },
       ),
     );
+    
   }
 
   String _formatDate(String? fecha) {

@@ -258,6 +258,7 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
 
   Widget _buildDatosGeneralesSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -279,8 +280,12 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
               focusNode: _focusProveedor,
               decoration: const InputDecoration(
                 labelText: 'Proveedor *',
-                border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.business),
+                border: UnderlineInputBorder(), // 👈 cambia aquí
+                focusedBorder: UnderlineInputBorder(
+                  // 👈 opcional: color al enfocar
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -289,6 +294,7 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                 return null;
               },
             ),
+
             const SizedBox(height: 12),
             Row(
               children: [
@@ -297,7 +303,7 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                     controller: controller.fechaController,
                     decoration: const InputDecoration(
                       labelText: 'Fecha *',
-                      border: OutlineInputBorder(),
+                      border: UnderlineInputBorder(),
                       prefixIcon: Icon(Icons.calendar_today),
                     ),
                     readOnly: true,
@@ -329,7 +335,7 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                     controller: controller.totalController,
                     decoration: const InputDecoration(
                       labelText: 'Total *',
-                      border: OutlineInputBorder(),
+                      border: UnderlineInputBorder(),
                       prefixIcon: Icon(Icons.attach_money),
                     ),
                     keyboardType: TextInputType.number,
@@ -373,6 +379,7 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
 
   Widget _buildDatosPersonalizadosSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -448,10 +455,28 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
               )
             else
               DropdownButtonFormField<DropdownOption>(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Categoría *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.category),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Colors.grey, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.category),
                 ),
                 value: controller.selectedCategoria,
                 items: controller.categoriasMovilidad.map((categoria) {
@@ -508,10 +533,28 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
               )
             else
               DropdownButtonFormField<DropdownOption>(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Tipo Gasto *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.receipt),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Colors.grey, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.receipt),
                 ),
                 value: controller.selectedTipoGasto,
                 items: controller.tiposGasto.map((tipo) {
@@ -534,15 +577,38 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
             TextFormField(
               controller: controller.rucController,
               focusNode: _focusRuc,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'RUC Proveedor *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.business),
+                prefixIcon: const Icon(Icons.business),
+
+                // 👇 Borde redondeado en lugar de underline recto
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Colors.grey, width: 2),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
               ),
               keyboardType: TextInputType.number,
               validator: (value) {
-                if (value == null || value.trim().isEmpty)
+                if (value == null || value.trim().isEmpty) {
                   return 'RUC es obligatorio';
+                }
                 return null;
               },
             ),
@@ -554,7 +620,25 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
               enabled: false,
               decoration: InputDecoration(
                 labelText: 'RUC Cliente',
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Colors.grey, width: 2),
+                ),
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: Icon(Icons.info_outline, color: Colors.grey[600]),
                 helperText: 'RUC de la empresa seleccionada',
@@ -570,10 +654,34 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                 Expanded(
                   child: TextFormField(
                     controller: controller.serieFacturaController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Serie *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.receipt_long),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 2,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.receipt_long),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty)
@@ -586,10 +694,34 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                 Expanded(
                   child: TextFormField(
                     controller: controller.numeroFacturaController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Número *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.confirmation_number),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 2,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.confirmation_number),
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
@@ -610,11 +742,35 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                   child: TextFormField(
                     controller: controller.tipoDocumentoController,
                     focusNode: _focusTipoDocumento,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Tipo Documento *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.description),
-                      hintText: 'Se llena automáticamente desde QR',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 2,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.description),
+                      hintText: 'Se llena automáticamente del QR',
                     ),
                     readOnly: true,
                     validator: (value) {
@@ -632,11 +788,29 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
             TextFormField(
               controller: controller.notaController,
               focusNode: _focusNota,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Nota',
                 hintText: 'Observaciones o comentarios',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.note_add),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Colors.grey, width: 2),
+                ),
+                prefixIcon: const Icon(Icons.note_add),
               ),
               maxLines: 3,
             ),
@@ -648,6 +822,7 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
 
   Widget _buildMovilidadSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -667,10 +842,28 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
             TextFormField(
               controller: controller.origenController,
               focusNode: _focusOrigen,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Origen *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.my_location),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Colors.grey, width: 2),
+                ),
+                prefixIcon: const Icon(Icons.my_location),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -692,10 +885,28 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                     () => _ensureVisibleOnFocus(_focusDestino),
                   );
                 },
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Destino *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.location_on),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Colors.grey, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.location_on),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -717,10 +928,28 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
                     () => _ensureVisibleOnFocus(_focusMotivo),
                   );
                 },
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Motivo del Viaje *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.description),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: const BorderSide(color: Colors.grey, width: 2),
+                  ),
+                  prefixIcon: const Icon(Icons.description),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -735,10 +964,28 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
               value: controller.tipoTransporteController.text.isEmpty
                   ? 'Taxi'
                   : controller.tipoTransporteController.text,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Tipo de Transporte',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.directions_car),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Colors.grey, width: 2),
+                ),
+                prefixIcon: const Icon(Icons.directions_car),
               ),
               items: const [
                 DropdownMenuItem(value: 'Taxi', child: Text('Taxi')),
@@ -760,6 +1007,7 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
 
   Widget _buildArchivoSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -878,8 +1126,9 @@ class _NuevoGastoMovilidadState extends State<NuevoGastoMovilidad> {
   /// Construir la sección del lector de código SUNAT
   Widget _buildLectorSunatSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(6),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

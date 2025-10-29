@@ -13,9 +13,9 @@
             "request": "attach",
             "type": "dart",
             "deviceId": "emulator-5554"
-        }, 
+        },  */
         {
-            "name": "SM A1555M",
+            "name": "SM A055M",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",

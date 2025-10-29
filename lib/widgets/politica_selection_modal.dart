@@ -30,17 +30,23 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
   }
 
   Future<void> _loadPoliticas() async {
+    // Marcar carga; esta llamada ocurre en initState por lo que el widget
+    // está montado en este punto.
     setState(() {
       _isLoading = true;
       _error = null;
     });
     try {
       final politicas = await _apiService.getRendicionPoliticas();
+      // Después de una operación asíncrona debemos comprobar `mounted` antes
+      // de llamar a setState para evitar el error "setState() called after dispose".
+      if (!mounted) return;
       setState(() {
         _politicas = politicas.map((e) => e.value.toString()).toList();
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
