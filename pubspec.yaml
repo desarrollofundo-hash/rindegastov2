@@ -49,10 +49,14 @@ flutter:
       fonts:
         - asset: assets/fonts/CascadiaCode-VariableFont_wght.ttf
         - asset: assets/fonts/CascadiaCode-Italic-VariableFont_wght.ttf
-    - family: Parkinsonianos
-      fonts:
-        - asset: assets/fonts/Parkinsonianos-Regular.ttf
-        - asset: assets/fonts/Parkinsonianos-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Parkinsonianos-Italic.ttf
-          style: italic
+    # Parkinsonianos font removed because the TTF files are not present in
+    # assets/fonts/. If you want to use this custom font, add the following
+    # files into `assets/fonts/` and uncomment the block below:
+    #
+    # - family: Parkinsonianos
+    #   fonts:
+    #     - asset: assets/fonts/Parkinsonianos-Regular.ttf
+    #     - asset: assets/fonts/Parkinsonianos-Bold.ttf
+    #       weight: 700
+    #     - asset: assets/fonts/Parkinsonianos-Italic.ttf
+    #       style: italic
