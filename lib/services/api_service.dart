@@ -626,8 +626,8 @@ class ApiService {
 
       // Construir la URL con los parámetros dinámicos
       final uri = Uri.parse(
-        '$baseUrl/reporte/rendicioninforme_detalle',
-      ).replace(queryParameters: {'idinf': idAd});
+        '$baseUrl/reporte/rendicionauditoria_detalle',
+      ).replace(queryParameters: {'idad': idAd});
       /* 
       debugPrint('📡 Realizando petición HTTP GET...');
       debugPrint('🌍 URL final: $uri');

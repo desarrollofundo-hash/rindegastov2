@@ -1,4 +1,5 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/editar_auditoria_modal.dart';
 import 'package:flutter/material.dart';
 import '../models/reporte_auditoria_detalle.dart';
@@ -121,7 +122,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           "useReg": detalless.idUser != 0
               ? detalless.idUser
               : widget.informe.idUser,
-          "hostname": detalless.hostname ?? '',
+          "hostname": 'FLUTTER',
           "fecEdit": DateTime.now().toIso8601String(),
           "useEdit": detalless.idUser != 0
               ? detalless.idUser
@@ -195,7 +196,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Detalle Auditoria',
+                  'DETALLE AUDITORÍA',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -207,7 +208,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Rendidor: ',
+                      'RENDIDOR: ',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.blue,
@@ -216,7 +217,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                       ),
                     ),
                     Text(
-                      widget.informe.dni ?? 'S/N', // ← valor dinámico
+                      widget.informe.usuario.toString(), // ← valor dinámico
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -288,7 +289,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    _formatDate(
+                                    formatDate(
                                       widget.informe.fecCre
                                               ?.toIso8601String() ??
                                           '',
@@ -378,12 +379,10 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: _getStatusColor(
-                                  widget.informe.estadoActual,
-                                ).withOpacity(0.2),
+                                color: Colors.transparent,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: _getStatusColor(
+                                  color: getStatusColor(
                                     widget.informe.estadoActual,
                                   ),
                                   width: 1,
@@ -392,9 +391,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                               child: Text(
                                 widget.informe.estadoActual ?? 'Borrador',
                                 style: TextStyle(
-                                  color: _getStatusColor(
-                                    widget.informe.estadoActual,
-                                  ),
+                                  color: Colors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -487,7 +484,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                   ),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'No hay gastos en este informe',
+                                    'No hay gastos en esta auditoria',
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.grey,
@@ -703,14 +700,13 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                 ),
                 const SizedBox(height: 0),
                 Text(
-                  detalle.estadoActual != null &&
-                          detalle.estadoActual!.isNotEmpty
-                      ? '${detalle.estadoActual}'
+                  detalle.categoria != null && detalle.categoria!.isNotEmpty
+                      ? '${detalle.categoria}'
                       : 'Sin categoría',
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 Text(
-                  _formatDate(detalle.fecCre),
+                  formatDate(detalle.fecha),
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ],
@@ -722,7 +718,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                detalle.idAd as String,
+                '${detalle.total} ${detalle.moneda ?? 'PEN'}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -733,14 +729,14 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(detalle.estadoActual).withOpacity(0.2),
+                  color: getStatusColor(detalle.estadoActual),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   detalle.estadoActual ?? 'Sin estado',
                   style: TextStyle(
                     fontSize: 12,
-                    color: _getStatusColor(detalle.estadoActual),
+                    color: Colors.white,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -816,71 +812,5 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         ],
       ),
     );
-  }
-
-  String _formatDate(String? dateString) {
-    if (dateString == null || dateString.isEmpty) {
-      return '----';
-    }
-
-    try {
-      // Si viene como timestamp ISO (2025-10-06T11:14:39.492431), extraer solo la fecha
-      if (dateString.contains('T')) {
-        final datePart = dateString.split('T')[0];
-        return datePart; // Ya está en formato YYYY-MM-DD
-      }
-
-      // Si viene en formato AÑO,MES,DIA (separado por comas)
-      if (dateString.contains(',')) {
-        final parts = dateString.split(',');
-        if (parts.length == 3) {
-          final year = parts[0].trim();
-          final month = parts[1].trim().padLeft(2, '0');
-          final day = parts[2].trim().padLeft(2, '0');
-          return '$year-$month-$day';
-        }
-      }
-
-      // Si viene en formato DD/MM/YYYY, convertir a YYYY-MM-DD
-      if (dateString.contains('/')) {
-        final parts = dateString.split('/');
-        if (parts.length == 3) {
-          final day = parts[0].padLeft(2, '0');
-          final month = parts[1].padLeft(2, '0');
-          final year = parts[2];
-          return '$year-$month-$day';
-        }
-      }
-
-      // Si ya está en formato ISO simple (YYYY-MM-DD), devolverlo tal como está
-      if (dateString.contains('-') &&
-          dateString.length >= 8 &&
-          dateString.length <= 10) {
-        return dateString;
-      }
-
-      return dateString;
-    } catch (e) {
-      return '----';
-    }
-  }
-
-  Color _getStatusColor(String? estado) {
-    switch (estado?.toLowerCase()) {
-      case 'aprobado':
-      case 'completado':
-        return Colors.green;
-      case 'borrador':
-      case 'pendiente':
-        return Colors.orange;
-      case 'rechazado':
-      case 'cancelado':
-        return Colors.red;
-      case 'en revision':
-      case 'en proceso':
-        return Colors.blue;
-      default:
-        return const Color.fromARGB(255, 255, 254, 254);
-    }
   }
 }

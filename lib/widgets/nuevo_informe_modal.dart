@@ -194,7 +194,7 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'Nuevo Informe',
+                        'NUEVO INFORME',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -349,8 +349,22 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
               },
             ),
 
-            const SizedBox(height: 3),
+            const SizedBox(height: 1),
 
+            // Dropdown de políticas
+            const Text(
+              'Política Aplicable',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            _buildPoliticasDropdown(),
+
+            const SizedBox(height: 16),
             // Campo de nota
             TextFormField(
               controller: _notaController,
@@ -385,19 +399,6 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
               keyboardType: TextInputType.multiline,
               textCapitalization: TextCapitalization.sentences,
             ),
-
-            // Dropdown de políticas
-            const Text(
-              'Política Aplicable',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            _buildPoliticasDropdown(),
 
             // Información adicional
 

@@ -305,7 +305,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ruc: CompanyService().companyRuc,
       );
       if (!mounted) return;
-/* 
+      /* 
       setState(() {
         _revision = _auditoria;
         _allRevision = List.from(revision);
@@ -447,7 +447,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.white,
-        
+
         appBar: CustomAppBar(
           hintText: "Buscar Informes...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
@@ -506,7 +506,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           tabViews: [
             InformesAuditoriaList(
               auditorias: _auditoria,
-                auditoria: [],
+              auditoria: [],
               onAuditoriaUpdated: _actualizarAuditoria,
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
@@ -680,13 +680,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(5)),
       ),
       builder: (BuildContext context) => NuevoInformeModal(
         onInformeCreated: (nuevoInforme) {
           // Después de crear el informe, recargamos la lista
           _loadInformes();
-          _mostrarSnackInformeCreado(nuevoInforme);
         },
         onCancel: () {
           Navigator.of(context).pop();
@@ -698,29 +697,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateFabOverlay());
   }
 
-  void _mostrarSnackInformeCreado(Gasto nuevo) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text("✅ Informe registrado con éxito"),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-        action: SnackBarAction(
-          label: "Ver",
-          textColor: Colors.white,
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => DetalleInformeScreen(informe: nuevo),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
   // ===== Overlay FAB helpers =====
   OverlayEntry _createFabOverlay() {
     return OverlayEntry(
@@ -728,9 +704,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         // Calcular offset para que el FAB quede por encima de la barra inferior
         final double safeBottom = MediaQuery.of(context).viewPadding.bottom;
         // Altura estimada de la barra inferior (NavigationBarTheme height = 16)
-        const double bottomNavHeight = 10.0;
+        const double bottomNavHeight = 56.0;
         // Margen extra entre la barra y el FAB (aumentado para subir el botón)
-        const double extraMargin = 25.0;
+        const double extraMargin = 20.0;
 
         final double bottomOffset = safeBottom + bottomNavHeight + extraMargin;
 

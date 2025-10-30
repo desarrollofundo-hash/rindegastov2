@@ -1,3 +1,4 @@
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/empty_state.dart';
 import 'package:flu2/widgets/informe_detalle_modal.dart';
 import 'package:flutter/material.dart';
@@ -75,7 +76,7 @@ class InformesReporteList extends StatelessWidget {
                         Container(
                           width: 4,
                           decoration: BoxDecoration(
-                            color: _getStatusColor(inf.estadoActual),
+                            color: getStatusColor(inf.estadoActual),
                             borderRadius: BorderRadius.circular(3),
                           ),
                         ),
@@ -160,7 +161,7 @@ class InformesReporteList extends StatelessWidget {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(inf.estadoActual),
+                                      color: getStatusColor(inf.estadoActual),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
@@ -264,22 +265,6 @@ class InformesReporteList extends StatelessWidget {
     }
 
     return fecha;
-  }
-
-  //COLORES DE ESTADO
-  Color _getStatusColor(String? estado) {
-    switch (estado) {
-      case 'EN AUDITORIA':
-        return Colors.blue;
-      case 'Enviado':
-        return Colors.blue;
-      case 'Aprobado':
-        return Colors.green;
-      case 'Rechazado':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
   }
 
   void _handleMenuAction(

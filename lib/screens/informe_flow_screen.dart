@@ -892,7 +892,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
           ),
           Expanded(
             child: Text(
-              'Nuevo informe',
+              'NUEVO INFORME',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
