@@ -7,6 +7,7 @@ import '../models/reporte_informe_detalle.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
+import '../utils/navigation_utils.dart';
 
 class EditarInformeModal extends StatefulWidget {
   final ReporteInforme informe;
@@ -395,15 +396,15 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.shade100,
+                                  color: getStatusColor(gasto.estadoactual),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Text(
-                                  'En informe',
+                                child: Text(
+                                  gasto.estadoactual ?? 'PENDIENTE',
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.amber,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
