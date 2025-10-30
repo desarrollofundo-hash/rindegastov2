@@ -1,3 +1,4 @@
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/empty_state.dart';
 import 'package:flutter/material.dart';
 import '../models/reporte_informe_detalle.dart';
@@ -145,9 +146,7 @@ class InformeReporteListDetalle extends StatelessWidget {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: _getStatusColor(
-                                      detalle.estadoactual,
-                                    ),
+                                    color: getStatusColor(detalle.estadoactual),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
@@ -162,7 +161,7 @@ class InformeReporteListDetalle extends StatelessWidget {
                                 const SizedBox(height: 4),
                                 // Fecha del gasto
                                 Text(
-                                  _formatDate(detalle.fecha),
+                                  formatDate(detalle.fecha),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey[600],
@@ -183,60 +182,6 @@ class InformeReporteListDetalle extends StatelessWidget {
         },
       ),
     );
-  }
-
-  String _formatDate(String? fecha) {
-    if (fecha == null || fecha.isEmpty) {
-      return 'Sin fecha';
-    }
-
-    try {
-      // Intentar parsear diferentes formatos de fecha
-      DateTime? dateTime;
-
-      // Formato ISO: 2025-10-04T00:00:00
-      if (fecha.contains('T')) {
-        dateTime = DateTime.tryParse(fecha);
-      }
-      // Formato dd/MM/yyyy
-      else if (fecha.contains('/')) {
-        final parts = fecha.split('/');
-        if (parts.length == 3) {
-          dateTime = DateTime.tryParse(
-            '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}',
-          );
-        }
-      }
-      // Formato yyyy-MM-dd
-      else if (fecha.contains('-')) {
-        dateTime = DateTime.tryParse(fecha);
-      }
-
-      if (dateTime != null) {
-        return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
-      }
-    } catch (e) {
-      // Si hay error en el parseo, devolver la fecha original
-    }
-
-    return fecha;
-  }
-
-  Color _getStatusColor(String? estado) {
-    switch (estado?.toUpperCase()) {
-      case 'EN INFORME':
-        return Colors.blue;
-      case 'APROBADO':
-        return Colors.green;
-      case 'RECHAZADO':
-        return Colors.red;
-      case 'BORRADOR':
-        return Colors.orange;
-      case 'PENDIENTE':
-        return Colors.amber;
-      default:
-        return Colors.grey;
-    }
   }
 
   void _handleMenuAction(
@@ -278,7 +223,7 @@ class InformeReporteListDetalle extends StatelessWidget {
                 _buildDetailRow('Total:', detalle.totalFormatted),
                 _buildDetailRow('IGV:', detalle.igvFormatted),
                 _buildDetailRow('Estado:', detalle.estadoFormatted),
-                _buildDetailRow('Fecha:', _formatDate(detalle.fecha)),
+                _buildDetailRow('Fecha:', formatDate(detalle.fecha)),
                 if (detalle.obs != null && detalle.obs!.isNotEmpty)
                   _buildDetailRow('Observaciones:', detalle.obs!),
               ],

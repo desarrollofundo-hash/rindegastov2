@@ -1508,29 +1508,6 @@ class ReportesListController {
     }
   }
 
-  Color? getEstadoColor(String? estado) {
-    if (estado == null) return Colors.grey[400];
-
-    final s = estado.trim().toUpperCase();
-
-    // Estados específicos por texto completo
-    if (s.contains('EN INFORME')) return Colors.yellow[800];
-    if (s.contains('BORRADOR') || s == 'B') return Colors.grey[500];
-    if (s.contains('ENVIADO') || s == 'E') return Colors.blue[400];
-    if (s.contains('PENDIENTE') || s == 'P' || s.contains('POR'))
-      return Colors.orange[400];
-    if (s.contains('APROBADO') || s == 'C' || s.contains('COMPLET'))
-      return Colors.green[600];
-    if (s.contains('RECHAZADO') || s.contains('RECHAZ')) return Colors.red[600];
-    if (s.contains('ANULADO') || s.contains('CANCEL'))
-      return Colors.redAccent[100];
-    if (s.contains('SYNC') || s == 'S') return Colors.teal[400];
-    if (s.contains('EN AUDITORIA')) return Colors.indigo[400];
-
-    // Fallback
-    return Colors.grey[400];
-  }
-
   // Decodifica QR usando Google ML Kit (BarcodeScanner). Retorna el rawValue
   // del primer barcode encontrado, o null si no se detecta ninguno.
   Future<String?> _decodeQrWithMlKit(String imagePath) async {

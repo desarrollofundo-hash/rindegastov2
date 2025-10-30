@@ -1,4 +1,5 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/reporte_auditoria_detalle.dart';
@@ -66,36 +67,6 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
       }
     }
     return total;
-  }
-
-  String _formatearFechaCorta(String? fecha) {
-    if (fecha == null || fecha.isEmpty) {
-      return DateFormat('yyyy-MM-dd').format(DateTime.now());
-    }
-
-    try {
-      DateTime fechaDateTime;
-      if (fecha.contains('/')) {
-        List<String> partes = fecha.split('/');
-        if (partes.length == 3) {
-          int dia = int.parse(partes[0]);
-          int mes = int.parse(partes[1]);
-          int anio = int.parse(partes[2]);
-          if (anio < 100) anio += 2000;
-          fechaDateTime = DateTime(anio, mes, dia);
-        } else {
-          fechaDateTime = DateTime.now();
-        }
-      } else if (fecha.contains('-')) {
-        fechaDateTime = DateTime.parse(fecha);
-      } else {
-        fechaDateTime = DateTime.now();
-      }
-
-      return DateFormat('yyyy-MM-dd').format(fechaDateTime);
-    } catch (e) {
-      return DateFormat('yyyy-MM-dd').format(DateTime.now());
-    }
   }
 
   @override
@@ -298,7 +269,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  det.estadoActual ?? 'Sin estado',
+                                  det.categoria ?? 'Sin estado',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -306,7 +277,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  _formatearFechaCorta(det.fecha),
+                                  formatDate(det.fecha),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -335,7 +306,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.shade100,
+                                  color: getStatusColor(det.estadoActual),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -343,7 +314,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                   style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.amber,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
