@@ -647,7 +647,6 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       debugPrint('🆔 ID autogenerado obtenido: $idRend');
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
 
-      
       String nombreArchivo =
           '${idRend.toString()}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
 
@@ -1555,7 +1554,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'Por favor complete todos los campos obligatorios (*) e incluya un archivo de evidencia',
+                      'Por favor complete todos los campos ',
                       style: TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.w500,
@@ -1605,9 +1604,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                           ),
                         )
                       : Text(
-                          _isFormValid
-                              ? 'Guardar Gasto'
-                              : 'Complete los campos obligatorios',
+                          _isFormValid ? 'Guardar Gasto' : 'Complete ',
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
