@@ -553,7 +553,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     if (!_isFormValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('❌ Por favor complete todos los campos obligatorios'),
+          content: Text('❌ Por favor complete todos los campos '),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),
@@ -725,7 +725,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       // ✅ SEGUNDO API: Guardar evidencia/archivo usando el idRend del primer API
       final facturaDataEvidencia = {
         "idRend": idRend, // ✅ Usar el ID autogenerado del API principal
-        "evidencia":null,
+        "evidencia": null,
         "obs": driveId,
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
@@ -1668,7 +1668,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
-                      'Por favor complete todos los campos obligatorios (*) e incluya un archivo de evidencia',
+                      'Por favor complete todos los campos ',
                       style: TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.w500,
@@ -1715,7 +1715,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                         ? 'Guardando...'
                         : _isFormValid
                         ? 'Guardar Factura'
-                        : 'Complete los campos obligatorios',
+                        : 'Complete ',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isFormValid
