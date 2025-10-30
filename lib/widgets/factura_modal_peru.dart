@@ -12,6 +12,7 @@ import '../services/api_service.dart';
 import '../screens/home_screen.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
+import 'package:path/path.dart' as p;
 
 /// Widget modal personalizado para mostrar y editar datos de factura peruana
 class FacturaModalPeru extends StatefulWidget {
@@ -710,8 +711,12 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       debugPrint('🆔 ID autogenerado obtenido: $idRend');
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
 
+      final extension = p.extension(
+        _selectedImage!.path,
+      ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
+
       String nombreArchivo =
-          '${idRend.toString()}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
+          '${idRend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extension';
 
       final driveId = await _apiService.subirArchivo(
         _selectedImage!.path,

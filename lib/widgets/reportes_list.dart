@@ -1,4 +1,5 @@
 // ignore_for_file: avoid_print
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import '../controllers/reportes_list_controller.dart';
@@ -361,11 +362,14 @@ class _ReportesListState extends State<ReportesList> {
                                             color: Colors.grey,
                                           ),
                                           const SizedBox(width: 4),
-                                          Text(
-                                            fechaCorta,
-                                            style: const TextStyle(
-                                              fontSize: 11,
-                                              color: Colors.black45,
+                                          Expanded(
+                                            child: Text(
+                                              formatDate(reporte.fecha),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.black54,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                         ],
@@ -406,9 +410,7 @@ class _ReportesListState extends State<ReportesList> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: _controller.getEstadoColor(
-                                    reporte.destino,
-                                  ),
+                                  color: getStatusColor(reporte.destino),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -423,7 +425,7 @@ class _ReportesListState extends State<ReportesList> {
                                     Text(
                                       reporte.destino ?? '',
                                       style: const TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         color: Colors.white,
                                         fontWeight: FontWeight.w500,
                                       ),

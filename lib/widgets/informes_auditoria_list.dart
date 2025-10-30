@@ -1,4 +1,5 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/auditoria_detalle_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flu2/widgets/empty_state.dart';
@@ -99,7 +100,7 @@ class InformesAuditoriaList extends StatelessWidget {
                           width: 4,
                           height: 48,
                           decoration: BoxDecoration(
-                            color: _getStatusColor(auditoria.estadoActual),
+                            color: getStatusColor(auditoria.estadoActual),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -144,7 +145,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                     const SizedBox(height: 2),
                                     // Fecha de creación
                                     Text(
-                                      'Creación: ${_formatDate(auditoria.fecCre?.toIso8601String())}',
+                                      'Creación: ${formatDate(auditoria.fecCre?.toIso8601String())}',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey[600],
@@ -183,7 +184,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                       vertical: 4,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: _getStatusColor(
+                                      color: getStatusColor(
                                         auditoria.estadoActual,
                                       ),
                                       borderRadius: BorderRadius.circular(12),
@@ -221,59 +222,6 @@ class InformesAuditoriaList extends StatelessWidget {
         },
       ),
     );
-    
-  }
-
-  String _formatDate(String? fecha) {
-    if (fecha == null || fecha.isEmpty) {
-      return 'Sin fecha';
-    }
-
-    try {
-      // Intentar parsear diferentes formatos de fecha
-      DateTime? dateTime;
-
-      // Formato ISO: 2025-10-04T00:00:00
-      if (fecha.contains('T')) {
-        dateTime = DateTime.tryParse(fecha);
-      }
-      // Formato dd/MM/yyyy
-      else if (fecha.contains('/')) {
-        final parts = fecha.split('/');
-        if (parts.length == 3) {
-          dateTime = DateTime.tryParse(
-            '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}',
-          );
-        }
-      }
-      // Formato yyyy-MM-dd
-      else if (fecha.contains('-')) {
-        dateTime = DateTime.tryParse(fecha);
-      }
-
-      if (dateTime != null) {
-        return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
-      }
-    } catch (e) {
-      // Si hay error en el parseo, devolver la fecha original
-    }
-
-    return fecha;
-  }
-
-  Color _getStatusColor(String? estado) {
-    switch (estado) {
-      case 'EN AUDITORIA':
-        return Colors.blue;
-      case 'Enviado':
-        return Colors.red;
-      case 'Aprobado':
-        return Colors.green;
-      case 'Rechazado':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
   }
 
   double _getTotal(ReporteAuditoria auditoria) {

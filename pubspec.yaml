@@ -36,6 +36,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   qr_code_tools: ^0.2.0
   google_mlkit_barcode_scanning: ^0.14.1
+  open_filex: ^4.0.3
 
 dev_dependencies:
   flutter_test:
@@ -44,19 +45,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family: CascadiaCode
-      fonts:
-        - asset: assets/fonts/CascadiaCode-VariableFont_wght.ttf
-        - asset: assets/fonts/CascadiaCode-Italic-VariableFont_wght.ttf
-    # Parkinsonianos font removed because the TTF files are not present in
-    # assets/fonts/. If you want to use this custom font, add the following
-    # files into `assets/fonts/` and uncomment the block below:
-    #
-    # - family: Parkinsonianos
-    #   fonts:
-    #     - asset: assets/fonts/Parkinsonianos-Regular.ttf
-    #     - asset: assets/fonts/Parkinsonianos-Bold.ttf
-    #       weight: 700
-    #     - asset: assets/fonts/Parkinsonianos-Italic.ttf
-    #       style: italic
+  

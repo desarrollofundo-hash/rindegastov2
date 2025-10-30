@@ -1,4 +1,5 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/reporte_auditoria_detalle.dart';
@@ -59,39 +60,13 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
   }
 
   double _getTotalSeleccionado() {
-    // Si luego ReporteAuditoriaDetalle incluye totales, aquí podrías sumar.
-    // Por ahora, solo devolvemos 0.0 (placeholder).
-    return 0.0;
-  }
-
-  String _formatearFechaCorta(String? fecha) {
-    if (fecha == null || fecha.isEmpty) {
-      return DateFormat('yyyy-MM-dd').format(DateTime.now());
-    }
-
-    try {
-      DateTime fechaDateTime;
-      if (fecha.contains('/')) {
-        List<String> partes = fecha.split('/');
-        if (partes.length == 3) {
-          int dia = int.parse(partes[0]);
-          int mes = int.parse(partes[1]);
-          int anio = int.parse(partes[2]);
-          if (anio < 100) anio += 2000;
-          fechaDateTime = DateTime(anio, mes, dia);
-        } else {
-          fechaDateTime = DateTime.now();
-        }
-      } else if (fecha.contains('-')) {
-        fechaDateTime = DateTime.parse(fecha);
-      } else {
-        fechaDateTime = DateTime.now();
+    double total = 0.0;
+    for (var gasto in detallesFiltrados) {
+      if (detallesSeleccionados[gasto.idInfDet] == true) {
+        total += gasto.total;
       }
-
-      return DateFormat('yyyy-MM-dd').format(fechaDateTime);
-    } catch (e) {
-      return DateFormat('yyyy-MM-dd').format(DateTime.now());
     }
+    return total;
   }
 
   @override
@@ -114,19 +89,11 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
           ),
         ),
         actions: [
-          TextButton(
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.black),
             onPressed: () {
-              // Lógica de guardado
               Navigator.of(context).pop();
             },
-            child: const Text(
-              'Guardar',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
         ],
       ),
@@ -302,7 +269,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  det.estadoActual ?? 'Sin estado',
+                                  det.categoria ?? 'Sin estado',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -310,7 +277,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  _formatearFechaCorta(det.fecCre),
+                                  formatDate(det.fecha),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -324,13 +291,22 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
+                              Text(
+                                '${det.total} PEN',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.shade100,
+                                  color: getStatusColor(det.estadoActual),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -338,7 +314,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                   style: const TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.amber,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
