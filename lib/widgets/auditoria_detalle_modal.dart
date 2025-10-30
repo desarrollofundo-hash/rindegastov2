@@ -121,7 +121,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           "useReg": detalless.idUser != 0
               ? detalless.idUser
               : widget.informe.idUser,
-          "hostname": detalless.hostname ?? '',
+          "hostname": 'FLUTTER',
           "fecEdit": DateTime.now().toIso8601String(),
           "useEdit": detalless.idUser != 0
               ? detalless.idUser
@@ -195,7 +195,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text(
-                  'Detalle Auditoria',
+                  'DETALLE AUDITORÍA',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
@@ -207,7 +207,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
-                      'Rendidor: ',
+                      'RENDIDOR: ',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.blue,
@@ -216,7 +216,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                       ),
                     ),
                     Text(
-                      widget.informe.dni ?? 'S/N', // ← valor dinámico
+                      widget.informe.usuario.toString(), // ← valor dinámico
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -487,7 +487,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                   ),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'No hay gastos en este informe',
+                                    'No hay gastos en esta auditoria',
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.grey,
@@ -703,14 +703,13 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                 ),
                 const SizedBox(height: 0),
                 Text(
-                  detalle.estadoActual != null &&
-                          detalle.estadoActual!.isNotEmpty
-                      ? '${detalle.estadoActual}'
+                  detalle.categoria != null && detalle.categoria!.isNotEmpty
+                      ? '${detalle.categoria}'
                       : 'Sin categoría',
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 Text(
-                  _formatDate(detalle.fecCre),
+                  _formatDate(detalle.fecha),
                   style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
               ],
@@ -722,7 +721,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                detalle.idAd as String,
+                '${detalle.total} ${detalle.moneda ?? 'PEN'}',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

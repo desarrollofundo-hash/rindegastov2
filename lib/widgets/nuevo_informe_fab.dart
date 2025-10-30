@@ -11,10 +11,10 @@ class NuevoInformeFab extends StatelessWidget {
   const NuevoInformeFab({
     Key? key,
     required this.onPressed,
-    this.backgroundColor = const Color(0xFFE0E5EC),
+    this.backgroundColor = Colors.blue,
     this.elevation = 4.0,
     this.icon,
-    this.label = 'Informe',
+    this.label = 'INFORME',
     this.labelStyle,
   }) : super(key: key);
 
@@ -28,7 +28,7 @@ class NuevoInformeFab extends StatelessWidget {
         boxShadow: isDark
             ? [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.white,
                   blurRadius: 8,
                   offset: const Offset(4, 4),
                 ),
@@ -64,7 +64,7 @@ class NuevoInformeFab extends StatelessWidget {
               children: [
                 Icon(
                   Icons.add_chart_rounded,
-                  color: isDark ? Colors.white : Colors.blue.shade700,
+                  color: isDark ? Colors.white : Colors.white,
                   size: 22,
                 ),
                 const SizedBox(width: 8),
@@ -73,7 +73,9 @@ class NuevoInformeFab extends StatelessWidget {
                   style:
                       labelStyle ??
                       TextStyle(
-                        color: isDark ? Colors.white : Colors.blue.shade700,
+                        color: isDark
+                            ? Colors.white
+                            : const Color.fromARGB(255, 255, 255, 255),
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),

@@ -45,15 +45,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  fonts:
-    - family: CascadiaCode
-      fonts:
-        - asset: assets/fonts/CascadiaCode-VariableFont_wght.ttf
-        - asset: assets/fonts/CascadiaCode-Italic-VariableFont_wght.ttf
-    - family: Parkinsonianos
-      fonts:
-        - asset: assets/fonts/Parkinsonianos-Regular.ttf
-        - asset: assets/fonts/Parkinsonianos-Bold.ttf
-          weight: 700
-        - asset: assets/fonts/Parkinsonianos-Italic.ttf
-          style: italic
+  

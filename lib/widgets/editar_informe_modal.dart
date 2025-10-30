@@ -172,6 +172,14 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.black),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
