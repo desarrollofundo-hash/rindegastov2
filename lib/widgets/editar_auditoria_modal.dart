@@ -59,9 +59,13 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
   }
 
   double _getTotalSeleccionado() {
-    // Si luego ReporteAuditoriaDetalle incluye totales, aquí podrías sumar.
-    // Por ahora, solo devolvemos 0.0 (placeholder).
-    return 0.0;
+    double total = 0.0;
+    for (var gasto in detallesFiltrados) {
+      if (detallesSeleccionados[gasto.idInfDet] == true) {
+        total += gasto.total;
+      }
+    }
+    return total;
   }
 
   String _formatearFechaCorta(String? fecha) {
@@ -114,19 +118,11 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
           ),
         ),
         actions: [
-          TextButton(
+          IconButton(
+            icon: const Icon(Icons.close, color: Colors.black),
             onPressed: () {
-              // Lógica de guardado
               Navigator.of(context).pop();
             },
-            child: const Text(
-              'Guardar',
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
         ],
       ),
@@ -310,7 +306,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  _formatearFechaCorta(det.fecCre),
+                                  _formatearFechaCorta(det.fecha),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -324,6 +320,15 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
+                              Text(
+                                '${det.total} PEN',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 8,
