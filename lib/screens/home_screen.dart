@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     if (UserService().isLoggedIn && CompanyService().isLoggedIn) {
       _loadReportes();
       _loadInformes();
-      _loadAuditoria();
+      loadAuditoria();
       _loadRevision();
     }
 
@@ -127,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     if (UserService().isLoggedIn && CompanyService().isLoggedIn) {
       _loadReportes();
       _loadInformes();
-      _loadAuditoria();
+      loadAuditoria();
       _loadRevision();
     } else {
       // Si no hay sesión, limpiar listas y forzar rebuild
@@ -242,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
-  Future<void> _loadAuditoria() async {
+  Future<void> loadAuditoria() async {
     if (!mounted) return;
 
     setState(() {
@@ -282,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             action: SnackBarAction(
               label: 'Reintentar',
               textColor: Colors.white,
-              onPressed: _loadAuditoria,
+              onPressed: loadAuditoria,
             ),
           ),
         );
@@ -510,7 +510,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onAuditoriaUpdated: _actualizarAuditoria,
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
-              onRefresh: _loadAuditoria,
+              onRefresh: loadAuditoria,
             ),
           ],
         ),
@@ -876,21 +876,37 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: NavigationBar(
                 elevation: 0,
                 selectedIndex: _selectedIndex,
-                onDestinationSelected: (index) {
+                onDestinationSelected: (index) async {
                   // Limpiar campo de búsqueda al cambiar de pestaña
                   _searchController.clear();
                   _searchFocusNode.unfocus();
-                  // Resetear las listas a su estado completo
+
                   setState(() {
-                    _reportes = List.from(_allReportes);
-                    _informes = List.from(_allInformes);
                     _selectedIndex = index.clamp(0, pages.length - 1);
                   });
-                  // Actualizar overlay después del frame para insertar/remover el FAB
+
+                  // 🔁 Recargar la data correspondiente a la pestaña seleccionada
+                  switch (index) {
+                    case 0:
+                      await _loadReportes();
+                      break;
+                    case 1:
+                      await _loadInformes();
+                      break;
+                    case 2:
+                      await loadAuditoria();
+                      break;
+                    case 3:
+                      await _loadRevision();
+                      break;
+                  }
+
+                  // Actualizar el FAB overlay después del frame
                   WidgetsBinding.instance.addPostFrameCallback(
                     (_) => _updateFabOverlay(),
                   );
                 },
+
                 destinations: [
                   _animatedIcon(MdiIcons.cashMultiple, "Gastos", 0),
                   _animatedIcon(Feather.file_text, "Informes", 1),

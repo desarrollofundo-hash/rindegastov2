@@ -804,176 +804,120 @@ class ReportesListController {
     );
   }
 
-  // Muestra previsualización simple para documento (PDF)
+  /// Muestra una previsualización de PDF (miniatura de la primera página)
+  /// y devuelve {'image': ui.Image?, 'qr': String?} si el usuario confirma.
   Future<Map<String, dynamic>?> _mostrarPrevisualizacionDocumento(
     BuildContext context,
     File file,
   ) async {
-    // Intentar rasterizar la primera página del PDF para mostrar una
-    // previsualización en el diálogo. Aplicamos protecciones para evitar
-    // OOM/ciertos cierres en dispositivos con poca memoria:
-    // - Si el PDF es muy grande, evitamos rasterizar y usamos fallback.
-    // - Reducimos DPI en archivos grandes.
-    // - Añadimos timeout y capturamos errores explícitamente.
-    // Devuelve un mapa con la imagen rasterizada y (opcional) el texto QR
+    // Rasterizar primera página del PDF (segura para dispositivos con poca memoria)
     Future<Map<String, dynamic>?> _rasterFirstPage() async {
       try {
         final bytes = await file.readAsBytes();
-
-        // Si el PDF es muy grande, no intentamos rasterizar (evita OOM).
-        final fileSize = bytes.lengthInBytes;
-        // Si el PDF es relativamente grande, evitamos rasterizar para no agotar memoria.
-        // Usamos un umbral conservador de 2 MB: archivos mayores usarán el fallback.
         const int maxSizeForRaster = 2 * 1024 * 1024; // 2 MB
-        if (fileSize > maxSizeForRaster) {
+        if (bytes.lengthInBytes > maxSizeForRaster) {
           debugPrint(
-            'PDF demasiado grande para rasterizar (${fileSize} bytes), usando fallback',
+            '⚠️ PDF demasiado grande (${bytes.lengthInBytes} bytes), usando fallback.',
           );
           return null;
         }
 
-        // Forzamos DPI muy bajo (thumbnail) para minimizar memoria usada.
-        // Esto reduce calidad pero evita que el proceso sea terminado por el SO.
-        final double dpi = 24.0;
+        final stream = Printing.raster(bytes, pages: [0], dpi: 24.0);
+        final raster = await stream.first.timeout(const Duration(seconds: 8));
+        final uiImage = await raster.toImage();
 
-        // Printing.raster devuelve un Stream<PdfRaster>
-        final stream = Printing.raster(bytes, pages: [0], dpi: dpi);
-
-        // Esperar el primer PdfRaster con timeout para evitar bloqueos largos
-        PdfRaster raster;
+        // Decodificar QR desde la imagen generada
+        String? qrText;
         try {
-          // Timeout más corto para evitar bloqueos largos en dispositivos lentos
-          raster = await stream.first.timeout(const Duration(seconds: 8));
-        } catch (e) {
-          debugPrint('Timeout o error al obtener PdfRaster: $e');
-          return null;
-        }
-
-        // PdfRaster ofrece toImage() que maneja la conversión segura a ui.Image
-        try {
-          final uiImage = await raster.toImage();
-
-          // Intentar decodificar QR a partir de la imagen rasterizada.
-          // Para ML Kit necesitamos un archivo, así que convertimos la ui.Image a PNG
-          // y la escribimos en un archivo temporal.
-          try {
-            final bd = await uiImage.toByteData(format: ui.ImageByteFormat.png);
-            if (bd != null) {
-              final bytes = bd.buffer.asUint8List();
-              final tempDir = await Directory.systemTemp.createTemp(
-                'rindegasto_pdf_preview',
-              );
-              final tmpFile = File(
-                '${tempDir.path}${Platform.pathSeparator}preview.png',
-              );
-              await tmpFile.writeAsBytes(bytes);
-
-              String? qrText;
-              try {
-                qrText = await _decodeQrPreferMlKit(tmpFile.path);
-              } catch (e) {
-                debugPrint('Error decodificando QR desde preview PNG: $e');
-              }
-
-              // Limpiar archivo temporal (no esperamos a que termine)
-              try {
-                await tmpFile.delete();
-                await tempDir.delete();
-              } catch (_) {}
-
-              return {'image': uiImage, 'qr': qrText};
-            }
-          } catch (e) {
-            debugPrint('Error convirtiendo ui.Image a bytes PNG: $e');
+          final bd = await uiImage.toByteData(format: ui.ImageByteFormat.png);
+          if (bd != null) {
+            final tmpDir = await Directory.systemTemp.createTemp('pdf_preview');
+            final tmpFile = File('${tmpDir.path}/preview.png');
+            await tmpFile.writeAsBytes(bd.buffer.asUint8List());
+            qrText = await _decodeQrPreferMlKit(tmpFile.path);
+            await tmpFile.delete();
+            await tmpDir.delete();
           }
-
-          // Si no pudimos crear PNG o decodificar QR, devolvemos la imagen sin QR
-          return {'image': uiImage, 'qr': null};
-        } catch (e, st) {
-          debugPrint('Error convirtiendo PdfRaster a Image: $e\n$st');
-          return null;
+        } catch (e) {
+          debugPrint('Error extrayendo QR desde PDF: $e');
         }
+
+        return {'image': uiImage, 'qr': qrText};
       } catch (e, st) {
-        debugPrint('No se pudo rasterizar PDF: $e\n$st');
+        debugPrint('❌ No se pudo rasterizar PDF: $e\n$st');
         return null;
       }
     }
 
-    // Rasterizar primero y luego mostrar diálogo sincronamente con el resultado
     final map = await _rasterFirstPage();
 
     return showDialog<Map<String, dynamic>?>(
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
-        final img = map == null ? null : map['image'] as ui.Image?;
-        final qr = map == null ? null : (map['qr'] as String?);
-
-        // Si encontramos texto QR, mostrarlo arriba
-        final qrWidget = (qr != null && qr.trim().isNotEmpty)
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8.0),
-                    child: Text(
-                      'Datos extraídos (QR):',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: SelectableText(
-                      qr,
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ],
-              )
-            : const SizedBox.shrink();
+        final img = map?['image'] as ui.Image?;
+        final qr = map?['qr'] as String?;
 
         return AlertDialog(
-          title: const Text('Previsualización'),
-          content: img != null
-              ? Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    qrWidget,
-                    SizedBox(
-                      width: MediaQuery.of(ctx).size.width * 0.6,
-                      height: MediaQuery.of(ctx).size.height * 0.5,
-                      child: InteractiveViewer(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'Previsualización de Documento',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (qr != null && qr.trim().isNotEmpty) ...[
+                const Text(
+                  'Datos extraídos (QR):',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+                const SizedBox(height: 4),
+                SelectableText(qr, style: const TextStyle(fontSize: 13)),
+                const SizedBox(height: 12),
+              ],
+              SizedBox(
+                width: MediaQuery.of(ctx).size.width * 0.7,
+                height: MediaQuery.of(ctx).size.height * 0.5,
+                child: img != null
+                    ? InteractiveViewer(
                         panEnabled: true,
                         scaleEnabled: true,
                         minScale: 1.0,
                         maxScale: 4.0,
                         child: RawImage(image: img, fit: BoxFit.contain),
+                      )
+                    : Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.insert_drive_file,
+                            size: 64,
+                            color: Colors.indigo,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(file.path.split(Platform.pathSeparator).last),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(file.path.split(Platform.pathSeparator).last),
-                  ],
-                )
-              : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.insert_drive_file,
-                      size: 64,
-                      color: Colors.indigo,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(file.path.split(Platform.pathSeparator).last),
-                  ],
-                ),
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(null),
               child: const Text('Cancelar'),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.of(ctx).pop(map),
+              onPressed: () {
+                Navigator.of(ctx).pop({
+                  'image': img,
+                  'qr': qr, // 👈 Envía el código QR leído
+                });
+              },
               child: const Text('Confirmar'),
             ),
           ],

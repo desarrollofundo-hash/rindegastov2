@@ -1,5 +1,6 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/utils/navigation_utils.dart';
+import 'package:flu2/widgets/detalle_modal_gasto.dart';
 import 'package:flu2/widgets/editar_auditoria_modal.dart';
 import 'package:flutter/material.dart';
 import '../models/reporte_auditoria_detalle.dart';
@@ -7,8 +8,13 @@ import '../services/api_service.dart';
 
 class AuditoriaDetalleModal extends StatefulWidget {
   final ReporteAuditoria informe;
+  final VoidCallback? onRefresh; // callback opcional
 
-  const AuditoriaDetalleModal({super.key, required this.informe});
+  const AuditoriaDetalleModal({
+    super.key,
+    required this.informe,
+    this.onRefresh,
+  });
 
   @override
   State<AuditoriaDetalleModal> createState() => AuditoriaDetalleModalState();
@@ -190,7 +196,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             elevation: 0.5,
             leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context).pop(true),
             ),
             title: Column(
               mainAxisSize: MainAxisSize.min,
@@ -203,6 +209,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                     color: Colors.black87,
                   ),
                 ),
+
                 const SizedBox(height: 2),
                 Row(
                   mainAxisSize: MainAxisSize.min,
@@ -232,7 +239,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             actions: [
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.grey),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
           ),
@@ -513,7 +520,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                 print(
                                   '🏗️ Building card for item $index: ${detalle.estadoActual}',
                                 );
-                                return _buildGastoCard(detalle);
+                                return _buildGastoCard( detalle, context);
                               },
                             ),
                           );
@@ -590,8 +597,9 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                       // Botón Editar
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
+                          onPressed: () async {
+                            // Abres el modal y esperas a que se cierre
+                            final result = await Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (context) => EditarAuditoriaModal(
                                   auditoria: widget.informe,
@@ -599,6 +607,11 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                 ),
                               ),
                             );
+
+                            // Si el modal devolvió "true" (por ejemplo, tras guardar cambios), recargas
+                            if (result == true) {
+                              _loadDetalles();
+                            }
                           },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
@@ -625,7 +638,10 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                       // Botón Enviar
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: _enviarInforme,
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                          },
+                          //_enviarInforme,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.green,
                             foregroundColor: Colors.white,
@@ -655,6 +671,121 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     );
   }
 
+Widget _buildGastoCard(
+    ReporteAuditoriaDetalle detalle,
+    BuildContext context,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        // Llamar al modal y pasar el detalle
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return DetalleModalGasto(id: detalle.idRend.toString());
+          },
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Imagen placeholder
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.receipt_long,
+                color: Colors.grey[600],
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // Información del gasto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    detalle.ruc ?? 'Proveedor no especificado',
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 0),
+                  Text(
+                    detalle.categoria != null && detalle.categoria!.isNotEmpty
+                        ? '${detalle.categoria}'
+                        : 'Sin categoría',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                  Text(
+                    formatDate(detalle.fecha),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+
+            // Monto y estado
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '${detalle.total} ${detalle.moneda ?? 'PEN'}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: getStatusColor(detalle.estadoActual),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    detalle.estadoActual ?? 'Sin estado',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+/*
   Widget _buildGastoCard(ReporteAuditoriaDetalle detalle) {
     return Container(
       padding: const EdgeInsets.all(8),
@@ -670,6 +801,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           ),
         ],
       ),
+
       child: Row(
         children: [
           // Imagen placeholder
@@ -747,7 +879,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       ),
     );
   }
-
+*/
   Widget _buildDetailSection(String title, List<Widget> children) {
     return Container(
       width: double.infinity,

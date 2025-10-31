@@ -1,4 +1,7 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/services/api_service.dart';
+import 'package:flu2/services/company_service.dart';
+import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -23,6 +26,8 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
   List<ReporteAuditoriaDetalle> detallesFiltrados = [];
   Map<int, bool> detallesSeleccionados = {};
   bool todosMarcados = true;
+
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -144,7 +149,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
 
           // Botón "Todos"
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
                 GestureDetector(
@@ -183,12 +188,37 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                     ),
                   ),
                 ),
+
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.tune, color: Colors.grey),
-                  onPressed: () {
-                    // Abrir filtros
-                  },
+                // 🔹 Botón RECHAZAR (condicional)
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _getSeleccionadosCount() > 0
+                        ? () {
+                            // Acción solo si hay seleccionados
+                            _eliminarAuditoria();
+                          }
+                        : null, // 🔸 Desactiva el botón si no hay seleccionados
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _getSeleccionadosCount() > 0
+                          ? Colors.red
+                          : Colors.grey.shade300, // Color según estado
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 1),
+                    ),
+                    child: Text(
+                      'RECHAZAR',
+                      style: TextStyle(
+                        color: _getSeleccionadosCount() > 0
+                            ? Colors.white
+                            : Colors.grey.shade600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -372,57 +402,6 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                   const SizedBox(height: 16),
 
                   // Botones
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Colors.orange,
-                              width: 2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text(
-                            'Cancelar',
-                            style: TextStyle(
-                              color: Colors.orange,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Guardar lógica
-                            Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text(
-                            'Guardar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -430,5 +409,123 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
         ],
       ),
     );
+  }
+
+  void _eliminarAuditoria() async {
+    // Filtrar gastos seleccionados y no seleccionados
+    debugPrint("SECCION ELIMINAR:");
+
+    final gastosSeleccionadosList = detallesFiltrados
+        .where((g) => detallesSeleccionados[g.idInfDet] == true)
+        .toList();
+    final gastosNoSeleccionadosList = detallesFiltrados
+        .where((g) => detallesSeleccionados[g.idInfDet] != true)
+        .toList();
+
+    if (detallesFiltrados.isEmpty) return;
+
+    try {
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+      // 3️⃣ Guardar DETALLES seleccionados (estadoACTUAL = RECHAZADO)
+      debugPrint("INICIO GUARDAR ELIMINAR:");
+      for (final gasto in gastosSeleccionadosList) {
+        final detalleData = {
+          "idAd": gasto.idAd, // Relación con la cabecera
+          "idInf": gasto.idInf,
+          "idInfDet": gasto.idInfDet, // usar idrend como id de factura
+          "idRend": gasto.idRend,
+          // Preferir el idUser del detalle; si no está, usar el del informe
+          "idUser": gasto.idUser,
+          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del informe
+          "dni": ('').toString(),
+          // Usar ruc del detalle si existe, si no, el ruc del informe
+          "ruc": (gasto.ruc ?? '').toString(),
+          "obs": gasto.obs ?? '',
+          "estadoActual": 'RECHAZADO',
+          "estado": gasto.estado ?? 'S',
+          "fecCre": gasto.fecCre,
+          "useReg": gasto.idUser,
+          "hostname": 'FLUTTER',
+          "fecEdit": DateTime.now().toIso8601String(),
+          "useEdit": gasto.idUser,
+          "useElim": 0,
+        };
+
+        debugPrint("Guardar detalle rechazado:");
+
+        final ok = await _apiService.saveRendicionAuditoriaDetalle(detalleData);
+        if (!ok) {
+          throw Exception(
+            'Error al guardar detalle del gasto ${gasto.idInfDet}',
+          );
+        }
+      }
+
+      // 5️⃣ Cerrar loading
+      if (mounted) Navigator.of(context).pop();
+
+      // 6️⃣ Mostrar mensaje de éxito
+      if (mounted) {
+        final total = gastosSeleccionadosList.length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GASTOS RECHAZADOS (${_getSeleccionadosCount()})',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+
+        // Volver después de 1 seg
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.of(context).pop(true);
+        });
+      }
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(
+              'Error al crear/actualizar el informe: ${e.toString()}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 }

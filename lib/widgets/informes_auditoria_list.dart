@@ -187,7 +187,7 @@ class InformesAuditoriaList extends StatelessWidget {
                                       color: getStatusColor(
                                         auditoria.estadoActual,
                                       ),
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       auditoria.estadoActual ?? 'Sin estado',
@@ -198,6 +198,47 @@ class InformesAuditoriaList extends StatelessWidget {
                                       ),
                                     ),
                                   ),
+
+                                  const SizedBox(height: 4),
+                                  // Aprobados y Desaprobados con colores (solo si hay cantidades > 0)
+                                  if (auditoria.cantidadAprobado > 0 ||
+                                      auditoria.cantidadDesaprobado > 0)
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          if (auditoria.cantidadAprobado > 0)
+                                            TextSpan(
+                                              text:
+                                                  '${auditoria.cantidadAprobado} Aprobrado',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.green[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          if (auditoria.cantidadAprobado > 0 &&
+                                              auditoria.cantidadDesaprobado > 0)
+                                            TextSpan(
+                                              text: ' / ',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          if (auditoria.cantidadDesaprobado > 0)
+                                            TextSpan(
+                                              text:
+                                                  '${auditoria.cantidadDesaprobado} Rechazado',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.red[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
                                 ],
                               ),
                             ],
@@ -231,17 +272,24 @@ class InformesAuditoriaList extends StatelessWidget {
   void _handleMenuAction(
     BuildContext context,
     String action,
-    ReporteAuditoria auditoria, // Cambié el tipo aquí
-  ) {
+    ReporteAuditoria auditoria,
+  ) async {
     switch (action) {
       case 'ver':
         try {
-          showDialog(
+          // Esperar el resultado del modal
+          final result = await showDialog(
             context: context,
             builder: (BuildContext context) => AuditoriaDetalleModal(
               informe: auditoria,
-            ), // Usar el modal adecuado
+              onRefresh: onRefresh, // <-- sigue pasando el callback
+            ),
           );
+
+          // Si el modal devuelve true, refresca la lista
+          if (result == true && onRefresh != null) {
+            await onRefresh!();
+          }
         } catch (e, st) {
           debugPrint('Error opening AuditoriaDetalleModal: $e\n$st');
           showDialog(
@@ -259,9 +307,11 @@ class InformesAuditoriaList extends StatelessWidget {
           );
         }
         break;
+
       case 'editar':
         onAuditoriaUpdated(auditoria);
         break;
+
       case 'eliminar':
         _showDeleteConfirmation(context, auditoria);
         break;

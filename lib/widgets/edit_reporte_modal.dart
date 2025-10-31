@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:printing/printing.dart';
@@ -118,13 +119,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
             value == 'EN AUDITORIA' ||
             value == 'EN REVISION' ||
             value == 'APROBADO' ||
-            value == 'DESAPROBADO' ) {
+            value == 'DESAPROBADO') {
           return true;
         }
       }
     }
-    return false;
-
     return false;
   }
 
@@ -163,7 +162,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     final empresaSeleccionada = CompanyService().currentUserCompany;
 
     if (rucClienteEscaneado.isEmpty) {
-      return '';
+      return '❌ RUC cliente no coincide con $empresaSeleccionada';
     }
 
     if (rucEmpresaSeleccionada.isEmpty) {
@@ -188,6 +187,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _totalController.text.trim().isNotEmpty &&
         _categoriaController.text.trim().isNotEmpty &&
         _tipoGastoController.text.trim().isNotEmpty &&
+        _notaController.text.trim().isNotEmpty &&
         (_selectedImage != null ||
             (_apiEvidencia != null && _apiEvidencia!.isNotEmpty)) &&
         _isRucValid();
@@ -341,7 +341,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       text: widget.reporte.igv?.toString() ?? '',
     );
     // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible
-    final formattedFecha = _formatToIsoDate(widget.reporte.fecha);
+    final formattedFecha = formatDate(widget.reporte.fecha);
     _fechaEmisionController = TextEditingController(text: formattedFecha);
     _notaController = TextEditingController(text: widget.reporte.obs ?? '');
   }
@@ -358,6 +358,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _totalController.removeListener(_validateForm);
     _categoriaController.removeListener(_validateForm);
     _tipoGastoController.removeListener(_validateForm);
+    _notaController.removeListener(_validateForm);
 
     // Dispose de los controladores
     _politicaController.dispose();
@@ -607,49 +608,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     } catch (e) {
       return 'Error interno del servidor';
     }
-  }
-
-  /// Intentar convertir varias representaciones de fecha a formato ISO (yyyy-MM-dd)
-  String _formatToIsoDate(String? input) {
-    if (input == null) return '';
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) return '';
-
-    try {
-      // Si ya está en formato ISO aproximado (yyyy-MM-dd o yyyy/MM/dd), normalizar
-      final isoLike = RegExp(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})');
-      final match = isoLike.firstMatch(trimmed);
-      if (match != null) {
-        final y = match.group(1)!;
-        final m = match.group(2)!.padLeft(2, '0');
-        final d = match.group(3)!.padLeft(2, '0');
-        return '$y-$m-$d';
-      }
-
-      // Intentar formatos comunes: dd/MM/yyyy, dd-MM-yyyy
-      final dmy = RegExp(r'^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})');
-      final matchDmy = dmy.firstMatch(trimmed);
-      if (matchDmy != null) {
-        final d = matchDmy.group(1)!.padLeft(2, '0');
-        final m = matchDmy.group(2)!.padLeft(2, '0');
-        final y = matchDmy.group(3)!;
-        return '$y-$m-$d';
-      }
-
-      // Intentar parsear con DateTime.parse como último recurso
-      final dt = DateTime.tryParse(trimmed);
-      if (dt != null) {
-        final y = dt.year.toString().padLeft(4, '0');
-        final m = dt.month.toString().padLeft(2, '0');
-        final d = dt.day.toString().padLeft(2, '0');
-        return '$y-$m-$d';
-      }
-    } catch (_) {
-      // ignore
-    }
-
-    // Si no se pudo parsear, devolver el original tal cual (o vacío si no se desea)
-    return trimmed;
   }
 
   /// Verificar si un archivo es PDF basado en su extensión
@@ -1242,36 +1200,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     );
   }
 
-  /// Construir la sección de datos raw
-  /* Widget _buildRawDataSection() {
-    return ExpansionTile(
-      title: const Text('Datos Originales del Reporte'),
-      leading: const Icon(Icons.receipt_long),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: SelectableText(
-            'ID: ${widget.reporte.idrend}\n'
-            'Política: ${widget.reporte.politica}\n'
-            'Categoría: ${widget.reporte.categoria}\n'
-            'RUC: ${widget.reporte.ruc}\n'
-            'Proveedor: ${widget.reporte.proveedor}\n'
-            'Serie: ${widget.reporte.serie}\n'
-            'Número: ${widget.reporte.numero}\n'
-            'Total: ${widget.reporte.total}\n'
-            'Fecha: ${widget.reporte.fecha}\n'
-            'Estado: ${widget.reporte.categoria}',
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 10),
-          ),
-        ),
-      ],
-    );
-  } */
-
   Future<void> _cargarImagenServidor() async {
     try {
       if (!mounted) return;
@@ -1613,7 +1541,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ FACTURA ACTUALIZADA'),
+            content: Text('✅ GASTO ACTUALIZADA'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -1716,7 +1644,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Editar Reporte',
+                  'Editar Gasto',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -1920,6 +1848,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       'Nota',
       Icons.comment,
       TextInputType.text,
+      readOnly: !_isEditMode,
     );
   }
 
@@ -2031,41 +1960,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
       ),
     );
   }
-  /* 
-  /// Construir un campo de texto personalizado
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-    TextInputType keyboardType, {
-    bool isRequired = false,
-    bool readOnly = false,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      readOnly: readOnly,
-      decoration: InputDecoration(
-        labelText: isRequired ? '$label *' : label,
-        prefixIcon: Icon(icon),
-        border: const UnderlineInputBorder(),
-        filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
-      ),
-      validator: isRequired
-          ? (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '$label es obligatorio';
-              }
-              if (label == 'Total' && double.tryParse(value) == null) {
-                return 'Ingrese un número válido';
-              }
-              return null;
-            }
-          : null,
-    );
-  }
- */
 
   /// Construir un campo de texto personalizado
   Widget _buildTextField(

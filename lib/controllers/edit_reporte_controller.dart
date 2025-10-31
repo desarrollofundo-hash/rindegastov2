@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/reporte_model.dart';
 import '../services/api_service.dart';
 import '../services/company_service.dart';
+import 'package:path/path.dart' as p;
 
 class EditReporteController {
   final ApiService _apiService;
@@ -187,19 +188,20 @@ class EditReporteController {
         "useElim": 0,
       };
 
-      final evidencia = selectedImage != null
-          ? await convertImageToBase64(selectedImage)
-          : (apiEvidencia ?? "");
-          
       debugPrint('API EVIDENCIA: $apiEvidencia');
-      
+
+      final extension = p.extension(
+        selectedImage!.path,
+      ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
+
       String nombreArchivo =
-          '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}.png';
+          '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}$extension';
 
       final driveId = await _apiService.subirArchivo(
-        evidencia,
+        selectedImage.path,
         nombreArchivo: nombreArchivo,
       );
+
       debugPrint('ID de archivo en Drive: $driveId');
 
       final facturaDataEvidencia = {

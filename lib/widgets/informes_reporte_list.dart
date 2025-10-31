@@ -162,7 +162,7 @@ class InformesReporteList extends StatelessWidget {
                                     ),
                                     decoration: BoxDecoration(
                                       color: getStatusColor(inf.estadoActual),
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       inf.estadoActual ?? 'Sin estado',
@@ -183,7 +183,7 @@ class InformesReporteList extends StatelessWidget {
                                           if (inf.cantidadAprobado > 0)
                                             TextSpan(
                                               text:
-                                                  '${inf.cantidadAprobado} Aprob.',
+                                                  '${inf.cantidadAprobado} Aprobrado',
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.green[600],
@@ -203,7 +203,7 @@ class InformesReporteList extends StatelessWidget {
                                           if (inf.cantidadDesaprobado > 0)
                                             TextSpan(
                                               text:
-                                                  '${inf.cantidadDesaprobado} Desaprob.',
+                                                  '${inf.cantidadDesaprobado} Rechazado',
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.red[600],
@@ -271,18 +271,25 @@ class InformesReporteList extends StatelessWidget {
     BuildContext context,
     String action,
     ReporteInforme informe,
-  ) {
+  ) async {
     switch (action) {
       case 'ver':
-        showDialog(
+        final result = await showDialog(
           context: context,
           builder: (BuildContext context) =>
               InformeDetalleModal(informe: informe),
         );
+
+        // Si el modal devuelve true, recarga los informes
+        if (result == true && onRefresh != null) {
+          await onRefresh!();
+        }
         break;
+
       case 'editar':
         onInformeUpdated(informe);
         break;
+
       case 'eliminar':
         _showDeleteConfirmation(context, informe);
         break;

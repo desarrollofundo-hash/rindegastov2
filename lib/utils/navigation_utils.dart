@@ -16,7 +16,7 @@ void safePop(BuildContext context, [dynamic result]) {
 Color getStatusColor(String? estado) {
   switch (estado?.toUpperCase()) {
     case 'EN INFORME':
-      return const Color.fromARGB(255, 168, 159, 76);
+      return const Color.fromARGB(255, 163, 152, 54);
     case 'EN AUDITORIA':
       return Colors.blue;
     case 'RECHAZADO':
@@ -27,7 +27,7 @@ Color getStatusColor(String? estado) {
     case 'APROBADO':
       return Colors.green;
     default:
-      return const Color.fromARGB(255, 255, 254, 254);
+      return Colors.grey;
   }
 }
 

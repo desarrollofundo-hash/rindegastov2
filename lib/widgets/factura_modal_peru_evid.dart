@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flu2/models/factura_data_ocr.dart';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -629,6 +630,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
     try {
       if (mounted) setState(() => _isLoading = true);
+
+      // Formatear fecha para SQL Server (solo fecha, sin hora)
 
       // Formatear fecha para SQL Server (solo fecha, sin hora)
       String fechaSQL = "";
@@ -1563,7 +1566,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                     child: _buildTextField(
                       _totalController,
                       'Total',
-                      Icons.attach_money,
+                      Icons.numbers,
                       TextInputType.number,
                       isRequired: true,
                       readOnly: true,
@@ -1574,7 +1577,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                     child: _buildTextField(
                       _monedaController,
                       'Moneda',
-                      Icons.currency_exchange,
+                      Icons.numbers_rounded,
                       TextInputType.text,
                       readOnly: true,
                     ),

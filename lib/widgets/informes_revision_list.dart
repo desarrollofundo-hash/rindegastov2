@@ -182,7 +182,7 @@ class InformesRevisionList extends StatelessWidget {
                                     color: _getStatusColor(
                                       revision.estadoActual,
                                     ),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     revision.estadoActual ?? 'Sin estado',

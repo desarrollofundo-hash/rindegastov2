@@ -1,6 +1,7 @@
 import 'package:flu2/models/reporte_model.dart';
 import 'package:flu2/screens/informes/detalle_informe_screen.dart';
 import 'package:flu2/utils/navigation_utils.dart';
+import 'package:flu2/widgets/detalle_modal_gasto.dart';
 import 'package:flutter/material.dart';
 import '../models/reporte_informe_model.dart';
 import '../models/reporte_informe_detalle.dart';
@@ -151,7 +152,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ Informe enviado correctamente")),
       );
-      Navigator.pop(context);
+      Navigator.of(context).pop(true);
     } catch (e, stack) {
       print("❌ Error al enviar informe: $e");
       print(stack);
@@ -192,7 +193,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
             elevation: 0.5,
             leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context).pop(true),
             ),
             title: const Text(
               'INFORME DETALLE',
@@ -206,7 +207,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
             actions: [
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.grey),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
           ),
@@ -481,7 +482,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                                 print(
                                   '🏗️ Building card for item $index: ${detalle.proveedor}',
                                 );
-                                return _buildGastoCard(detalle);
+                                return _buildGastoCard(detalle, context);
                               },
                             ),
                           );
@@ -559,16 +560,24 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                       Expanded(
                         child: OutlinedButton(
                           onPressed: widget.informe.estadoActual == 'EN INFORME'
-                              ? () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => EditarInformeModal(
-                                        informe: widget.informe,
-                                        gastos: _detalles,
-                                      ),
-                                    ),
-                                  );
-                                }
+                              ? () async {
+                                  // Abre el modal y espera a que se cierre
+                                  final result = await Navigator.of(context)
+                                      .push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EditarInformeModal(
+                                                informe: widget.informe,
+                                                gastos: _detalles,
+                                              ),
+                                        ),
+                                      );
+
+                                  // Si el modal devuelve true (por ejemplo tras guardar cambios), recarga los detalles
+                                  if (result == true) {
+                                    _loadDetalles(); // <-- Método que refresca tu lista o detalles
+                                  }
+                                } // Si no está en 'EN INFORME', el botón queda deshabilitado
                               : null, // 🔒 Deshabilitado si no está en estado 'Informe'
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
@@ -632,95 +641,114 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
     );
   }
 
-  Widget _buildGastoCard(ReporteInformeDetalle detalle) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Imagen placeholder
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
+  Widget _buildGastoCard(ReporteInformeDetalle detalle, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Abrir modal al hacer click
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            // Aquí pasas el detalle que necesites al modal
+            return DetalleModalGasto(id: detalle.idrend.toString());
+          },
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(Icons.receipt_long, color: Colors.grey[600], size: 24),
-          ),
-          const SizedBox(width: 16),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Imagen placeholder
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.receipt_long,
+                color: Colors.grey[600],
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
 
-          // Información del gasto
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            // Información del gasto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    detalle.ruc ?? 'Proveedor no especificado',
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 0),
+                  Text(
+                    detalle.categoria != null && detalle.categoria!.isNotEmpty
+                        ? '${detalle.categoria}'
+                        : 'Sin categoría',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                  Text(
+                    formatDate(detalle.fecha),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+
+            // Monto y estado
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  detalle.ruc ?? 'Proveedor no especificado',
-                  maxLines: 1,
+                  '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
                   ),
                 ),
-                const SizedBox(height: 0),
-                Text(
-                  detalle.categoria != null && detalle.categoria!.isNotEmpty
-                      ? '${detalle.categoria}'
-                      : 'Sin categoría',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-                Text(
-                  formatDate(detalle.fecha),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: getStatusColor(detalle.estadoactual),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    detalle.estadoactual ?? 'Sin estado',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-
-          // Monto y estado
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: getStatusColor(detalle.estadoactual),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  detalle.estadoactual ?? 'Sin estado',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
