@@ -17,10 +17,12 @@ class Reporte {
   final String? ruccliente;
   final String? desempr;
   final String? dessed;
+  final String? gerencia;
+  final String? area;
   final String? idcuenta;
   final String? consumidor;
-  final String? regimen;
-  final String? destino;
+  final String? placa;
+  final String? estadoActual;
   final String? glosa;
   final String? motivoviaje;
   final String? lugarorigen;
@@ -48,10 +50,12 @@ class Reporte {
     this.ruccliente,
     this.desempr,
     this.dessed,
+    this.gerencia,
+    this.area,
     this.idcuenta,
     this.consumidor,
-    this.regimen,
-    this.destino,
+    this.placa,
+    this.estadoActual,
     this.glosa,
     this.motivoviaje,
     this.lugarorigen,
@@ -73,8 +77,8 @@ class Reporte {
         ruc: _parseStringSafe(json['ruc']),
         proveedor: _parseStringSafe(json['proveedor']),
         tipocomprobante: _parseStringSafe(
-          json['tipocombrobante'],
-        ), // ojo nombre raro
+          json['tipocomprobante'] ?? json['tipocombrobante'],
+        ),
         serie: _parseStringSafe(json['serie']),
         numero: _parseStringSafe(json['numero']),
         igv: _parseDoubleSafe(json['igv']),
@@ -84,10 +88,12 @@ class Reporte {
         ruccliente: _parseStringSafe(json['ruccliente']),
         desempr: _parseStringSafe(json['desempr']),
         dessed: _parseStringSafe(json['dessed']),
+        gerencia: _parseStringSafe(json['gerencia']),
+        area: _parseStringSafe(json['area']),
         idcuenta: _parseStringSafe(json['idcuenta']),
         consumidor: _parseStringSafe(json['consumidor']),
-        regimen: _parseStringSafe(json['regimen']),
-        destino: _parseStringSafe(json['destino']),
+        placa: _parseStringSafe(json['placa']),
+        estadoActual: _parseStringSafe(json['estadoActual']),
         glosa: _parseStringSafe(json['glosa']),
         motivoviaje: _parseStringSafe(json['motivoviaje']),
         lugarorigen: _parseStringSafe(json['lugarorigen']),
@@ -100,8 +106,6 @@ class Reporte {
       throw Exception('Error al crear Reporte desde JSON: $e\nJSON: $json');
     }
   }
-
-  get id => null;
 
   static int _parseIntSafe(dynamic value, int defaultValue) {
     if (value == null) return defaultValue;
@@ -141,7 +145,7 @@ class Reporte {
       'tipogasto': tipogasto,
       'ruc': ruc,
       'proveedor': proveedor,
-      'tipocombrobante': tipocomprobante,
+      'tipocomprobante': tipocomprobante,
       'serie': serie,
       'numero': numero,
       'igv': igv,
@@ -151,10 +155,12 @@ class Reporte {
       'ruccliente': ruccliente,
       'desempr': desempr,
       'dessed': dessed,
+      'gerencia': gerencia,
+      'area': area,
       'idcuenta': idcuenta,
       'consumidor': consumidor,
-      'regimen': regimen,
-      'destino': destino,
+      'placa': placa,
+      'estadoActual': estadoActual,
       'glosa': glosa,
       'motivoviaje': motivoviaje,
       'lugarorigen': lugarorigen,
@@ -167,6 +173,6 @@ class Reporte {
 
   @override
   String toString() {
-    return 'Reporte{idrend: $idrend, iduser: $iduser, ruc: $ruc, proveedor: $proveedor, total: $total}';
+    return 'Reporte(idrend: $idrend, iduser: $iduser, proveedor: $proveedor, estadoActual: $estadoActual, total: $total)';
   }
 }

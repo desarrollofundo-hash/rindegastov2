@@ -23,7 +23,7 @@ class InformesAuditoriaList extends StatelessWidget {
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
-    List<ReporteAuditoria>? auditoria,
+    List<ReporteAuditoria>? auditori,
   });
 
   @override
@@ -281,8 +281,7 @@ class InformesAuditoriaList extends StatelessWidget {
           final result = await showDialog(
             context: context,
             builder: (BuildContext context) => AuditoriaDetalleModal(
-              informe: auditoria,
-              onRefresh: onRefresh, // <-- sigue pasando el callback
+              auditoria: auditoria, // <-- sigue pasando el callback
             ),
           );
 

@@ -571,7 +571,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_reporte!.destino}', // Usamos el id de reporte
+                  '${_reporte!.estadoActual}', // Usamos el id de reporte
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -887,7 +887,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
-        _buildReadOnlyField('Estado', _reporte!.destino ?? 'Sin estado'),
+        _buildReadOnlyField('Estado', _reporte!.estadoActual ?? 'Sin estado'),
       ],
     );
   }
@@ -925,6 +925,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
         _buildReadOnlyField('Destino', _reporte?.lugardestino ?? 'N/A'),
         _buildReadOnlyField('Motivo Viajes', _reporte?.motivoviaje ?? 'N/A'),
         _buildReadOnlyField('Transporte', _reporte?.tipomovilidad ?? 'N/A'),
+        _buildReadOnlyField('Placa', _reporte?.placa ?? 'N/A'),
       ],
     );
   }

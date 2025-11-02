@@ -1445,7 +1445,7 @@ class ReportesListController {
   List<Reporte> filtrarReportes(List<Reporte> reportes, EstadoReporte filtro) {
     // Helper para detectar estado del reporte en diferentes campos/formatos
     bool isBorrador(Reporte r) {
-      final candidates = [r.destino, r.obs, r.glosa];
+      final candidates = [r.estadoActual, r.obs, r.glosa];
       for (final v in candidates) {
         if (v == null) continue;
         final s = v.trim().toUpperCase();

@@ -139,7 +139,7 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
           .where(
             (f) =>
                 f.politica == widget.informe.politica &&
-                f.destino == 'BORRADOR',
+                f.estadoActual == 'BORRADOR',
           )
           .toList();
 

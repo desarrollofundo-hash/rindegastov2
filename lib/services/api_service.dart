@@ -2819,6 +2819,100 @@ class ApiService {
     }
   }
 
+
+  //------------------- GUARDAR RENDICIÓN AUDITORÍA (CABECERA) ------------------------//
+  Future<int?> saveRendicionRevision(
+    Map<String, dynamic> informeDetalleData,
+  ) async {
+    debugPrint('🚀 Guardando cabecera de rendición revision...');
+    debugPrint('📍 URL: $baseUrl/saveupdate/saverendicionrevision');
+    debugPrint('📦 Datos a enviar: $informeDetalleData');
+
+    try {
+      final uri = Uri.parse('$baseUrl/saveupdate/saverendicionrevision');
+      final encodedBody = json.encode([informeDetalleData]);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Accept': 'application/json',
+            },
+            body: encodedBody,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      debugPrint('📊 Respuesta - Status: ${response.statusCode}');
+      debugPrint('📄 Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = json.decode(response.body);
+
+        if (decoded['success'] == true) {
+          debugPrint('✅ Cabecera guardada correctamente');
+          return decoded['idRev']; // ID retornado por el backend
+        } else {
+          throw Exception('❌ Error del servidor: ${decoded['message']}');
+        }
+      } else {
+        throw Exception(
+          '❌ Error del servidor (${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      debugPrint('💥 Error en saveRendicionRevision: $e');
+      rethrow;
+    }
+  }
+
+  //------------------- GUARDAR RENDICIÓN AUDITORÍA DETALLE ------------------------//
+  Future<bool> saveRendicionRevisionDetalle(
+    Map<String, dynamic> informeDetalleData,
+  ) async {
+    debugPrint('🚀 Guardando detalle de rendición revision...');
+    debugPrint('📍 URL: $baseUrl/saveupdate/saverendicionrevision_detalle');
+    debugPrint('📦 Datos a enviar: $informeDetalleData');
+
+    try {
+      final uri = Uri.parse(
+        '$baseUrl/saveupdate/saverendicionrevision_detalle',
+      );
+      final encodedBody = json.encode([informeDetalleData]);
+
+      final response = await client
+          .post(
+            uri,
+            headers: {
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Accept': 'application/json',
+            },
+            body: encodedBody,
+          )
+          .timeout(const Duration(seconds: 30));
+
+      debugPrint('📊 Respuesta detalle - Status: ${response.statusCode}');
+      debugPrint('📄 Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final decoded = json.decode(response.body);
+        if (decoded['success'] == true) {
+          debugPrint('✅ Detalle guardado correctamente');
+          return true;
+        } else {
+          throw Exception('❌ Error del servidor: ${decoded['message']}');
+        }
+      } else {
+        throw Exception(
+          '❌ Error del servidor (${response.statusCode}): ${response.body}',
+        );
+      }
+    } catch (e) {
+      debugPrint('💥 Error en saveRendicionRevisionDetalle: $e');
+      rethrow;
+    }
+  }
+
   Future<String?> subirArchivo(String filePath, {String? nombreArchivo}) async {
     debugPrint('🚀 Guardando archivo en servidor local...');
     debugPrint('📍 URL: $baseUrl/recibir/uploadlocal');

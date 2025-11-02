@@ -22,6 +22,12 @@ class UserCompany {
   /// Sucursal de la empresa
   final String sucursal;
 
+  /// Sucursal de la empresa
+  final String gerencia;
+
+  /// Sucursal de la empresa
+  final String area;
+
   /// Tipo de gasto permitido
   final String tipogasto;
 
@@ -43,6 +49,8 @@ class UserCompany {
     required this.apeNom,
     required this.empresa,
     required this.sucursal,
+    required this.gerencia,
+    required this.area,
     required this.tipogasto,
     required this.consumidor,
     required this.regimen,
@@ -60,6 +68,8 @@ class UserCompany {
       apeNom: json['apeNom'] ?? '',
       empresa: json['empresa'] ?? '',
       sucursal: json['sucursal'] ?? '',
+      gerencia: json['gerencia'] ?? '',
+      area: json['area'] ?? '',
       tipogasto: json['tipogasto'] ?? '',
       consumidor: json['consumidor'] ?? '',
       regimen: json['regimen'] ?? '',
@@ -78,6 +88,8 @@ class UserCompany {
       'apeNom': apeNom,
       'empresa': empresa,
       'sucursal': sucursal,
+      'gerencia': gerencia,
+      'area': area,
       'tipogasto': tipogasto,
       'consumidor': consumidor,
       'regimen': regimen,
@@ -93,6 +105,8 @@ class UserCompany {
       'id': id.toString(),
       'name': empresa,
       'sucursal': sucursal,
+      'gerencia': gerencia,
+      'area': area,
       'tipogasto': tipogasto,
       'consumidor': consumidor,
       'placa': placa,
@@ -127,6 +141,8 @@ class UserCompany {
         other.id == id &&
         other.iduser == iduser &&
         other.empresa == empresa &&
+        other.gerencia == gerencia &&
+        other.area == area &&
         other.placa == placa &&
         other.ruc == ruc;
   }
@@ -142,6 +158,8 @@ class UserCompany {
     String? dni,
     String? apeNom,
     String? empresa,
+    String? gerencia,
+    String? area,
     String? sucursal,
     String? tipogasto,
     String? consumidor,
@@ -156,6 +174,8 @@ class UserCompany {
       dni: dni ?? this.dni,
       apeNom: apeNom ?? this.apeNom,
       empresa: empresa ?? this.empresa,
+      gerencia: gerencia ?? this.gerencia,
+      area: area ?? this.area,
       sucursal: sucursal ?? this.sucursal,
       tipogasto: tipogasto ?? this.tipogasto,
       consumidor: consumidor ?? this.consumidor,

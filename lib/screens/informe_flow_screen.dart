@@ -76,7 +76,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
       // Filtrar facturas por la política seleccionada y destino "Borrador"
       final facturasFiltradas = todasLasFacturas.where((factura) {
         return factura.politica == widget.politicaSeleccionada.value &&
-            factura.destino == "BORRADOR";
+            factura.estadoActual == "BORRADOR";
       }).toList();
 
       _facturasDisponibles = facturasFiltradas;

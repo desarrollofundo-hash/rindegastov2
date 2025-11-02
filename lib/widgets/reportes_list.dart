@@ -410,7 +410,7 @@ class _ReportesListState extends State<ReportesList> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: getStatusColor(reporte.destino),
+                                  color: getStatusColor(reporte.estadoActual),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -423,7 +423,7 @@ class _ReportesListState extends State<ReportesList> {
                                     ),
                                     const SizedBox(width: 3),
                                     Text(
-                                      reporte.destino ?? '',
+                                      reporte.estadoActual ?? '',
                                       style: const TextStyle(
                                         fontSize: 11,
                                         color: Colors.white,

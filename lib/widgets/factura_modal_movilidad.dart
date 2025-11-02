@@ -701,10 +701,12 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   : _rucClienteController.text),
         "desEmp": CompanyService().currentCompany?.empresa ?? '',
         "desSed": "",
+        "gerencia": CompanyService().currentCompany?.gerencia ?? '',
+        "area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
         "consumidor": "",
-        "regimen": _placaController.text,
-        "destino": "BORRADOR",
+        "placa": _placaController.text,
+        "estadoActual": "BORRADOR",
         "glosa": "ESCANER IA",
         "motivoViaje": _motivoViajeController.text.length > 50
             ? _motivoViajeController.text.substring(0, 50)

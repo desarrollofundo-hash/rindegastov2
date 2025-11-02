@@ -108,7 +108,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   bool _isEnInforme() {
     final candidates = [
       widget.reporte.categoria,
-      widget.reporte.destino,
+      widget.reporte.estadoActual,
       widget.reporte.tipogasto,
       widget.reporte.obs,
       widget.reporte.glosa,
@@ -336,7 +336,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       text: widget.reporte.tipomovilidad ?? '',
     );
     _placaController = TextEditingController(
-      text: widget.reporte.regimen ?? '',
+      text: widget.reporte.placa ?? '',
     );
 
     // Nuevos controladores

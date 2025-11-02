@@ -506,7 +506,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           tabViews: [
             InformesAuditoriaList(
               auditorias: _auditoria,
-              auditoria: [],
               onAuditoriaUpdated: _actualizarAuditoria,
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
@@ -570,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         final rucCliente = (r.ruccliente ?? '').toLowerCase();
         final politica = (r.politica ?? '').toLowerCase();
         // Para estado en Reporte usamos 'obs' o 'destino' si aplica
-        final estado = (r.obs ?? r.destino ?? '').toLowerCase();
+        final estado = (r.obs ?? r.estadoActual ?? '').toLowerCase();
 
         return ruc.contains(q) ||
             categoria.contains(q) ||

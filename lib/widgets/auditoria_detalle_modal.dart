@@ -1,26 +1,28 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/models/reporte_auditoria_detalle.dart';
+import 'package:flu2/models/reporte_model.dart';
+import 'package:flu2/screens/informes/detalle_informe_screen.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/detalle_modal_gasto.dart';
 import 'package:flu2/widgets/editar_auditoria_modal.dart';
 import 'package:flutter/material.dart';
-import '../models/reporte_auditoria_detalle.dart';
+import '../models/reporte_informe_model.dart';
+import '../models/reporte_informe_detalle.dart';
 import '../services/api_service.dart';
+import '../services/user_service.dart';
+import '../services/company_service.dart';
+import 'editar_informe_modal.dart';
 
 class AuditoriaDetalleModal extends StatefulWidget {
-  final ReporteAuditoria informe;
-  final VoidCallback? onRefresh; // callback opcional
+  final ReporteAuditoria auditoria;
 
-  const AuditoriaDetalleModal({
-    super.key,
-    required this.informe,
-    this.onRefresh,
-  });
+  const AuditoriaDetalleModal({super.key, required this.auditoria});
 
   @override
-  State<AuditoriaDetalleModal> createState() => AuditoriaDetalleModalState();
+  State<AuditoriaDetalleModal> createState() => _AuditoriaDetalleModalState();
 }
 
-class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
+class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<ReporteAuditoriaDetalle> _detalles = [];
@@ -44,21 +46,21 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
 
     try {
       // Intentar llamar al API primero para obtener los detalles reales
-      List<ReporteAuditoriaDetalle> reportesInforme = [];
+      List<ReporteAuditoriaDetalle> reportesAuditoria = [];
 
       try {
-        reportesInforme = await _apiService
+        reportesAuditoria = await _apiService
             .getReportesRendicionAuditoria_Detalle(
-              idAd: widget.informe.idAd.toString(),
+              idAd: widget.auditoria.idAd.toString(),
             );
       } catch (apiError) {
         // fallback: dejar la lista vacía para mostrar el estado "No hay gastos"
-        reportesInforme = [];
+        reportesAuditoria = [];
       }
 
       if (mounted) {
         setState(() {
-          _detalles = reportesInforme;
+          _detalles = reportesAuditoria;
           _isLoading = false;
         });
       }
@@ -72,95 +74,114 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     }
   }
 
-  Future<void> _enviarInforme() async {
+  Future<void> _enviarAuditoria() async {
     try {
       setState(() => _isLoading = true);
-      print("🚀 Iniciando envío de informe...");
+      print("🚀 Iniciando envío de auditoria...");
 
       // 1️⃣ GUARDAR CABECERA (saveRendicionAuditoria)
       final cabeceraPayload = {
-        "idAd": 0,
-        "idInf": widget.informe.idInf,
-        "idUser": widget.informe.idUser,
-        "dni": widget.informe.dni,
-        "ruc": widget.informe.ruc,
-        "obs": widget.informe.obs ?? "",
-        "estadoActual": "EN AUDITORIA",
+        "idRev": 0,
+        "idAd": widget.auditoria.idAd,
+        "idInf": widget.auditoria.idInf,
+        "idUser": widget.auditoria.idUser,
+        "dni": widget.auditoria.dni,
+        "ruc": widget.auditoria.ruc,
+        "obs": widget.auditoria.obs ?? "",
+        "estadoActual": "EN REVISION",
         "estado": "S",
         "fecCre": DateTime.now().toIso8601String(),
-        "useReg": widget.informe.idUser,
-        "hostname": "",
+        "useReg": UserService().currentUserCode,
+        "hostname": "FLUTTER",
         "fecEdit": DateTime.now().toIso8601String(),
-        "useEdit": widget.informe.idUser,
+        "useEdit": UserService().currentUserCode,
         "useElim": 0,
       };
 
       print("📤 Enviando cabecera: $cabeceraPayload");
 
-      final idAd = await _apiService.saveRendicionAuditoria(cabeceraPayload);
-      if (idAd == null) throw Exception("Error al guardar cabecera.");
+      final idRev = await _apiService.saveRendicionRevision(cabeceraPayload);
+      if (idRev == null) throw Exception("Error al guardar cabecera.");
 
-      print("✅ Cabecera guardada con idAd: $idAd");
+      print("✅ Cabecera guardada con idRev: $idRev");
 
-      // 2️⃣ GUARDAR DETALLES: usamos los campos del modelo ReporteInformeDetalle
+      // 2️⃣ GUARDAR DETALLES: usamos los campos del modelo ReporteauditoriaDetalle
       if (_detalles.isEmpty) {
         print('⚠️ No hay detalles para enviar.');
       }
 
       for (final detalless in _detalles) {
         final detallePayload = {
-          "idAd": idAd, // Relación con la cabecera
-          "idInf": detalless.idInf,
-          "idInfDet": detalless.idInfDet, // usar idrend como id de factura
+          "idRev": idRev, // Relación con la cabecera
+          "idAd": detalless.idAd,
+          "idAdDet": detalless.id, // usar idrend como id de factura
           "idRend": detalless.idRend,
-          // Preferir el idUser del detalle; si no está, usar el del informe
+          // Preferir el idUser del detalle; si no está, usar el del auditoria
           "idUser": detalless.idUser != 0
               ? detalless.idUser
-              : widget.informe.idUser,
-          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del informe
-          "dni": (widget.informe.dni ?? '').toString(),
-          // Usar ruc del detalle si existe, si no, el ruc del informe
-          "ruc": (detalless.ruc ?? widget.informe.ruc ?? '').toString(),
+              : widget.auditoria.idUser,
+          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
+          "dni": (widget.auditoria.dni ?? '').toString(),
+          // Usar ruc del detalle si existe, si no, el ruc del auditoria
+          "ruc": (detalless.ruc ?? widget.auditoria.ruc ?? '').toString(),
           "obs": detalless.obs ?? '',
-          "estadoActual": detalless.estadoActual ?? 'EN AUDITORIA',
-          "estado": detalless.estado ?? 'S',
-          "fecCre": detalless.fecCre ?? DateTime.now().toIso8601String(),
-          "useReg": detalless.idUser != 0
-              ? detalless.idUser
-              : widget.informe.idUser,
+          "estadoActual": 'EN REVISION',
+          "estado": 'S',
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": UserService().currentUserCode,
           "hostname": 'FLUTTER',
           "fecEdit": DateTime.now().toIso8601String(),
-          "useEdit": detalless.idUser != 0
-              ? detalless.idUser
-              : widget.informe.idUser,
+          "useEdit": UserService().currentUserCode,
           "useElim": 0,
         };
 
-        print("📤 Enviando detalle (id: ${detalless.idAd}): $detallePayload");
+        print("📤 Enviando detalle (id: ${detalless.id}): $detallePayload");
 
-        final detalleGuardado = await _apiService.saveRendicionAuditoriaDetalle(
+        final detalleGuardado = await _apiService.saveRendicionRevisionDetalle(
           detallePayload,
         );
 
         if (!detalleGuardado) {
           throw Exception(
-            'Error al guardar el detalle de la rendición de auditoría para id ${detalless.idAd}',
+            'Error al guardar el detalle de auditoria a revision id ${detalless.id}',
           );
         }
-
-        print("✅ Detalle ${detalless.idAd} guardado correctamente");
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Informe enviado correctamente")),
+        SnackBar(
+          backgroundColor: Colors.green, // Fondo verde
+          content: Row(
+            children: const [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+              ), // Check verde (puedes dejarlo blanco si prefieres contraste)
+              SizedBox(width: 10),
+              Text(
+                "Auditoría enviada correctamente",
+                style: TextStyle(
+                  color: Colors.white,
+                ), // Texto blanco para contraste
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior
+              .floating, // Hace que flote sobre el contenido (opcional)
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
       );
-      Navigator.pop(context);
+
+      Navigator.of(context).pop(true);
     } catch (e, stack) {
       print("❌ Error al enviar informe: $e");
       print(stack);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Error al enviar informe: $e")));
+      ).showSnackBar(SnackBar(content: Text("Error al enviar auditoria: $e")));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -190,7 +211,6 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             .maxFinite, // Usa toda la altura disponible desde el margen superior
         child: Scaffold(
           backgroundColor: Colors.grey[50],
-
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0.5,
@@ -198,42 +218,13 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
               onPressed: () => Navigator.of(context).pop(true),
             ),
-            title: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'DETALLE AUDITORÍA',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-
-                const SizedBox(height: 2),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'RENDIDOR: ',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.blue,
-                        fontStyle: FontStyle.normal,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      widget.informe.usuario.toString(), // ← valor dinámico
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+            title: const Text(
+              'AUDITORIA DETALLE',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
             centerTitle: true,
             actions: [
@@ -243,7 +234,6 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               ),
             ],
           ),
-
           body: Column(
             children: [
               // Cabecera ultra compacta
@@ -256,7 +246,6 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                     padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       children: [
                         // COLUMNA IZQUIERDA
                         Expanded(
@@ -269,7 +258,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      widget.informe.titulo ??
+                                      widget.auditoria.titulo ??
                                           'Sin título asignado',
                                       style: const TextStyle(
                                         color: Colors.white,
@@ -297,9 +286,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                   const SizedBox(width: 6),
                                   Text(
                                     formatDate(
-                                      widget.informe.fecCre
-                                              ?.toIso8601String() ??
-                                          '',
+                                      widget.auditoria.fecCre.toString(),
                                     ),
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.9),
@@ -324,7 +311,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                     ),
 
                                     child: Text(
-                                      '#${widget.informe.idAd}',
+                                      '#${widget.auditoria.idInf}',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 17,
@@ -347,7 +334,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    widget.informe.politica ?? 'General',
+                                    widget.auditoria.politica ?? 'General',
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.9),
                                       fontSize: 16,
@@ -368,7 +355,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                           children: [
                             // Monto
                             Text(
-                              'S/ ${widget.informe.total.toStringAsFixed(2)}',
+                              'S/ ${widget.auditoria.total.toStringAsFixed(2)}',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 20,
@@ -379,7 +366,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
 
                             const SizedBox(height: 4),
 
-                            // Estado del informe
+                            // Estado del auditoria
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
@@ -390,13 +377,13 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: getStatusColor(
-                                    widget.informe.estadoActual,
+                                    widget.auditoria.estadoActual,
                                   ),
                                   width: 1,
                                 ),
                               ),
                               child: Text(
-                                widget.informe.estadoActual ?? 'Borrador',
+                                widget.auditoria.estadoActual ?? 'Borrador',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 11,
@@ -415,7 +402,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                               ),
 
                               child: Text(
-                                '${widget.informe.cantidad} ${widget.informe.cantidad == 1 ? 'gasto' : 'gastos'}',
+                                '${widget.auditoria.cantidad} ${widget.auditoria.cantidad == 1 ? 'gasto' : 'gastos'}',
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.9),
                                   fontSize: 17,
@@ -449,7 +436,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                     fontWeight: FontWeight.w500,
                   ),
                   tabs: [
-                    Tab(text: 'Gastos (${widget.informe.cantidad})'),
+                    Tab(text: 'Gastos (${widget.auditoria.cantidad})'),
                     const Tab(text: 'Detalle'),
                   ],
                 ),
@@ -491,7 +478,7 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                   ),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'No hay gastos en esta auditoria',
+                                    'No hay gastos en este auditoria',
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.grey,
@@ -518,9 +505,9 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                               itemBuilder: (context, index) {
                                 final detalle = _detalles[index];
                                 print(
-                                  '🏗️ Building card for item $index: ${detalle.estadoActual}',
+                                  '🏗️ Building card for item $index: ${detalle.proveedor}',
                                 );
-                                return _buildGastoCard( detalle, context);
+                                return _buildGastoCard(detalle, context);
                               },
                             ),
                           );
@@ -537,43 +524,43 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                           children: [
                             _buildDetailSection('Información General', [
                               _buildDetailRow(
-                                'ID Audtoría',
-                                '#${widget.informe.idAd}',
+                                'ID Informe',
+                                '#${widget.auditoria.idInf}',
                               ),
                               _buildDetailRow(
                                 'Usuario',
-                                widget.informe.idUser.toString(),
+                                widget.auditoria.idUser.toString(),
                               ),
                               _buildDetailRow(
                                 'RUC',
-                                widget.informe.ruc ?? 'N/A',
+                                widget.auditoria.ruc ?? 'N/A',
                               ),
                               _buildDetailRow(
                                 'DNI',
-                                widget.informe.dni ?? 'N/A',
+                                widget.auditoria.dni ?? 'N/A',
                               ),
                             ]),
                             const SizedBox(height: 20),
                             _buildDetailSection('Estadísticas', [
                               _buildDetailRow(
                                 'Total Gastos',
-                                widget.informe.cantidad.toString(),
+                                widget.auditoria.cantidad.toString(),
                               ),
                               _buildDetailRow(
                                 'Aprobados',
-                                '${widget.informe.cantidadAprobado} (${widget.informe.totalAprobado.toStringAsFixed(2)} PEN)',
+                                '${widget.auditoria.cantidadAprobado} (${widget.auditoria.totalAprobado.toStringAsFixed(2)} PEN)',
                               ),
                               _buildDetailRow(
                                 'Desaprobados',
-                                '${widget.informe.cantidadDesaprobado} (${widget.informe.totalDesaprobado.toStringAsFixed(2)} PEN)',
+                                '${widget.auditoria.cantidadDesaprobado} (${widget.auditoria.totalDesaprobado.toStringAsFixed(2)} PEN)',
                               ),
                             ]),
-                            if (widget.informe.nota != null &&
-                                widget.informe.nota!.isNotEmpty) ...[
+                            if (widget.auditoria.nota != null &&
+                                widget.auditoria.nota!.isNotEmpty) ...[
                               const SizedBox(height: 20),
                               _buildDetailSection('Observaciones', [
                                 Text(
-                                  widget.informe.nota!,
+                                  widget.auditoria.nota!,
                                   style: const TextStyle(fontSize: 14),
                                 ),
                               ]),
@@ -597,22 +584,27 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                       // Botón Editar
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () async {
-                            // Abres el modal y esperas a que se cierre
-                            final result = await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => EditarAuditoriaModal(
-                                  auditoria: widget.informe,
-                                  detalles: _detalles,
-                                ),
-                              ),
-                            );
+                          onPressed:
+                              widget.auditoria.estadoActual == 'EN AUDITORIA'
+                              ? () async {
+                                  // Abre el modal y espera a que se cierre
+                                  final result = await Navigator.of(context)
+                                      .push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EditarAuditoriaModal(
+                                                auditoria: widget.auditoria,
+                                                detalles: _detalles,
+                                              ),
+                                        ),
+                                      );
 
-                            // Si el modal devolvió "true" (por ejemplo, tras guardar cambios), recargas
-                            if (result == true) {
-                              _loadDetalles();
-                            }
-                          },
+                                  // Si el modal devuelve true (por ejemplo tras guardar cambios), recarga los detalles
+                                  if (result == true) {
+                                    _loadDetalles(); // <-- Método que refresca tu lista o detalles
+                                  }
+                                } // Si no está en 'EN INFORME', el botón queda deshabilitado
+                              : null, // 🔒 Deshabilitado si no está en estado 'Informe'
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
                               color: Colors.blue,
@@ -623,10 +615,14 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Editar auditoria',
                             style: TextStyle(
-                              color: Colors.blue,
+                              color:
+                                  widget.auditoria.estadoActual ==
+                                      'EN AUDITORIA'
+                                  ? Colors.blue
+                                  : Colors.grey, // gris cuando está bloqueado
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -638,12 +634,15 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                       // Botón Enviar
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(true);
-                          },
-                          //_enviarInforme,
+                          onPressed:
+                              widget.auditoria.estadoActual == 'EN AUDITORIA'
+                              ? _enviarAuditoria
+                              : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor:
+                                widget.auditoria.estadoActual == 'EN AUDITORIA'
+                                ? Colors.green
+                                : Colors.grey, // gris si bloqueado
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -671,16 +670,17 @@ class AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     );
   }
 
-Widget _buildGastoCard(
+  Widget _buildGastoCard(
     ReporteAuditoriaDetalle detalle,
     BuildContext context,
   ) {
     return GestureDetector(
       onTap: () {
-        // Llamar al modal y pasar el detalle
+        // Abrir modal al hacer click
         showDialog(
           context: context,
           builder: (BuildContext context) {
+            // Aquí pasas el detalle que necesites al modal
             return DetalleModalGasto(id: detalle.idRend.toString());
           },
         );
@@ -751,7 +751,7 @@ Widget _buildGastoCard(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${detalle.total} ${detalle.moneda ?? 'PEN'}',
+                  '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -784,102 +784,7 @@ Widget _buildGastoCard(
       ),
     );
   }
-  
-/*
-  Widget _buildGastoCard(ReporteAuditoriaDetalle detalle) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
 
-      child: Row(
-        children: [
-          // Imagen placeholder
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.receipt_long, color: Colors.grey[600], size: 24),
-          ),
-          const SizedBox(width: 16),
-
-          // Información del gasto
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  detalle.ruc ?? 'Proveedor no especificado',
-                  maxLines: 1,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 0),
-                Text(
-                  detalle.categoria != null && detalle.categoria!.isNotEmpty
-                      ? '${detalle.categoria}'
-                      : 'Sin categoría',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-                Text(
-                  formatDate(detalle.fecha),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-
-          // Monto y estado
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${detalle.total} ${detalle.moneda ?? 'PEN'}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: getStatusColor(detalle.estadoActual),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  detalle.estadoActual ?? 'Sin estado',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-*/
   Widget _buildDetailSection(String title, List<Widget> children) {
     return Container(
       width: double.infinity,

@@ -86,10 +86,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
         "estadoActual": "EN AUDITORIA",
         "estado": "S",
         "fecCre": DateTime.now().toIso8601String(),
-        "useReg": widget.informe.idUser,
+        "useReg": UserService().currentUserCode,
         "hostname": "",
         "fecEdit": DateTime.now().toIso8601String(),
-        "useEdit": widget.informe.idUser,
+        "useEdit": UserService().currentUserCode,
         "useElim": 0,
       };
 
@@ -120,17 +120,13 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           // Usar ruc del detalle si existe, si no, el ruc del informe
           "ruc": (detalless.ruc ?? widget.informe.ruc ?? '').toString(),
           "obs": detalless.obs ?? '',
-          "estadoActual": detalless.estadoactual ?? '',
-          "estado": detalless.estado ?? 'S',
-          "fecCre": detalless.feccre ?? DateTime.now().toIso8601String(),
-          "useReg": detalless.iduser != 0
-              ? detalless.iduser
-              : widget.informe.idUser,
-          "hostname": detalless.proveedor ?? '',
+          "estadoActual": 'EN AUDITORIA',
+          "estado": 'S',
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": UserService().currentUserCode,
+          "hostname": 'FLUTTER',
           "fecEdit": DateTime.now().toIso8601String(),
-          "useEdit": detalless.iduser != 0
-              ? detalless.iduser
-              : widget.informe.idUser,
+          "useEdit": UserService().currentUserCode,
           "useElim": 0,
         };
 
@@ -150,8 +146,32 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Informe enviado correctamente")),
+        SnackBar(
+          backgroundColor: Colors.green, // Fondo verde
+          content: Row(
+            children: const [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+              ), // Check verde (puedes dejarlo blanco si prefieres contraste)
+              SizedBox(width: 10),
+              Text(
+                "Informe enviada correctamente",
+                style: TextStyle(
+                  color: Colors.white,
+                ), // Texto blanco para contraste
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior
+              .floating, // Hace que flote sobre el contenido (opcional)
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
       );
+
       Navigator.of(context).pop(true);
     } catch (e, stack) {
       print("❌ Error al enviar informe: $e");
