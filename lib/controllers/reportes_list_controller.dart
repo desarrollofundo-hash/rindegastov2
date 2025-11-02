@@ -22,7 +22,6 @@ import '../models/factura_data_ocr.dart';
 import '../widgets/politica_selector_modal.dart';
 import '../widgets/factura_modal_peru_ocr.dart';
 import '../widgets/nuevo_gasto_modal.dart';
-import '../widgets/nuevo_gasto_movilidad.dart';
 // NOTE: ya no abrimos `factura_modal_peru_ocr_extractor.dart` desde aquí.
 
 class ReportesListController {
@@ -390,6 +389,21 @@ class ReportesListController {
         ? politica
         : DropdownOption(value: politica?.toString() ?? '', id: '');
 
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => NuevoGastoModal(
+        politicaSeleccionada: politicaObj,
+        onCancel: () => Navigator.of(ctx).pop(),
+        onSave: (data) {
+          Navigator.of(ctx).pop();
+          // opcional: manejar resultado saved data si es necesario
+        },
+      ),
+    );
+
+    /*
     final key = politicaObj.value.toUpperCase();
     switch (key) {
       case 'GENERAL':
@@ -431,6 +445,7 @@ class ReportesListController {
         );
         break;
     }
+  */
   }
 
   // Muestra un modal para elegir fuente (tomar foto, elegir foto, documento), luego previsualizar
@@ -926,6 +941,7 @@ class ReportesListController {
     );
   }
 
+  /*
   // Escanear documento y procesar con IA si es un File
   Future<void> escanearDocumento(
     BuildContext context,
@@ -965,6 +981,7 @@ class ReportesListController {
       }
     }
   }
+*/
 
   Future<void> procesarFacturaConIA(
     BuildContext context,

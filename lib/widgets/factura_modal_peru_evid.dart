@@ -1,11 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flu2/controllers/edit_reporte_controller.dart';
+import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/factura_data_ocr.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 import '../models/categoria_model.dart';
 import '../models/dropdown_option.dart';
 import '../services/categoria_service.dart';
@@ -14,6 +18,7 @@ import '../screens/home_screen.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 /// Widget modal personalizado para mostrar y editar datos de factura peruana
 class FacturaModalPeruEvid extends StatefulWidget {
@@ -42,6 +47,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
   late TextEditingController _rucController;
+  late TextEditingController _razonSocialController;
   late TextEditingController _tipoComprobanteController;
   late TextEditingController _serieController;
   late TextEditingController _numeroController;
@@ -57,6 +63,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   late TextEditingController _destinoController;
   late TextEditingController _motivoViajeController;
   late TextEditingController _tipoTransporteController;
+  late TextEditingController _placaController;
 
   File? selectedFile;
   String? _selectedFileType; // 'image' o 'pdf'
@@ -68,8 +75,23 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   bool _isLoadingTiposGasto = false;
   List<CategoriaModel> _categoriasGeneral = [];
   List<DropdownOption> _tiposGasto = [];
+  List<DropdownOption> _tiposMovilidad = [];
   String? _errorCategorias;
   String? _errorTiposGasto;
+  String? _errorTiposMovilidad;
+
+  ///ApiRuc
+  bool _isLoadingApiRuc = false;
+  String? _errorApiRuc;
+  ApiRuc? _apiRucData;
+
+  bool _isLoadingTipoMovilidad = false;
+
+  // Opciones para moneda
+  String? _selectedMoneda;
+  final List<String> _monedas = ['PEN', 'USD', 'EUR'];
+
+  late final EditReporteController _controller;
 
   // Variables para validación de campos obligatorios
   bool _isFormValid = false;
@@ -96,6 +118,10 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   void initState() {
     super.initState();
     _initializeControllers();
+    _loadTipoMovilidad(); //
+    _loadApiRuc(
+      widget.facturaData.rucEmisor.toString(),
+    ); //widget.facturaData.rucEmisor
 
     // Si el modal recibió un archivo seleccionado, cargarlo en la sección de evidencia
     if (widget.selectedFile != null) {
@@ -244,8 +270,72 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
   }
 
+  /// Cargar tipos de gasto desde la API
+  Future<void> _loadTipoMovilidad() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingTipoMovilidad = true;
+        _errorTiposMovilidad = null;
+      });
+    }
+
+    try {
+      final tiposMovilidad = await _apiService.getTiposMovilidad();
+      if (mounted) {
+        setState(() {
+          _tiposMovilidad = tiposMovilidad;
+          _isLoadingTipoMovilidad = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorTiposMovilidad = e.toString();
+          _isLoadingTipoMovilidad = false;
+        });
+      }
+    }
+  }
+
+  /// Cargar información del RUC desde la API
+  Future<void> _loadApiRuc(String ruc) async {
+    if (mounted) {
+      setState(() {
+        _isLoadingApiRuc = true;
+        _errorApiRuc = null;
+      });
+    }
+
+    try {
+      // ✅ Aquí la llamada correcta al método de la API
+      final apiRuc = await _apiService.getApiRuc(ruc: ruc);
+
+      if (mounted) {
+        setState(() {
+          _apiRucData = apiRuc;
+          _isLoadingApiRuc = false;
+
+          // 👇 Aquí actualizas el TextEditingController después de obtener los datos
+          _razonSocialController.text = apiRuc.nombreRazonSocial ?? 'S/N';
+        });
+      }
+
+      debugPrint('✅ RUC cargado correctamente: ${apiRuc.ruc}');
+    } catch (e) {
+      debugPrint('❌ Error al cargar RUC: $e');
+      if (mounted) {
+        setState(() {
+          _errorApiRuc = e.toString();
+          _isLoadingApiRuc = false;
+        });
+      }
+    }
+  }
+
   /// Inicializar todos los controladores con los datos parseados del QR
   void _initializeControllers() {
+    _razonSocialController = TextEditingController();
+
     _politicaController = TextEditingController(
       text: widget.politicaSeleccionada,
     );
@@ -284,7 +374,13 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _origenController = TextEditingController(text: '');
     _destinoController = TextEditingController(text: '');
     _motivoViajeController = TextEditingController(text: '');
-    _tipoTransporteController = TextEditingController(text: 'Taxi');
+    _tipoTransporteController = TextEditingController(text: 'TAXI');
+    _placaController = TextEditingController(
+      text: CompanyService().companyPlaca,
+    );
+
+    // Configurar valores por defecto
+    _selectedMoneda = 'PEN';
   }
 
   @override
@@ -314,6 +410,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _categoriaController.dispose();
     _tipoGastoController.dispose();
     _rucController.dispose();
+    _razonSocialController.dispose();
     _tipoComprobanteController.dispose();
     _serieController.dispose();
     _numeroController.dispose();
@@ -323,6 +420,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _monedaController.dispose();
     _rucClienteController.dispose();
     _notaController.dispose();
+    _placaController.dispose();
   }
 
   /// Seleccionar archivo (imagen o PDF)
@@ -678,7 +776,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             : (_rucController.text.length > 80
                   ? _rucController.text.substring(0, 80)
                   : _rucController.text),
-        "proveedor": "",
+        "proveedor": _razonSocialController.text,
         "tipoCombrobante": _tipoComprobanteController.text.isEmpty
             ? ""
             : (_tipoComprobanteController.text.length > 180
@@ -711,11 +809,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         "desSed": "",
         "idCuenta": "",
         "consumidor": "",
-        "regimen": "",
+        "regimen": _placaController.text,
         "destino": "BORRADOR",
-        "glosa": _notaController.text.length > 480
-            ? _notaController.text.substring(0, 480)
-            : _notaController.text,
+        "glosa": "ESCANER IA",
         "motivoViaje": _motivoViajeController.text,
         "lugarOrigen": _origenController.text,
         "lugarDestino": _destinoController.text,
@@ -951,7 +1047,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             ),
             const SizedBox(height: 12),
 
-            // Mostrar archivo seleccionado
+            /// Mostrar archivo seleccionado
             if (selectedFile != null)
               Container(
                 width: double.infinity,
@@ -959,66 +1055,70 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   border: Border.all(color: Colors.grey.shade300),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: _selectedFileType == 'image'
-                    ? LayoutBuilder(
-                        builder: (context, constraints) {
-                          final h = MediaQuery.of(context).size.height;
-                          // Usar una altura relativa para ser responsive
-                          final imageHeight = (h * 0.25).clamp(120.0, 360.0);
-                          return SizedBox(
-                            height: imageHeight,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                selectedFile!,
-                                fit: BoxFit.cover,
+                child: GestureDetector(
+                  onTap:
+                      _handleTapEvidencia, // Aquí se agrega la opción de hacer clic
+                  child: _selectedFileType == 'image'
+                      ? LayoutBuilder(
+                          builder: (context, constraints) {
+                            final h = MediaQuery.of(context).size.height;
+                            // Usar una altura relativa para ser responsive
+                            final imageHeight = (h * 0.25).clamp(120.0, 360.0);
+                            return SizedBox(
+                              height: imageHeight,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  selectedFile!,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      )
-                    : Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.picture_as_pdf,
-                              color: Colors.red,
-                              size: 40,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Archivo PDF seleccionado',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _selectedFileName ?? 'archivo.pdf',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
+                            );
+                          },
+                        )
+                      : Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.picture_as_pdf,
+                                color: Colors.red,
+                                size: 40,
                               ),
-                            ),
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 24,
-                            ),
-                          ],
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Archivo PDF seleccionado',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _selectedFileName ?? 'archivo.pdf',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 24,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                ),
               )
             else
               Container(
@@ -1069,6 +1169,201 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleTapEvidencia() async {
+    try {
+      String nombreArchivo =
+          '${_rucController.text}_${_serieController.text}_${_numeroController.text}';
+
+      // 1️⃣ Si hay un archivo local seleccionado
+      if (selectedFile != null) {
+        final path = selectedFile!.path;
+        final bytes = await selectedFile!.readAsBytes();
+
+        if (_isPdfFile(path)) {
+          await _abrirPdfExterno(bytes, path.split('/').last);
+          return;
+        } else {
+          await _showEvidenciaDialogFromBytes(bytes);
+          return;
+        }
+      }
+
+      // 2️⃣ Si tenemos evidencia almacenada en `_apiEvidencia`
+      if (selectedFile != null) {
+        final evidencia = selectedFile!.path;
+
+        // 👉 Si es base64
+        if (_controller.isBase64(evidencia)) {
+          final bytes = base64Decode(evidencia);
+
+          // Detectar si es PDF por cabecera '%PDF'
+          final isPdf =
+              bytes.length >= 4 &&
+              bytes[0] == 0x25 &&
+              bytes[1] == 0x50 &&
+              bytes[2] == 0x44 &&
+              bytes[3] == 0x46;
+
+          if (isPdf) {
+            await _abrirPdfExterno(bytes, nombreArchivo + '.pdf');
+            return;
+          }
+
+          await _showEvidenciaDialogFromBytes(bytes);
+          return;
+        }
+
+        // 👉 Si es una URL válida
+        if (_controller.isValidUrl(evidencia)) {
+          try {
+            final uri = Uri.tryParse(evidencia);
+            String? fileName;
+            if (uri != null && uri.pathSegments.isNotEmpty) {
+              fileName = uri.pathSegments.last;
+            }
+
+            if (fileName != null) {
+              final bytes = await _apiService.obtenerImagenBytes(fileName);
+              if (bytes != null) {
+                if (fileName.toLowerCase().endsWith('.pdf')) {
+                  await _abrirPdfExterno(bytes, fileName);
+                } else {
+                  await _showEvidenciaDialogFromBytes(bytes);
+                }
+                return;
+              }
+            }
+
+            // Fallback: mostrar imagen por URL directamente
+            if (!mounted) return;
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('Evidencia'),
+                content: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: InteractiveViewer(
+                    panEnabled: true,
+                    boundaryMargin: const EdgeInsets.all(20),
+                    minScale: 1.0,
+                    maxScale: 5.0,
+                    child: Image.network(evidencia, fit: BoxFit.contain),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cerrar'),
+                  ),
+                ],
+              ),
+            );
+            return;
+          } catch (e) {
+            debugPrint('⚠️ Error descargando evidencia: $e');
+          }
+        }
+      }
+
+      // 3️⃣ Si no hay evidencia o es inválida
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Evidencia'),
+          content: const Text('No hay imagen disponible para previsualizar.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error mostrando evidencia: ${e.toString()}')),
+      );
+    }
+  }
+
+  /// Mostrar un diálogo con los bytes de la imagen
+  Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black, // Fondo negro para el AlertDialog
+        title: Center(
+          child: const Text(
+            'Evidencia',
+            style: TextStyle(
+              color: Colors.white,
+            ), // Título en blanco para que sea visible en el fondo negro
+          ),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(2),
+            minScale: 1.0,
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                12,
+              ), // Bordes redondeados para la imagen
+              child: Image.memory(
+                bytes,
+                fit: BoxFit
+                    .contain, // Asegurarse de que la imagen no se distorsione
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cerrar',
+              style: TextStyle(
+                color: Colors.white,
+              ), // Texto de cerrar en blanco
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _abrirPdfExterno(Uint8List pdfBytes, String fileName) async {
+    try {
+      // Crea un archivo temporal en el almacenamiento del dispositivo
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = '${tempDir.path}/$fileName';
+
+      final file = File(tempPath);
+      await file.writeAsBytes(pdfBytes, flush: true);
+
+      // Abre el archivo con una app externa instalada en el teléfono
+      final result = await OpenFilex.open(tempPath);
+
+      if (result.type != ResultType.done) {
+        debugPrint('⚠️ No se pudo abrir el PDF: ${result.message}');
+      }
+    } catch (e, st) {
+      debugPrint('🔥 Error al abrir PDF externo: $e\n$st');
+    }
+  }
+
+  /// Verificar si un archivo es PDF basado en su extensión
+  bool _isPdfFile(String filePath) {
+    return filePath.toLowerCase().endsWith('.pdf');
   }
 
   /// Construir la sección de política
@@ -1346,12 +1641,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Tipo de Gasto',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 8),
-
         // Si está cargando, mostrar indicador
         if (_isLoadingTiposGasto)
           const Column(
@@ -1436,8 +1725,101 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     );
   }
 
-  /// Construir la sección de datos de la factura
+  Widget _buildTipoMovilidad() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tipo de movilidad',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
 
+        // Si está cargando, mostrar indicador
+        if (_isLoadingTipoMovilidad)
+          const Column(
+            children: [
+              Center(child: CircularProgressIndicator()),
+              SizedBox(height: 8),
+              Text(
+                'Cargando tipos movilidad...',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          )
+        else if (_errorTiposMovilidad != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.red.shade200),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error al cargar tipos movilidad: $_errorTiposMovilidad',
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _loadTiposGasto,
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
+          )
+        else
+          AbsorbPointer(
+            absorbing: !_isEditMode,
+            child: DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: 'Tipo de Movilidad *',
+                prefixIcon: Icon(Icons.attach_money),
+                border: OutlineInputBorder(),
+                filled: true,
+                fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+              ),
+              value:
+                  _tipoTransporteController.text.isNotEmpty &&
+                      _tiposMovilidad.any(
+                        (tipo) => tipo.value == _tipoTransporteController.text,
+                      )
+                  ? _tipoTransporteController.text
+                  : null,
+              items: _tiposMovilidad
+                  .map(
+                    (tipo) => DropdownMenuItem<String>(
+                      value: tipo.value,
+                      child: Text(tipo.value),
+                    ),
+                  )
+                  .toList(),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Tipo movilidad es obligatorio';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _tipoTransporteController.text = value;
+                  });
+                  _validateForm(); // Validar cuando cambie el tipo de gasto
+                }
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Construir la sección de datos de la factura
   Widget _buildFacturaDataSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1459,6 +1841,22 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               child: _buildTextField(
                 _rucController,
                 'RUC Emisor',
+                Icons.business,
+                TextInputType.number,
+                isRequired: true,
+                readOnly: true,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
+                _razonSocialController,
+                'Razon Social',
                 Icons.business,
                 TextInputType.number,
                 isRequired: true,
@@ -1556,57 +1954,61 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         ),
         const SizedBox(height: 12),
 
-        // Cuarta fila: Total y Moneda (solo lectura) - responsive
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth > 480) {
-              return Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      _totalController,
-                      'Total',
-                      Icons.numbers,
-                      TextInputType.number,
-                      isRequired: true,
-                      readOnly: true,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildTextField(
-                      _monedaController,
-                      'Moneda',
-                      Icons.numbers_rounded,
-                      TextInputType.text,
-                      readOnly: true,
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            return Column(
-              children: [
-                _buildTextField(
-                  _totalController,
-                  'Total',
-                  Icons.attach_money,
-                  TextInputType.number,
-                  isRequired: true,
-                  readOnly: true,
+        // Total y Moneda en la misma fila
+        Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: TextFormField(
+                controller: _totalController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Total',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
                 ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  _monedaController,
-                  'Moneda',
-                  Icons.currency_exchange,
-                  TextInputType.text,
-                  readOnly: true,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El total es obligatorio';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Ingrese un valor válido';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _selectedMoneda,
+                decoration: const InputDecoration(
+                  labelText: 'Moneda',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.monetization_on),
                 ),
-              ],
-            );
-          },
+                items: _monedas.map((moneda) {
+                  return DropdownMenuItem<String>(
+                    value: moneda,
+                    child: Text(moneda),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMoneda = value;
+                    _monedaController.text = value ?? '';
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Seleccione una moneda';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
 
@@ -1617,7 +2019,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               child: _buildTextField(
                 _igvController,
                 'IGV',
-                Icons.code,
+                Icons.attach_money,
                 TextInputType.text,
                 readOnly: true,
               ),
@@ -1777,29 +2179,21 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               },
             ),
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _tipoTransporteController.text.isNotEmpty
-                  ? _tipoTransporteController.text
-                  : 'Taxi',
+
+            _buildTipoMovilidad(),
+            const SizedBox(height: 12),
+
+            // PLACA
+            TextFormField(
+              controller: _placaController,
               decoration: const InputDecoration(
-                labelText: 'Tipo de Transporte',
+                labelText: 'Placa',
                 border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.directions_car),
+                prefixIcon: Icon(Icons.badge),
               ),
-              items: const [
-                DropdownMenuItem(value: 'Taxi', child: Text('Taxi')),
-                DropdownMenuItem(value: 'Uber', child: Text('Uber')),
-                DropdownMenuItem(value: 'Bus', child: Text('Bus')),
-                DropdownMenuItem(value: 'Metro', child: Text('Metro')),
-                DropdownMenuItem(value: 'Avión', child: Text('Avión')),
-                DropdownMenuItem(value: 'Otro', child: Text('Otro')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _tipoTransporteController.text = value ?? 'Taxi';
-                });
-              },
+              keyboardType: TextInputType.text,
             ),
+            const SizedBox(height: 12),
           ],
         ),
       ),

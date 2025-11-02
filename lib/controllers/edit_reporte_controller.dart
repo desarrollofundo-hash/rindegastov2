@@ -188,8 +188,6 @@ class EditReporteController {
         "useElim": 0,
       };
 
-      debugPrint('API EVIDENCIA: $apiEvidencia');
-
       final extension = p.extension(
         selectedImage!.path,
       ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
@@ -217,7 +215,12 @@ class EditReporteController {
         "useElim": 0,
       };
 
+      debugPrint('Guardando factura');
+
       await _apiService.saveupdateRendicionGasto(facturaData);
+
+      debugPrint('Guardando evidencia');
+
       final success = await _apiService.saveRendicionGastoEvidencia(
         facturaDataEvidencia,
       );

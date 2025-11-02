@@ -67,3 +67,15 @@ String formatDate(String? fecha) {
 
   return fecha;
 }
+
+/// Muestra un SnackBar con un mensaje en la pantalla
+void showMessageError(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 2),
+}) {
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message), duration: duration));
+}
+

@@ -1,9 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flu2/controllers/edit_reporte_controller.dart';
+import 'package:flu2/models/apiruc_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:open_filex/open_filex.dart';
 import '../models/factura_data.dart';
 import '../models/categoria_model.dart';
 import '../models/dropdown_option.dart';
@@ -13,6 +17,7 @@ import '../screens/home_screen.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 /// Widget modal personalizado para mostrar y editar datos de factura peruana
 class FacturaModalPeru extends StatefulWidget {
@@ -39,6 +44,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
   late TextEditingController _rucController;
+  late TextEditingController _razonSocialController;
   late TextEditingController _tipoComprobanteController;
   late TextEditingController _serieController;
   late TextEditingController _numeroController;
@@ -54,8 +60,10 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   late TextEditingController _destinoController;
   late TextEditingController _motivoViajeController;
   late TextEditingController _tipoTransporteController;
+  late TextEditingController _placaController;
 
-  File? _selectedImage;
+  late final EditReporteController _controller;
+
   File? _selectedFile;
   String? _selectedFileType; // 'image' o 'pdf'
   String? _selectedFileName;
@@ -66,9 +74,21 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   bool _isLoadingTiposGasto = false;
   List<CategoriaModel> _categoriasGeneral = [];
   List<DropdownOption> _tiposGasto = [];
-  List<CategoriaModel> _categoriasMovilidad = [];
+  List<DropdownOption> _tiposMovilidad = [];
   String? _errorCategorias;
   String? _errorTiposGasto;
+  String? _errorTiposMovilidad;
+
+  ///ApiRuc
+  bool _isLoadingApiRuc = false;
+  String? _errorApiRuc;
+  ApiRuc? _apiRucData;
+
+  bool _isLoadingTipoMovilidad = false;
+
+  // Opciones para moneda
+  String? _selectedMoneda;
+  final List<String> _monedas = ['PEN', 'USD', 'EUR'];
 
   // Variables para validación de campos obligatorios
   bool _isFormValid = false;
@@ -79,7 +99,12 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     super.initState();
     _initializeControllers();
     _loadCategorias();
-    _loadTiposGasto(); // Cargar tipos de gasto al inicializar
+    _loadTiposGasto(); // Cargar gasto
+    _loadTipoMovilidad();
+    _loadApiRuc(
+      widget.facturaData.ruc.toString(),
+    ); //widget.facturaData.rucEmisor
+
     _addValidationListeners();
   }
 
@@ -144,9 +169,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         _categoriaController.text.trim().isNotEmpty &&
         _tipoGastoController.text.trim().isNotEmpty &&
         _rucClienteController.text.trim().isNotEmpty &&
-        (_selectedImage != null ||
-            _selectedFile !=
-                null) && // ✅ Actualizado para aceptar archivos o imágenes
+        (_selectedFile !=
+            null) && // ✅ Actualizado para aceptar archivos o imágenes
         _isRucValid(); // ✅ Añadida validación de RUC
 
     if (_isFormValid != isValid) {
@@ -214,6 +238,68 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     }
   }
 
+  /// Cargar tipos de gasto desde la API
+  Future<void> _loadTipoMovilidad() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingTipoMovilidad = true;
+        _errorTiposMovilidad = null;
+      });
+    }
+
+    try {
+      final tiposMovilidad = await _apiService.getTiposMovilidad();
+      if (mounted) {
+        setState(() {
+          _tiposMovilidad = tiposMovilidad;
+          _isLoadingTipoMovilidad = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorTiposMovilidad = e.toString();
+          _isLoadingTipoMovilidad = false;
+        });
+      }
+    }
+  }
+
+  /// Cargar información del RUC desde la API
+  Future<void> _loadApiRuc(String ruc) async {
+    if (mounted) {
+      setState(() {
+        _isLoadingApiRuc = true;
+        _errorApiRuc = null;
+      });
+    }
+
+    try {
+      // ✅ Aquí la llamada correcta al método de la API
+      final apiRuc = await _apiService.getApiRuc(ruc: ruc);
+
+      if (mounted) {
+        setState(() {
+          _apiRucData = apiRuc;
+          _isLoadingApiRuc = false;
+
+          // 👇 Aquí actualizas el TextEditingController después de obtener los datos
+          _razonSocialController.text = apiRuc.nombreRazonSocial ?? 'S/N';
+        });
+      }
+
+      debugPrint('✅ RUC cargado correctamente: ${apiRuc.ruc}');
+    } catch (e) {
+      debugPrint('❌ Error al cargar RUC: $e');
+      if (mounted) {
+        setState(() {
+          _errorApiRuc = e.toString();
+          _isLoadingApiRuc = false;
+        });
+      }
+    }
+  }
+
   /// Inicializar todos los controladores con los datos parseados del QR
   void _initializeControllers() {
     _politicaController = TextEditingController(
@@ -224,6 +310,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       text: CompanyService().companyTipogasto,
     );
     _rucController = TextEditingController(text: widget.facturaData.ruc ?? '');
+    _razonSocialController = TextEditingController();
     _tipoComprobanteController = TextEditingController(
       text: widget.facturaData.tipoComprobante ?? '',
     );
@@ -249,6 +336,13 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       text: widget.facturaData.rucCliente ?? '',
     );
     _notaController = TextEditingController(text: '');
+    _tipoTransporteController = TextEditingController(text: 'TAXI');
+    _placaController = TextEditingController(
+      text: CompanyService().companyPlaca,
+    );
+
+    // Configurar valores por defecto
+    _selectedMoneda = 'PEN';
   }
 
   @override
@@ -278,6 +372,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     _categoriaController.dispose();
     _tipoGastoController.dispose();
     _rucController.dispose();
+    _razonSocialController.dispose();
     _tipoComprobanteController.dispose();
     _serieController.dispose();
     _numeroController.dispose();
@@ -287,6 +382,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     _monedaController.dispose();
     _rucClienteController.dispose();
     _notaController.dispose();
+    _placaController.dispose();
   }
 
   /// Seleccionar archivo (imagen o PDF)
@@ -376,7 +472,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   }
                   if (mounted) {
                     setState(() {
-                      _selectedImage = null;
                       _selectedFile = null;
                       _selectedFileType = null;
                       _selectedFileName = null;
@@ -399,7 +494,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   );
                 }
                 setState(() {
-                  _selectedImage = null;
                   _selectedFile = null;
                   _selectedFileType = null;
                   _selectedFileName = null;
@@ -409,7 +503,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             }
             if (mounted) {
               setState(() {
-                _selectedImage = file;
                 _selectedFile = file;
                 _selectedFileType = 'image';
                 _selectedFileName = image.name;
@@ -429,7 +522,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             final file = File(result.files.first.path!);
             if (mounted) {
               setState(() {
-                _selectedImage = null; // Limpiar imagen si había una
                 _selectedFile = file;
                 _selectedFileType = 'pdf';
                 _selectedFileName = result.files.first.name;
@@ -643,7 +735,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             : (_rucController.text.length > 80
                   ? _rucController.text.substring(0, 80)
                   : _rucController.text),
-        "proveedor": "",
+        "proveedor": _razonSocialController.text,
         "tipoCombrobante": _tipoComprobanteController.text.isEmpty
             ? ""
             : (_tipoComprobanteController.text.length > 180
@@ -676,11 +768,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         "desSed": "",
         "idCuenta": "",
         "consumidor": "",
-        "regimen": "",
+        "regimen": _placaController.text,
         "destino": "BORRADOR",
-        "glosa": _notaController.text.length > 480
-            ? _notaController.text.substring(0, 480)
-            : _notaController.text,
+        "glosa": "CODIGO QR",
         "motivoViaje": "",
         "lugarOrigen": "",
         "lugarDestino": "",
@@ -712,20 +802,20 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
 
       final extension = p.extension(
-        _selectedImage!.path,
+        _selectedFile!.path,
       ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
 
       String nombreArchivo =
           '${idRend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extension';
 
       final driveId = await _apiService.subirArchivo(
-        _selectedImage!.path,
+        _selectedFile!.path,
         nombreArchivo: nombreArchivo,
       );
       // ✅ SEGUNDO API: Guardar evidencia/archivo usando el idRend del primer API
       final facturaDataEvidencia = {
         "idRend": idRend, // ✅ Usar el ID autogenerado del API principal
-        "evidencia":null,
+        "evidencia": null,
         "obs": driveId,
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
@@ -898,14 +988,175 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   ElevatedButton.icon(
                     onPressed: _pickImage,
                     icon: Icon(
-                      (_selectedImage == null && _selectedFile == null)
-                          ? Icons.add
-                          : Icons.edit,
+                      (_selectedFile == null) ? Icons.add : Icons.edit,
                     ),
                     label: Text(
-                      (_selectedImage == null && _selectedFile == null)
-                          ? 'Agregar'
-                          : 'Cambiar',
+                      (_selectedFile == null) ? 'Agregar' : 'Cambiar',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Mostrar archivo seleccionado
+            if (_selectedFile != null)
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: _selectedFileType == 'image'
+                    ? GestureDetector(
+                        onTap: _handleTapEvidencia, // 👈 agregado aquí
+                        child: Container(
+                          height: 200,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              _selectedFile!,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      )
+                    : GestureDetector(
+                        onTap: _handleTapEvidencia, // 👈 agregado aquí también
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.picture_as_pdf,
+                                color: Colors.red,
+                                size: 40,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Archivo PDF seleccionado',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _selectedFileName ?? 'archivo.pdf',
+                                      style: TextStyle(
+                                        color: Colors.grey.shade700,
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 24,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+              )
+            else
+              Container(
+                height: 100,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  border: Border.all(
+                    color: (_selectedFile == null)
+                        ? Colors.red.shade300
+                        : Colors.grey.shade300,
+                    width: (_selectedFile == null) ? 2 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.attach_file,
+                      color: (_selectedFile == null) ? Colors.red : Colors.grey,
+                      size: 40,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Agregar evidencia (Obligatorio)',
+                      style: TextStyle(
+                        color: (_selectedFile == null)
+                            ? Colors.red
+                            : Colors.grey,
+                        fontWeight: (_selectedFile == null)
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Imagen o PDF',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /*
+  /// Construir la sección de imagen
+  Widget _buildImageSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.attach_file, color: Colors.red),
+                const SizedBox(width: 8),
+                const Text(
+                  'Adjuntar Evidencia',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  ' *',
+                  style: TextStyle(color: Colors.red, fontSize: 16),
+                ),
+                const Spacer(),
+                if (_isLoading)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  ElevatedButton.icon(
+                    onPressed: _pickImage,
+                    icon: Icon(
+                      (_selectedFile == null) ? Icons.add : Icons.edit,
+                    ),
+                    label: Text(
+                      (_selectedFile == null) ? 'Agregar' : 'Cambiar',
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -982,12 +1233,10 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   border: Border.all(
-                    color: (_selectedImage == null && _selectedFile == null)
+                    color: (_selectedFile == null)
                         ? Colors.red.shade300
                         : Colors.grey.shade300,
-                    width: (_selectedImage == null && _selectedFile == null)
-                        ? 2
-                        : 1,
+                    width: (_selectedFile == null) ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -996,20 +1245,17 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   children: [
                     Icon(
                       Icons.attach_file,
-                      color: (_selectedImage == null && _selectedFile == null)
-                          ? Colors.red
-                          : Colors.grey,
+                      color: (_selectedFile == null) ? Colors.red : Colors.grey,
                       size: 40,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Agregar evidencia (Obligatorio)',
                       style: TextStyle(
-                        color: (_selectedImage == null && _selectedFile == null)
+                        color: (_selectedFile == null)
                             ? Colors.red
                             : Colors.grey,
-                        fontWeight:
-                            (_selectedImage == null && _selectedFile == null)
+                        fontWeight: (_selectedFile == null)
                             ? FontWeight.bold
                             : FontWeight.normal,
                       ),
@@ -1029,6 +1275,202 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         ),
       ),
     );
+  }
+*/
+
+  Future<void> _handleTapEvidencia() async {
+    try {
+      String nombreArchivo =
+          '${_rucController.text}_${_serieController.text}_${_numeroController.text}';
+
+      // 1️⃣ Si hay un archivo local seleccionado
+      if (_selectedFile != null) {
+        final path = _selectedFile!.path;
+        final bytes = await _selectedFile!.readAsBytes();
+
+        if (_isPdfFile(path)) {
+          await _abrirPdfExterno(bytes, path.split('/').last);
+          return;
+        } else {
+          await _showEvidenciaDialogFromBytes(bytes);
+          return;
+        }
+      }
+
+      // 2️⃣ Si tenemos evidencia almacenada en `_apiEvidencia`
+      if (_selectedFile != null) {
+        final evidencia = _selectedFile!.path;
+
+        // 👉 Si es base64
+        if (_controller.isBase64(evidencia)) {
+          final bytes = base64Decode(evidencia);
+
+          // Detectar si es PDF por cabecera '%PDF'
+          final isPdf =
+              bytes.length >= 4 &&
+              bytes[0] == 0x25 &&
+              bytes[1] == 0x50 &&
+              bytes[2] == 0x44 &&
+              bytes[3] == 0x46;
+
+          if (isPdf) {
+            await _abrirPdfExterno(bytes, nombreArchivo + '.pdf');
+            return;
+          }
+
+          await _showEvidenciaDialogFromBytes(bytes);
+          return;
+        }
+
+        // 👉 Si es una URL válida
+        if (_controller.isValidUrl(evidencia)) {
+          try {
+            final uri = Uri.tryParse(evidencia);
+            String? fileName;
+            if (uri != null && uri.pathSegments.isNotEmpty) {
+              fileName = uri.pathSegments.last;
+            }
+
+            if (fileName != null) {
+              final bytes = await _apiService.obtenerImagenBytes(fileName);
+              if (bytes != null) {
+                if (fileName.toLowerCase().endsWith('.pdf')) {
+                  await _abrirPdfExterno(bytes, fileName);
+                } else {
+                  await _showEvidenciaDialogFromBytes(bytes);
+                }
+                return;
+              }
+            }
+
+            // Fallback: mostrar imagen por URL directamente
+            if (!mounted) return;
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('Evidencia'),
+                content: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: InteractiveViewer(
+                    panEnabled: true,
+                    boundaryMargin: const EdgeInsets.all(20),
+                    minScale: 1.0,
+                    maxScale: 5.0,
+                    child: Image.network(evidencia, fit: BoxFit.contain),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cerrar'),
+                  ),
+                ],
+              ),
+            );
+            return;
+          } catch (e) {
+            debugPrint('⚠️ Error descargando evidencia: $e');
+          }
+        }
+      }
+
+      // 3️⃣ Si no hay evidencia o es inválida
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Evidencia'),
+          content: const Text('No hay imagen disponible para previsualizar.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error mostrando evidencia: ${e.toString()}')),
+      );
+    }
+  }
+
+  /// Mostrar un diálogo con los bytes de la imagen
+  Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black, // Fondo negro para el AlertDialog
+        title: Center(
+          child: const Text(
+            'Evidencia',
+            style: TextStyle(
+              color: Colors.white,
+            ), // Título en blanco para que sea visible en el fondo negro
+          ),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(2),
+            minScale: 1.0,
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                12,
+              ), // Bordes redondeados para la imagen
+              child: Image.memory(
+                bytes,
+                fit: BoxFit
+                    .contain, // Asegurarse de que la imagen no se distorsione
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cerrar',
+              style: TextStyle(
+                color: Colors.white,
+              ), // Texto de cerrar en blanco
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _abrirPdfExterno(Uint8List pdfBytes, String fileName) async {
+    try {
+      // Crea un archivo temporal en el almacenamiento del dispositivo
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = '${tempDir.path}/$fileName';
+
+      final file = File(tempPath);
+      await file.writeAsBytes(pdfBytes, flush: true);
+
+      // Abre el archivo con una app externa instalada en el teléfono
+      final result = await OpenFilex.open(tempPath);
+
+      if (result.type != ResultType.done) {
+        debugPrint('⚠️ No se pudo abrir el PDF: ${result.message}');
+      }
+    } catch (e, st) {
+      debugPrint('🔥 Error al abrir PDF externo: $e\n$st');
+    }
+  }
+
+  /// Verificar si un archivo es PDF basado en su extensión
+  bool _isPdfFile(String filePath) {
+    return filePath.toLowerCase().endsWith('.pdf');
   }
 
   /// Construir la sección de política
@@ -1342,6 +1784,22 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
           children: [
             Expanded(
               child: _buildTextField(
+                _razonSocialController,
+                'Razon Social',
+                Icons.business,
+                TextInputType.text,
+                isRequired: true,
+                readOnly: true,
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildTextField(
                 _tipoComprobanteController,
                 'Tipo Comprobante',
                 Icons.description,
@@ -1396,27 +1854,58 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         ),
         const SizedBox(height: 12),
 
-        // Cuarta fila: Total y Moneda (solo lectura)
+        // Total y Moneda en la misma fila
         Row(
           children: [
             Expanded(
-              child: _buildTextField(
-                _totalController,
-                'Total',
-                Icons.attach_money,
-                TextInputType.number,
-                isRequired: true,
+              flex: 1,
+              child: TextFormField(
+                controller: _totalController,
                 readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Total',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El total es obligatorio';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Ingrese un valor válido';
+                  }
+                  return null;
+                },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 6),
             Expanded(
-              child: _buildTextField(
-                _monedaController,
-                'Moneda',
-                Icons.currency_exchange,
-                TextInputType.text,
-                readOnly: true,
+              child: DropdownButtonFormField<String>(
+                value: _selectedMoneda,
+                decoration: const InputDecoration(
+                  labelText: 'Moneda',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.monetization_on),
+                ),
+                items: _monedas.map((moneda) {
+                  return DropdownMenuItem<String>(
+                    value: moneda,
+                    child: Text(moneda),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMoneda = value;
+                    _monedaController.text = value ?? '';
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Seleccione una moneda';
+                  }
+                  return null;
+                },
               ),
             ),
           ],
@@ -1430,7 +1919,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
               child: _buildTextField(
                 _igvController,
                 'IGV',
-                Icons.code,
+                Icons.attach_money,
                 TextInputType.text,
                 readOnly: true,
               ),

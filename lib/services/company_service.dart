@@ -43,6 +43,7 @@ class CompanyService extends ChangeNotifier {
   /// Getter para obtener el régimen de la empresa seleccionada
   String get companyRegimen => _currentCompany?.regimen ?? '';
   String get companyRuc => _currentCompany?.ruc ?? '';
+  String get companyPlaca => _currentCompany?.placa ?? '';
 
   /// Setter para establecer la empresa seleccionada
   void setCurrentCompany(UserCompany company) {

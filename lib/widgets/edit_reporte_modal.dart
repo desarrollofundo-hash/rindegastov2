@@ -16,6 +16,7 @@ import '../screens/home_screen.dart';
 import 'package:path/path.dart' as p;
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class EditReporteModal extends StatefulWidget {
   final Reporte reporte;
@@ -33,7 +34,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
   late TextEditingController _rucController;
-  late TextEditingController _proveedorController;
+  late TextEditingController _razonSocialController;
   late TextEditingController _tipoComprobanteController;
   late TextEditingController _serieController;
   late TextEditingController _numeroController;
@@ -48,6 +49,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   late TextEditingController _destinoController;
   late TextEditingController _motivoViajeController;
   late TextEditingController _tipoMovilidadController;
+  late TextEditingController _placaController;
 
   // Campos adicionales usados en el formulario
   late TextEditingController _igvController;
@@ -68,7 +70,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
   // Image / file picker
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
-  String? _apiEvidencia;
 
   List<CategoriaModel> _categoriasGeneral = [];
   List<DropdownOption> _tiposGasto = [];
@@ -115,10 +116,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
     for (final v in candidates) {
       if (v != null) {
         final value = v.trim().toUpperCase();
-        if (value.contains('EN INFORME') ||
-            value == 'EN AUDITORIA' ||
+        if (value == 'EN AUDITORIA' ||
             value == 'EN REVISION' ||
             value == 'APROBADO' ||
+            value == 'RECHAZADO' ||
             value == 'DESAPROBADO') {
           return true;
         }
@@ -187,9 +188,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _totalController.text.trim().isNotEmpty &&
         _categoriaController.text.trim().isNotEmpty &&
         _tipoGastoController.text.trim().isNotEmpty &&
-        _notaController.text.trim().isNotEmpty &&
-        (_selectedImage != null ||
-            (_apiEvidencia != null && _apiEvidencia!.isNotEmpty)) &&
+        (_selectedImage != null) &&
         _isRucValid();
 
     if (_isFormValid != isValid) {
@@ -200,6 +199,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   }
 
   void _initializeSelectedValues() {
+    _selectedImage = null;
     // Para política se validará después de cargar desde API
     // Para categoría y tipo de gasto, se validarán después de cargar desde API
     // Las variables se inicializan en los métodos correspondientes
@@ -299,7 +299,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       text: widget.reporte.tipogasto ?? '',
     );
     _rucController = TextEditingController(text: widget.reporte.ruc ?? '');
-    _proveedorController = TextEditingController(
+    _razonSocialController = TextEditingController(
       text: widget.reporte.proveedor ?? '',
     );
     _tipoComprobanteController = TextEditingController(
@@ -335,6 +335,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _tipoMovilidadController = TextEditingController(
       text: widget.reporte.tipomovilidad ?? '',
     );
+    _placaController = TextEditingController(
+      text: widget.reporte.regimen ?? '',
+    );
 
     // Nuevos controladores
     _igvController = TextEditingController(
@@ -358,14 +361,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _totalController.removeListener(_validateForm);
     _categoriaController.removeListener(_validateForm);
     _tipoGastoController.removeListener(_validateForm);
-    _notaController.removeListener(_validateForm);
 
     // Dispose de los controladores
     _politicaController.dispose();
     _categoriaController.dispose();
     _tipoGastoController.dispose();
     _rucController.dispose();
-    _proveedorController.dispose();
+    _razonSocialController.dispose();
     _tipoComprobanteController.dispose();
     _serieController.dispose();
     _numeroController.dispose();
@@ -382,6 +384,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _destinoController.dispose();
     _motivoViajeController.dispose();
     _tipoMovilidadController.dispose();
+    _placaController.dispose();
 
     _controller.dispose();
     super.dispose();
@@ -633,7 +636,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   const Icon(Icons.receipt, color: Colors.red),
                   const SizedBox(width: 8),
                   const Text(
-                    'Adjuntar Factura',
+                    'Adjuntar Evidencia',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const Text(
@@ -651,18 +654,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ElevatedButton.icon(
                       onPressed: _isEditMode ? _pickImage : null,
                       icon: Icon(
-                        (_selectedImage == null &&
-                                (_apiEvidencia == null ||
-                                    _apiEvidencia!.isEmpty))
+                        (_selectedImage == null)
                             ? Icons.add_a_photo
                             : Icons.edit,
                       ),
                       label: Text(
-                        (_selectedImage == null &&
-                                (_apiEvidencia == null ||
-                                    _apiEvidencia!.isEmpty))
-                            ? 'Seleccionar'
-                            : 'Cambiar ',
+                        (_selectedImage == null) ? 'Seleccionar' : 'Cambiar ',
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isEditMode ? Colors.red : Colors.grey,
@@ -671,7 +668,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                 ],
               ),
-              // Mostrar archivo: puede ser imagen o PDF
+
+              /// Mostrar archivo: puede ser imagen o PDF
               if (_selectedImage != null)
                 Container(
                   height: 200,
@@ -711,7 +709,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                   ),
                 )
-              else if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty)
+              else if (_selectedImage != null)
+                // Si la evidencia está en base64
                 Container(
                   height: 200,
                   width: double.infinity,
@@ -723,7 +722,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     borderRadius: BorderRadius.circular(8),
                     child: GestureDetector(
                       onTap: _handleTapEvidencia,
-                      child: _buildEvidenciaImage(_apiEvidencia!),
+                      child: _buildEvidenciaImage(_selectedImage!.path),
                     ),
                   ),
                 )
@@ -734,16 +733,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     border: Border.all(
-                      color:
-                          (_selectedImage == null &&
-                              (_apiEvidencia == null || _apiEvidencia!.isEmpty))
+                      color: (_selectedImage == null)
                           ? Colors.red.shade300
                           : Colors.grey.shade300,
-                      width:
-                          (_selectedImage == null &&
-                              (_apiEvidencia == null || _apiEvidencia!.isEmpty))
-                          ? 2
-                          : 1,
+                      width: (_selectedImage == null) ? 2 : 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -752,10 +745,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     children: [
                       Icon(
                         Icons.receipt_outlined,
-                        color:
-                            (_selectedImage == null &&
-                                (_apiEvidencia == null ||
-                                    _apiEvidencia!.isEmpty))
+                        color: (_selectedImage == null)
                             ? Colors.red
                             : Colors.grey,
                         size: 40,
@@ -764,16 +754,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       Text(
                         'Agregar evidencia (Obligatorio)',
                         style: TextStyle(
-                          color:
-                              (_selectedImage == null &&
-                                  (_apiEvidencia == null ||
-                                      _apiEvidencia!.isEmpty))
+                          color: (_selectedImage == null)
                               ? Colors.red
                               : Colors.grey,
-                          fontWeight:
-                              (_selectedImage == null &&
-                                  (_apiEvidencia == null ||
-                                      _apiEvidencia!.isEmpty))
+                          fontWeight: (_selectedImage == null)
                               ? FontWeight.bold
                               : FontWeight.normal,
                         ),
@@ -1095,9 +1079,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Tipo de Gasto'),
-        const SizedBox(height: 8),
-
         // Si está cargando, mostrar indicador
         if (_isLoadingTiposGasto)
           const Column(
@@ -1201,6 +1182,82 @@ class _EditReporteModalState extends State<EditReporteModal> {
   }
 
   Future<void> _cargarImagenServidor() async {
+    debugPrint('🔄 Iniciando carga de evidencia desde servidor...');
+
+    try {
+      if (!mounted) return;
+
+      final baseName =
+          '${widget.reporte.idrend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}';
+
+      // Construir lista de extensiones candidatas
+      final List<String> candidates = [];
+
+      // Añadir extensiones comunes y un intento sin extensión
+      candidates.addAll(['.png', '.jpg', '.jpeg', '.pdf', '.gif', '']);
+
+      Uint8List? bytes;
+      String? triedName;
+
+      // Intentar obtener la imagen desde el servidor con las extensiones candidatas
+      for (final ext in candidates) {
+        final name = ext.isNotEmpty ? '$baseName$ext' : baseName;
+        debugPrint('🔎 Intentando obtener: $name');
+        try {
+          bytes = await _apiService.obtenerImagenBytes(name);
+        } catch (_) {
+          bytes = null;
+        }
+        if (bytes != null) {
+          triedName = name;
+          break;
+        }
+      }
+
+      // Si encontramos la imagen
+      if (bytes != null && mounted) {
+        // Guardar la imagen en el dispositivo
+        final tempDir =
+            await getTemporaryDirectory(); // Obtén el directorio temporal
+        final tempFile = File(
+          '${tempDir.path}/$triedName',
+        ); // Crear un archivo temporal
+
+        // Escribir los bytes en el archivo
+        await tempFile.writeAsBytes(bytes);
+
+        setState(() {
+          _selectedImage =
+              tempFile; // Asignar el archivo a la variable _selectedImage
+        });
+
+        debugPrint('✅ Evidencia cargada desde servidor: $triedName');
+        return;
+      }
+
+      // Si no se encuentra la imagen
+      debugPrint(
+        '⚠️ No se encontró la evidencia en el servidor (probadas: ${candidates.join(', ')})',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se encontró la evidencia en el servidor'),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('🔥 Error cargando imagen del servidor: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error cargando evidencia: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  /*
+  Future<void> _cargarImagenServidor() async {
     try {
       if (!mounted) return;
 
@@ -1281,54 +1338,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       }
     }
   }
-
-  /// Mostrar un diálogo con los bytes de la imagen
-  Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Evidencia'),
-        content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: InteractiveViewer(
-            panEnabled: true,
-            boundaryMargin: const EdgeInsets.all(20),
-            minScale: 1.0,
-            maxScale: 5.0,
-            child: Image.memory(bytes, fit: BoxFit.contain),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _abrirPdfExterno(Uint8List pdfBytes, String fileName) async {
-    try {
-      // Crea un archivo temporal en el almacenamiento del dispositivo
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = '${tempDir.path}/$fileName';
-
-      final file = File(tempPath);
-      await file.writeAsBytes(pdfBytes, flush: true);
-
-      // Abre el archivo con una app externa instalada en el teléfono
-      final result = await OpenFilex.open(tempPath);
-
-      if (result.type != ResultType.done) {
-        debugPrint('⚠️ No se pudo abrir el PDF: ${result.message}');
-      }
-    } catch (e, st) {
-      debugPrint('🔥 Error al abrir PDF externo: $e\n$st');
-    }
-  }
+*/
 
   /// Mostrar un PDF en un diálogo usando PdfPreview (paquete `printing` está en pubspec)
   Future<void> _showPdfDialogFromBytes(Uint8List bytes, {String? title}) async {
@@ -1397,8 +1407,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
       }
 
       // 2️⃣ Si tenemos evidencia almacenada en `_apiEvidencia`
-      if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty) {
-        final evidencia = _apiEvidencia!;
+      if (_selectedImage != null) {
+        final evidencia = _selectedImage!.path;
 
         // 👉 Si es base64
         if (_controller.isBase64(evidencia)) {
@@ -1497,6 +1507,150 @@ class _EditReporteModalState extends State<EditReporteModal> {
     }
   }
 
+  /*
+  /// Mostrar un diálogo con los bytes de la imagen
+  Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black, // Fondo negro para el AlertDialog
+        title: Center(
+          child: const Text(
+            'Evidencia',
+            style: TextStyle(
+              color: Colors.white,
+            ), // Título en blanco para que sea visible en el fondo negro
+          ),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(2),
+            minScale: 1.0,
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                12,
+              ), // Bordes redondeados para la imagen
+              child: Image.memory(
+                bytes,
+                fit: BoxFit
+                    .contain, // Asegurarse de que la imagen no se distorsione
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cerrar',
+              style: TextStyle(
+                color: Colors.white,
+              ), // Texto de cerrar en blanco
+            ),
+          ),
+        ],
+      ),
+    );
+  
+  }
+*/
+  Future<void> _showEvidenciaDialogFromBytes(
+    Uint8List bytes, {
+    String? nombreArchivo,
+  }) async {
+    if (!mounted) return;
+    // Supongamos que tienes estos valores
+    final ruc = widget.reporte.ruc;
+    final serie = widget.reporte.serie;
+    final numero = widget.reporte.numero;
+
+    // Concatenar para formar el nombre del archivo
+    final nombreArchivo = '${ruc}_${serie}_${numero}.png';
+
+    // Si no se pasa un nombre, usar un default
+    final fileName = nombreArchivo;
+    // Guardar temporalmente los bytes en un archivo para compartir
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/$fileName');
+    await tempFile.writeAsBytes(bytes);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black,
+        title: Center(
+          child: const Text('Evidencia', style: TextStyle(color: Colors.white)),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(2),
+            minScale: 1.0,
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.memory(bytes, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+        actions: [
+          // Botón de compartir
+          TextButton.icon(
+            onPressed: () async {
+              try {
+                await Share.shareXFiles([
+                  XFile(tempFile.path, name: fileName),
+                ], text: fileName);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error compartiendo: $e')),
+                );
+              }
+            },
+            icon: const Icon(Icons.share, color: Colors.white),
+            label: const Text(
+              'Compartir',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+
+          // Botón de cerrar
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _abrirPdfExterno(Uint8List pdfBytes, String fileName) async {
+    try {
+      // Crea un archivo temporal en el almacenamiento del dispositivo
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = '${tempDir.path}/$fileName';
+
+      final file = File(tempPath);
+      await file.writeAsBytes(pdfBytes, flush: true);
+
+      // Abre el archivo con una app externa instalada en el teléfono
+      final result = await OpenFilex.open(tempPath);
+
+      if (result.type != ResultType.done) {
+        debugPrint('⚠️ No se pudo abrir el PDF: ${result.message}');
+      }
+    } catch (e, st) {
+      debugPrint('🔥 Error al abrir PDF externo: $e\n$st');
+    }
+  }
+
   /// Guardar factura mediante API
   Future<void> _updateFacturaAPI() async {
     // Validar campos obligatorios antes de continuar
@@ -1535,7 +1689,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         lugarDestino: _destinoController.text,
         tipoMovilidad: _tipoMovilidadController.text,
         selectedImage: _selectedImage,
-        apiEvidencia: _apiEvidencia,
+        apiEvidencia: null,
       );
 
       if (success && mounted) {
@@ -1725,6 +1879,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Datos Factura',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
+        const SizedBox(height: 8),
         // Primera fila: RUC y Tipo de Comprobante
         _buildTextField(
           _rucController,
@@ -1735,6 +1898,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
           readOnly: true,
         ),
         const SizedBox(height: 16),
+
+        _buildTextField(
+          _razonSocialController,
+          'Razon social',
+          Icons.house,
+          TextInputType.text,
+        ),
+        const SizedBox(height: 16),
+
         _buildTextField(
           _tipoComprobanteController,
           'Tipo Comprobante ',
@@ -1946,6 +2118,21 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Tipo Transporte',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.directions_transit),
+                  filled: true,
+                  fillColor: _isEditMode
+                      ? Colors.white
+                      : sectionBg.withOpacity(0.12),
+                ),
+              ),
+
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _placaController,
+                readOnly: !_isEditMode,
+                decoration: InputDecoration(
+                  labelText: 'Placa',
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.directions_transit),
                   filled: true,

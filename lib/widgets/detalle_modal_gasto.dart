@@ -13,6 +13,7 @@ import '../models/reporte_model.dart'; // Modelo de Reporte
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:share_plus/share_plus.dart';
 
 class DetalleModalGasto extends StatefulWidget {
   final String id;
@@ -195,28 +196,124 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
     return filePath.toLowerCase().endsWith('.pdf');
   }
 
+  /*
   /// Mostrar un diálogo con los bytes de la imagen
   Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
     if (!mounted) return;
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Evidencia'),
+        backgroundColor: Colors.black, // Fondo negro para el AlertDialog
+        title: Center(
+          child: const Text(
+            'Evidencia',
+            style: TextStyle(
+              color: Colors.white,
+            ), // Título en blanco para que sea visible en el fondo negro
+          ),
+        ),
         content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.8,
+          width: MediaQuery.of(context).size.width * 0.9,
           height: MediaQuery.of(context).size.height * 0.6,
           child: InteractiveViewer(
             panEnabled: true,
-            boundaryMargin: const EdgeInsets.all(20),
+            boundaryMargin: const EdgeInsets.all(2),
             minScale: 1.0,
-            maxScale: 5.0,
-            child: Image.memory(bytes, fit: BoxFit.contain),
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                12,
+              ), // Bordes redondeados para la imagen
+              child: Image.memory(
+                bytes,
+                fit: BoxFit
+                    .contain, // Asegurarse de que la imagen no se distorsione
+              ),
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
+            child: const Text(
+              'Cerrar',
+              style: TextStyle(
+                color: Colors.white,
+              ), // Texto de cerrar en blanco
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+*/
+
+  Future<void> _showEvidenciaDialogFromBytes(
+    Uint8List bytes, {
+    String? nombreArchivo,
+  }) async {
+    if (!mounted) return;
+    // Supongamos que tienes estos valores
+    final ruc = _reporte!.ruc;
+    final serie = _reporte!.serie;
+    final numero = _reporte!.numero;
+
+    // Concatenar para formar el nombre del archivo
+    final nombreArchivo = '${ruc}_${serie}_${numero}.png';
+
+    // Si no se pasa un nombre, usar un default
+    final fileName = nombreArchivo;
+    // Guardar temporalmente los bytes en un archivo para compartir
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/$fileName');
+    await tempFile.writeAsBytes(bytes);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black,
+        title: Center(
+          child: const Text('Evidencia', style: TextStyle(color: Colors.white)),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(2),
+            minScale: 1.0,
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.memory(bytes, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+        actions: [
+          // Botón de compartir
+          TextButton.icon(
+            onPressed: () async {
+              try {
+                await Share.shareXFiles([
+                  XFile(tempFile.path, name: fileName),
+                ], text: fileName);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error compartiendo: $e')),
+                );
+              }
+            },
+            icon: const Icon(Icons.share, color: Colors.white),
+            label: const Text(
+              'Compartir',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+
+          // Botón de cerrar
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -610,7 +707,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Agregar evidencia (Obligatorio)',
+                        'Sin evidencia',
                         style: TextStyle(
                           color:
                               (_selectedImage == null &&

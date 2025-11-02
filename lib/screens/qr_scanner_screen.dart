@@ -38,29 +38,34 @@ class QRScannerScreenState extends State<QRScannerScreen> {
     super.dispose();
   }
 
-  void _onDetect(BarcodeCapture barcodeCapture) {
+  void _onDetect(BarcodeCapture barcodeCapture) async {
     if (_isModalOpen) return;
 
-    // Let controller handle duplicate suppression
+    // Delega al controlador interno si aplica (detección de duplicados, etc.)
     _controller.onDetect(barcodeCapture);
 
-    // If controller detected and set facturaDetectada, proceed
+    // Obtener la factura detectada
     final factura = _controller.facturaDetectada;
-    if (factura != null) {
-      _isModalOpen = true;
 
-      // Haptic and vibration feedback
+    if (factura != null) {
+      // 👇 Oculta el escáner inmediatamente
+      setState(() {
+        _isModalOpen = true;
+      });
+
+      // Feedback háptico y vibración
       HapticFeedback.mediumImpact();
       if (Platform.isAndroid) {
         _platformVibrate(80);
       }
 
-      // Visual flash
+      // Efecto visual de flash
       setState(() => _showCaptureFlash = true);
       Future.delayed(const Duration(milliseconds: 120), () {
         if (mounted) setState(() => _showCaptureFlash = false);
       });
 
+      // 👇 Mostrar el modal de política (ya gestiona restartScanning internamente)
       _showPoliticaSelectionModal(factura);
     }
   }
@@ -77,6 +82,40 @@ class QRScannerScreenState extends State<QRScannerScreen> {
     }
   }
 
+  void _showPoliticaSelectionModal(FacturaData facturaData) {
+    // 👇 Oculta el escáner antes de abrir el modal
+    setState(() {
+      _isModalOpen = true;
+    });
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => PoliticaSelectionModal(
+        onPoliticaSelected: (politica) {
+          Navigator.of(context).pop();
+          _showFacturaModal(facturaData, politica);
+        },
+        onCancel: () {
+          setState(() {
+            _isModalOpen = false;
+          });
+          _controller.restartScanning();
+        },
+      ),
+    ).then((_) {
+      // 👇 Cuando se cierre el modal (por selección o al regresar)
+      if (mounted) {
+        setState(() {
+          _isModalOpen = false;
+        });
+      }
+      _controller.restartScanning();
+    });
+  }
+
+  /*
   void _showPoliticaSelectionModal(FacturaData facturaData) {
     showModalBottomSheet(
       context: context,
@@ -98,7 +137,7 @@ class QRScannerScreenState extends State<QRScannerScreen> {
       _controller.restartScanning();
     });
   }
-
+*/
   void _showFacturaModal(FacturaData facturaData, String politicaSeleccionada) {
     showModalBottomSheet(
       context: context,
@@ -175,7 +214,7 @@ class QRScannerScreenState extends State<QRScannerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Escáner QR',
+          'Scanner QR',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
         backgroundColor: Colors.blue,

@@ -9,6 +9,8 @@ import '../models/dropdown_option.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class NuevoGastoLogic {
   /// Obtiene categorías desde el servicio API
@@ -22,6 +24,11 @@ class NuevoGastoLogic {
   /// Obtiene tipos de gasto desde el servicio API
   Future<List<DropdownOption>> fetchTiposGasto(ApiService apiService) async {
     return await apiService.getTiposGasto();
+  }
+
+  /// Obtiene tipos de gasto desde el servicio API
+  Future<List<DropdownOption>> fetchTipoMovilidad(ApiService apiService) async {
+    return await apiService.getTiposMovilidad();
   }
 
   /// Comprime una imagen si supera 1MB
@@ -85,6 +92,12 @@ class NuevoGastoLogic {
     required String total,
     required String moneda,
     required String nota,
+    required String motivoviaje,
+    required String origen,
+    required String destino,
+    required String movilidad,
+    required String placa,
+    required String razonSocial,
   }) {
     final companyService = CompanyService();
 
@@ -99,7 +112,7 @@ class NuevoGastoLogic {
           ? "GASTO GENERAL"
           : (tipoGasto.length > 80 ? tipoGasto.substring(0, 80) : tipoGasto),
       "ruc": ruc.isEmpty ? "" : (ruc.length > 80 ? ruc.substring(0, 80) : ruc),
-      "proveedor": "",
+      "proveedor": razonSocial,
       "tipoCombrobante": tipoComprobante.isEmpty
           ? ""
           : (tipoComprobante.length > 180
@@ -122,13 +135,13 @@ class NuevoGastoLogic {
       "desSed": "",
       "idCuenta": "",
       "consumidor": "",
-      "regimen": "",
+      "regimen": placa,
       "destino": "BORRADOR",
-      "glosa": nota.length > 480 ? nota.substring(0, 480) : nota,
-      "motivoViaje": "",
-      "lugarOrigen": "",
-      "lugarDestino": "",
-      "tipoMovilidad": "",
+      "glosa": "CREAR GASTO",
+      "motivoViaje": motivoviaje,
+      "lugarOrigen": origen,
+      "lugarDestino": destino,
+      "tipoMovilidad": movilidad,
       "obs": nota.length > 1000 ? nota.substring(0, 1000) : nota,
       "estado": "S",
       "fecCre": DateTime.now().toIso8601String(),
@@ -165,36 +178,38 @@ class NuevoGastoLogic {
       );
     }
 
-    if (selectedFile != null) {
-      try {
-        final bytes = await selectedFile.readAsBytes();
-        final base64String = base64Encode(bytes);
+    final extension = p.extension(
+      selectedFile!.path,
+    ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
 
-        final facturaDataEvidencia = {
-          "idRend": idRend,
-          "evidencia": base64String,
-          "obs": gastoData['obs'] ?? '',
-          "estado": "S",
-          "fecCre": DateTime.now().toIso8601String(),
-          "useReg": UserService().currentUserCode,
-          "hostname": "FLUTTER",
-          "fecEdit": DateTime.now().toIso8601String(),
-          "useEdit": 0,
-          "useElim": 0,
-        };
+    String nombreArchivo =
+        '${idRend}_${gastoData['ruc']}_${gastoData['serie']}_${gastoData['numero']}$extension';
 
-        final successEvidencia = await apiService.saveRendicionGastoEvidencia(
-          facturaDataEvidencia,
-        );
+    final driveId = await apiService.subirArchivo(
+      selectedFile.path,
+      nombreArchivo: nombreArchivo,
+    );
 
-        if (!successEvidencia) {
-          // No lanzar excepción por evidencia fallida, solo loguear
-          return idRend;
-        }
-      } catch (e) {
-        // Ignorar errores de evidencia (comportamiento original)
-        return idRend;
-      }
+    final facturaDataEvidencia = {
+      "idRend": idRend,
+      "evidencia": null,
+      "obs": driveId,
+      "estado": "S",
+      "fecCre": DateTime.now().toIso8601String(),
+      "useReg": UserService().currentUserCode,
+      "hostname": "FLUTTER",
+      "fecEdit": DateTime.now().toIso8601String(),
+      "useEdit": 0,
+      "useElim": 0,
+    };
+
+    final successEvidencia = await apiService.saveRendicionGastoEvidencia(
+      facturaDataEvidencia,
+    );
+
+    if (!successEvidencia) {
+      // No lanzar excepción por evidencia fallida, solo loguear
+      return idRend;
     }
 
     return idRend;

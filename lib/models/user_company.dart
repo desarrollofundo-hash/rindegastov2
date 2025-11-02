@@ -33,6 +33,7 @@ class UserCompany {
 
   /// Destino de la configuración
   final String destino;
+  final String placa;
   final String ruc;
 
   const UserCompany({
@@ -46,6 +47,7 @@ class UserCompany {
     required this.consumidor,
     required this.regimen,
     required this.destino,
+    required this.placa,
     required this.ruc,
   });
 
@@ -62,6 +64,7 @@ class UserCompany {
       consumidor: json['consumidor'] ?? '',
       regimen: json['regimen'] ?? '',
       destino: json['destino'] ?? '',
+      placa: json['placa'] ?? '',
       ruc: json['ruc'] ?? '',
     );
   }
@@ -79,6 +82,7 @@ class UserCompany {
       'consumidor': consumidor,
       'regimen': regimen,
       'destino': destino,
+      'placa': placa,
       'ruc': ruc,
     };
   }
@@ -91,6 +95,7 @@ class UserCompany {
       'sucursal': sucursal,
       'tipogasto': tipogasto,
       'consumidor': consumidor,
+      'placa': placa,
       'ruc': ruc,
     };
   }
@@ -122,6 +127,7 @@ class UserCompany {
         other.id == id &&
         other.iduser == iduser &&
         other.empresa == empresa &&
+        other.placa == placa &&
         other.ruc == ruc;
   }
 
@@ -141,6 +147,7 @@ class UserCompany {
     String? consumidor,
     String? regimen,
     String? destino,
+    String? placa,
     String? ruc,
   }) {
     return UserCompany(
@@ -154,6 +161,7 @@ class UserCompany {
       consumidor: consumidor ?? this.consumidor,
       regimen: regimen ?? this.regimen,
       destino: destino ?? this.destino,
+      placa: placa ?? this.placa,
       ruc: ruc ?? this.ruc,
     );
   }

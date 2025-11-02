@@ -120,7 +120,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           // Usar ruc del detalle si existe, si no, el ruc del informe
           "ruc": (detalless.ruc ?? widget.informe.ruc ?? '').toString(),
           "obs": detalless.obs ?? '',
-          "estadoActual": detalless.estadoactual ?? 'EN AUDITORIA',
+          "estadoActual": detalless.estadoactual ?? '',
           "estado": detalless.estado ?? 'S',
           "fecCre": detalless.feccre ?? DateTime.now().toIso8601String(),
           "useReg": detalless.iduser != 0
