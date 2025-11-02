@@ -390,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   void _actualizarRevision(ReporteRevision revisionModel) {
     setState(() {
-      final index = _informes.indexWhere((i) => i.idInf == revisionModel.idInf);
+      final index = _revision.indexWhere((i) => i.idAd == revisionModel.idAd);
       if (index != -1) {
         _revision[index] = revisionModel;
       }
@@ -539,7 +539,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           tabColors: const [Colors.green],
           tabViews: [
             InformesRevisionList(
-              revisiones: _revision,
+              revisio: _revision,
               revision: [],
               onRevisionUpdated: _actualizarRevision,
               onRevisionDeleted: _eliminarRevision,

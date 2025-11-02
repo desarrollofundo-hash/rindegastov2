@@ -1,14 +1,16 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/models/reporte_revision_model.dart';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/auditoria_detalle_modal.dart';
 import 'package:flu2/widgets/revision_detalle_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flu2/widgets/empty_state.dart';
-
 // Nota: se eliminó import innecesario
+
 class InformesRevisionList extends StatelessWidget {
-  final List<ReporteRevision> revisiones;
-  final Function(ReporteRevision) onRevisionUpdated;
+  final List<ReporteRevision> revision; // Cambié el tipo de la lista aquí
+  final Function(ReporteRevision)
+  onRevisionUpdated; // Cambié el tipo de la función aquí
   final Function(ReporteRevision)
   onRevisionDeleted; // Cambié el tipo de la función aquí
   final bool showEmptyStateButton;
@@ -17,35 +19,39 @@ class InformesRevisionList extends StatelessWidget {
 
   const InformesRevisionList({
     super.key,
-    required this.revisiones,
+    required this.revision,
     required this.onRevisionUpdated,
     required this.onRevisionDeleted,
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
-    required List<ReporteRevision> revision,
+    List<ReporteRevision>? revisio,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (revisiones.isEmpty) {
+    if (revision.isEmpty) {
       return RefreshIndicator(
+        // Personalizar indicador para que coincida con la apariencia de Auditoría
         color: Colors.green,
         backgroundColor: Colors.white,
-        strokeWidth: 2.0,
-        displacement: 40.0,
+        strokeWidth: 2.5,
+        displacement: 40,
         onRefresh: onRefresh ?? () async {},
         child: SingleChildScrollView(
+          // AlwaysScrollable + Bouncing ayuda a detectar el gesto incluso
+          // cuando hay pocos elementos o estamos dentro de un TabBarView.
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           child: ConstrainedBox(
             constraints: BoxConstraints(
+              // Garantiza suficiente área para que el gesto de pull se detecte
               minHeight: MediaQuery.of(context).size.height * 0.7,
             ),
             child: EmptyState(
-              message: "No hay auditorías disponibles",
-              buttonText: showEmptyStateButton ? "Agregar Auditoría" : null,
+              message: "No hay revision disponibles",
+              buttonText: showEmptyStateButton ? "Agregar Revision" : null,
               onButtonPressed: showEmptyStateButton
                   ? onEmptyStateButtonPressed
                   : null,
@@ -64,241 +70,264 @@ class InformesRevisionList extends StatelessWidget {
       displacement: 40,
       onRefresh: onRefresh ?? () async {},
       child: ListView.builder(
-        key: const PageStorageKey('revision_list'),
+        key: const PageStorageKey('auditoria_list'),
         padding: const EdgeInsets.all(8),
         // Siempre scrollable y con rebote para mejorar la detección del pull
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        itemCount: revisiones.length,
+        itemCount: revision.length,
         itemBuilder: (context, index) {
-          final revision = revisiones[index];
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            child: Card(
-              color: Colors.white,
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              margin: const EdgeInsets.symmetric(vertical: 2),
-              child: InkWell(
-                onTap: () => _handleMenuAction(context, 'ver', revision),
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: Row(
-                    children: [
-                      // Barra lateral de color que indica el estado
-                      Container(
-                        width: 4,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(revision.estadoActual),
-                          borderRadius: BorderRadius.circular(2),
+          try {
+            final revisionn = revision[index];
+            return AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: Card(
+                color: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                margin: const EdgeInsets.symmetric(vertical: 2),
+                child: InkWell(
+                  onTap: () => _handleMenuAction(context, 'ver', revisionn),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Row(
+                      children: [
+                        // Barra lateral de color que indica el estado
+                        Container(
+                          width: 4,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: getStatusColor(revisionn.estadoActual),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      // Icono de la izquierda (más compacto)
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(6),
+                        const SizedBox(width: 8),
+                        // Icono de la izquierda (más compacto)
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.description,
+                            color: Colors.grey[600],
+                            size: 20,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.description,
-                          color: Colors.grey[600],
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Contenido principal
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Columna izquierda: Título, Creación, Auditoría
-                            Expanded(
-                              flex: 2,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                        const SizedBox(width: 12),
+                        // Contenido principal
+                        Expanded(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Columna izquierda: Título, Creación, Auditoría
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Título de la auditoría (más compacto)
+                                    Text(
+                                      revisionn.titulo ?? 'Sin título',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 2),
+                                    // Fecha de creación
+                                    Text(
+                                      'Creación: ${formatDate(revisionn.fecCre?.toIso8601String())}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    // Cantidad de detalles
+                                    Text(
+                                      '${revisionn.cantidad} detalles',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Columna derecha: Total, Estado
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  // Título de la auditoría (más compacto)
+                                  // Total en PEN (más compacto)
                                   Text(
-                                    revision.titulo ?? 'Sin título',
+                                    '${_getTotal(revisionn)} PEN',
                                     style: const TextStyle(
                                       fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black87,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 2),
-                                  // Fecha de creación
-                                  Text(
-                                    'Creación: ${_formatDate(revision.fecCre?.toIso8601String())}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
+                                  // Estado
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: getStatusColor(
+                                        revisionn.estadoActual,
+                                      ),
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      revisionn.estadoActual ?? 'Sin estado',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ),
+
                                   const SizedBox(height: 4),
-                                  // Cantidad de detalles
-                                  Text(
-                                    '${revision.cantidad} detalles',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
+                                  // Aprobados y Desaprobados con colores (solo si hay cantidades > 0)
+                                  if (revisionn.cantidadAprobado > 0 ||
+                                      revisionn.cantidadDesaprobado > 0)
+                                    RichText(
+                                      text: TextSpan(
+                                        children: [
+                                          if (revisionn.cantidadAprobado > 0)
+                                            TextSpan(
+                                              text:
+                                                  '${revisionn.cantidadAprobado} Aprobrado',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.green[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          if (revisionn.cantidadAprobado > 0 &&
+                                              revisionn.cantidadDesaprobado > 0)
+                                            TextSpan(
+                                              text: ' / ',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          if (revisionn.cantidadDesaprobado > 0)
+                                            TextSpan(
+                                              text:
+                                                  '${revisionn.cantidadDesaprobado} Rechazado',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.red[600],
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
-                            ),
-                            // Columna derecha: Total, Estado
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                // Total en PEN (más compacto)
-                                Text(
-                                  '${_getTotal(revision as ReporteAuditoria)} PEN',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                // Estado
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(
-                                      revision.estadoActual,
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    revision.estadoActual ?? 'Sin estado',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
+            );
+          } catch (e, st) {
+            debugPrint('Error building revision  item: $e\n$st');
+            return Card(
+              color: Colors.red.shade50,
+              child: ListTile(
+                title: const Text('Error al mostrar auditoría'),
+                subtitle: Text(e.toString()),
+              ),
+            );
+          }
         },
       ),
     );
   }
 
-  String _formatDate(String? fecha) {
-    if (fecha == null || fecha.isEmpty) {
-      return 'Sin fecha';
-    }
-
-    try {
-      // Intentar parsear diferentes formatos de fecha
-      DateTime? dateTime;
-
-      // Formato ISO: 2025-10-04T00:00:00
-      if (fecha.contains('T')) {
-        dateTime = DateTime.tryParse(fecha);
-      }
-      // Formato dd/MM/yyyy
-      else if (fecha.contains('/')) {
-        final parts = fecha.split('/');
-        if (parts.length == 3) {
-          dateTime = DateTime.tryParse(
-            '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}',
-          );
-        }
-      }
-      // Formato yyyy-MM-dd
-      else if (fecha.contains('-')) {
-        dateTime = DateTime.tryParse(fecha);
-      }
-
-      if (dateTime != null) {
-        return '${dateTime.day.toString().padLeft(2, '0')}/${dateTime.month.toString().padLeft(2, '0')}/${dateTime.year}';
-      }
-    } catch (e) {
-      // Si hay error en el parseo, devolver la fecha original
-    }
-
-    return fecha;
-  }
-
-  Color _getStatusColor(String? estado) {
-    switch (estado) {
-      case 'EN AUDITORIA':
-        return Colors.blue;
-      case 'Enviado':
-        return Colors.red;
-      case 'Aprobado':
-        return Colors.green;
-      case 'Rechazado':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  double _getTotal(ReporteAuditoria auditoria) {
-    return auditoria.total;
+  double _getTotal(ReporteRevision revision) {
+    return revision.total;
   }
 
   void _handleMenuAction(
     BuildContext context,
     String action,
-    ReporteRevision revision, // Cambié el tipo aquí
-  ) {
+    ReporteRevision revisionn,
+  ) async {
     switch (action) {
       case 'ver':
-        showDialog(
-          context: context,
-          builder: (BuildContext context) => RevisionDetalleModal(
-            revision: revision,
-          ), // Usar el modal adecuado
-        );
+        try {
+          // Esperar el resultado del modal
+          final result = await showDialog(
+            context: context,
+            builder: (BuildContext context) => RevisionDetalleModal(
+              revision: revisionn,
+              onRefresh: onRefresh, // <-- sigue pasando el callback
+            ),
+          );
+
+          // Si el modal devuelve true, refresca la lista
+          if (result == true && onRefresh != null) {
+            await onRefresh!();
+          }
+        } catch (e, st) {
+          debugPrint('Error opening revision DetalleModal: $e\n$st');
+          showDialog(
+            context: context,
+            builder: (BuildContext ctx) => AlertDialog(
+              title: const Text('Error'),
+              content: Text('No se pudo abrir el detalle: $e'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
         break;
+
       case 'editar':
-        onRevisionUpdated(revision);
+        onRevisionUpdated(revisionn);
         break;
+
       case 'eliminar':
-        _showDeleteConfirmation(context, revision as ReporteAuditoria);
+        _showDeleteConfirmation(context, revisionn);
         break;
     }
   }
 
-  void _showDeleteConfirmation(
-    BuildContext context,
-    ReporteAuditoria revision,
-  ) {
+  void _showDeleteConfirmation(BuildContext context, ReporteRevision revision) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirmar eliminación'),
           content: Text(
-            '¿Estás seguro de que quieres eliminar la auditoría "${revision.titulo}"?',
+            '¿Estás seguro de que quieres eliminar la revision "${revision.titulo}"?',
           ),
           actions: [
             TextButton(
@@ -308,7 +337,7 @@ class InformesRevisionList extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                onRevisionDeleted(revision as ReporteRevision);
+                onRevisionDeleted(revision);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Eliminar'),

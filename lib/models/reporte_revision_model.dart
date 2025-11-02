@@ -2,8 +2,8 @@
 // Nombre del archivo: auditioria_model.dart
 
 class ReporteRevision {
+  final int idRev;
   final int idAd;
-  final int idInf;
   final int idUser;
   final String? dni;
   final String? ruc;
@@ -25,10 +25,11 @@ class ReporteRevision {
   final double totalAprobado;
   final int cantidadDesaprobado;
   final double totalDesaprobado;
+  final String? usuario;
 
   ReporteRevision({
+    required this.idRev,
     required this.idAd,
-    required this.idInf,
     required this.idUser,
     required this.dni,
     required this.ruc,
@@ -50,6 +51,7 @@ class ReporteRevision {
     required this.totalAprobado,
     required this.cantidadDesaprobado,
     required this.totalDesaprobado,
+    required this.usuario,
   });
 
   factory ReporteRevision.fromJson(Map<String, dynamic> json) {
@@ -73,8 +75,8 @@ class ReporteRevision {
     }
 
     return ReporteRevision(
+      idRev: _i(json['idRev']),
       idAd: _i(json['idAd']),
-      idInf: _i(json['idInf']),
       idUser: _i(json['idUser']),
       dni: json['dni']?.toString(),
       ruc: json['ruc']?.toString(),
@@ -96,13 +98,14 @@ class ReporteRevision {
       totalAprobado: _d(json['totalAprobado']),
       cantidadDesaprobado: _i(json['cantidadDesaprobado']),
       totalDesaprobado: _d(json['totalDesaprobado']),
+      usuario: json['usuario']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'idRev': idRev,
       'idAd': idAd,
-      'idInf': idInf,
       'idUser': idUser,
       'dni': dni,
       'ruc': ruc,
@@ -124,6 +127,7 @@ class ReporteRevision {
       'totalAprobado': totalAprobado,
       'cantidadDesaprobado': cantidadDesaprobado,
       'totalDesaprobado': totalDesaprobado,
+      'usuario': usuario,
     };
   }
 
@@ -176,6 +180,6 @@ class ReporteRevision {
   /// Sobrescritura de toString para depuración
   @override
   String toString() {
-    return 'ReporteRevision{idAd: $idAd, idInf: $idInf, titulo: $titulo, total: $total, cantidad: $cantidad}';
+    return 'ReporteAuditoria{idRev: $idRev, idAd: $idAd, titulo: $titulo, total: $total, cantidad: $cantidad}';
   }
 }

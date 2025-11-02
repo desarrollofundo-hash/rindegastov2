@@ -1,143 +1,131 @@
 class ReporteRevisionDetalle {
+  final int id;
+  final int idRev;
   final int idAd;
-  final int idInf;
-  final int idInfDet;
+  final int idAdDet;
   final int idRend;
   final int idUser;
-  final String? dni;
-  final String? ruc;
   final String? obs;
   final String? estadoActual;
   final String? estado;
   final String? fecCre;
-  final int? useReg;
-  final String? hostname;
-  final String? fecEdit;
-  final int? useEdit;
-  final int? useElim;
+
+  // Campos adicionales del JSON (tabla gasto)
+  final String? politica;
+  final String? categoria;
+  final String? tipoGasto;
+  final String? ruc;
+  final String? proveedor;
+  final String? tipoComprobante;
+  final String? serie;
+  final String? numero;
+  final double igv;
+  final String? fecha;
+  final double total;
+  final String? moneda;
+  final String? rucCliente;
+  final String? motivoViaje;
+  final String? lugarOrigen;
+  final String? lugarDestino;
+  final String? tipoMovilidad;
 
   ReporteRevisionDetalle({
+    required this.id,
+    required this.idRev,
     required this.idAd,
-    required this.idInf,
-    required this.idInfDet,
+    required this.idAdDet,
     required this.idRend,
     required this.idUser,
-    required this.dni,
-    required this.ruc,
-    required this.obs,
-    required this.estadoActual,
-    required this.estado,
-    required this.fecCre,
-    required this.useReg,
-    required this.hostname,
-    required this.fecEdit,
-    required this.useEdit,
-    required this.useElim,
+    this.obs,
+    this.estadoActual,
+    this.estado,
+    this.fecCre,
+    this.politica,
+    this.categoria,
+    this.tipoGasto,
+    this.ruc,
+    this.proveedor,
+    this.tipoComprobante,
+    this.serie,
+    this.numero,
+    required this.igv,
+    this.fecha,
+    required this.total,
+    this.moneda,
+    this.rucCliente,
+    this.motivoViaje,
+    this.lugarOrigen,
+    this.lugarDestino,
+    this.tipoMovilidad,
   });
 
-  Map<String, dynamic> toMap() {
+  factory ReporteRevisionDetalle.fromJson(Map<String, dynamic> json) {
+    return ReporteRevisionDetalle(
+      id: json['id'] ?? 0,
+      idRev: json['idrev'] ?? 0,
+      idAd: json['idas'] ?? 0,
+      idAdDet: json['idaddet'] ?? 0,
+      idRend: json['idrend'] ?? 0,
+      idUser: json['iduser'] ?? 0,
+      obs: json['obs'],
+      estadoActual: json['estadoactual'],
+      estado: json['estado'],
+      fecCre: json['feccre'],
+      politica: json['politica'],
+      categoria: json['categoria'],
+      tipoGasto: json['tipogasto'],
+      ruc: json['ruc'],
+      proveedor: json['proveedor'],
+      tipoComprobante: json['tipocombrobante'],
+      serie: json['serie'],
+      numero: json['numero'],
+      igv: (json['igv'] ?? 0.0).toDouble(),
+      fecha: json['fecha'],
+      total: (json['total'] ?? 0.0).toDouble(),
+      moneda: json['moneda'],
+      rucCliente: json['ruccliente'],
+      motivoViaje: json['motivoviaje'],
+      lugarOrigen: json['lugarorigen'],
+      lugarDestino: json['lugardestino'],
+      tipoMovilidad: json['tipomovilidad'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
     return {
-      'idAd': idAd,
-      'idInf': idInf,
-      'idInfDet': idInfDet,
-      'idRend': idRend,
-      'idUser': idUser,
-      'dni': dni,
-      'ruc': ruc,
+      'id': id,
+      'idrev': idRev,
+      'idad': idAd,
+      'idaddet': idAdDet,
+      'idrend': idRend,
+      'iduser': idUser,
       'obs': obs,
-      'estadoActual': estadoActual,
+      'estadoactual': estadoActual,
       'estado': estado,
-      'fecCre': fecCre,
-      'useReg': useReg,
-      'hostname': hostname,
-      'fecEdit': fecEdit,
-      'useEdit': useEdit,
-      'useElim': useElim,
+      'feccre': fecCre,
+      'politica': politica,
+      'categoria': categoria,
+      'tipogasto': tipoGasto,
+      'ruc': ruc,
+      'proveedor': proveedor,
+      'tipocombrobante': tipoComprobante,
+      'serie': serie,
+      'numero': numero,
+      'igv': igv,
+      'fecha': fecha,
+      'total': total,
+      'moneda': moneda,
+      'ruccliente': rucCliente,
+      'motivoviaje': motivoViaje,
+      'lugarorigen': lugarOrigen,
+      'lugardestino': lugarDestino,
+      'tipomovilidad': tipoMovilidad,
     };
   }
 
-  factory ReporteRevisionDetalle.fromJson(Map<String, dynamic> map) {
-    return ReporteRevisionDetalle(
-      idAd: map['idAd']?.toInt() ?? 0,
-      idInf: map['idInf']?.toInt() ?? 0,
-      idInfDet: map['idInfDet']?.toInt() ?? 0,
-      idRend: map['idRend']?.toInt() ?? 0,
-      idUser: map['idUser']?.toInt() ?? 0,
-      dni: map['dni'],
-      ruc: map['ruc'],
-      obs: map['obs'],
-      estadoActual: map['estadoActual'],
-      estado: map['estado'],
-      fecCre: map['fecCre'],
-      useReg: map['useReg']?.toInt(),
-      hostname: map['hostname'],
-      fecEdit: map['fecEdit'],
-      useEdit: map['useEdit']?.toInt(),
-      useElim: map['useElim']?.toInt(),
-    );
-  }
-
-  ReporteRevisionDetalle copyWith({
-    int? idAd,
-    int? idInf,
-    int? idInfDet,
-    int? idRend,
-    int? idUser,
-    String? dni,
-    String? ruc,
-    String? obs,
-    String? estadoActual,
-    String? estado,
-    String? fecCre,
-    int? useReg,
-    String? hostname,
-    String? fecEdit,
-    int? useEdit,
-    int? useElim,
-  }) {
-    return ReporteRevisionDetalle(
-      idAd: idAd ?? this.idAd,
-      idInf: idInf ?? this.idInf,
-      idInfDet: idInfDet ?? this.idInfDet,
-      idRend: idRend ?? this.idRend,
-      idUser: idUser ?? this.idUser,
-      dni: dni ?? this.dni,
-      ruc: ruc ?? this.ruc,
-      obs: obs ?? this.obs,
-      estadoActual: estadoActual ?? this.estadoActual,
-      estado: estado ?? this.estado,
-      fecCre: fecCre ?? this.fecCre,
-      useReg: useReg ?? this.useReg,
-      hostname: hostname ?? this.hostname,
-      fecEdit: fecEdit ?? this.fecEdit,
-      useEdit: useEdit ?? this.useEdit,
-      useElim: useElim ?? this.useElim,
-    );
-  }
-
-  // --- 🔍 MÉTODOS Y CONDICIONES AÑADIDAS ---
-
-  @override
-  String toString() {
-    return 'ReporteRevisionDetalle{idAd: $idAd, idInf: $idInf, idInfDet: $idInfDet, idRend: $idRend, idUser: $idUser, estadoActual: $estadoActual, estado: $estado, fecCre: $fecCre, ruc: $ruc, obs: $obs}';
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ReporteRevisionDetalle &&
-          runtimeType == other.runtimeType &&
-          idAd == other.idAd &&
-          idInf == other.idInf &&
-          idInfDet == other.idInfDet;
-
-  @override
-  int get hashCode => idAd.hashCode ^ idInf.hashCode ^ idInfDet.hashCode;
-
-  // ✅ Formato de estado
+  // Métodos auxiliares
   String get estadoFormatted => estadoActual ?? 'Sin estado';
 
-  // ✅ Fecha formateada
   String get fechaCreacionFormatted {
     if (fecCre == null || fecCre!.isEmpty) return '----';
     try {
@@ -145,19 +133,22 @@ class ReporteRevisionDetalle {
         return fecCre!.split('T')[0];
       }
       return fecCre!;
-    } catch (e) {
+    } catch (_) {
       return '----';
     }
   }
 
-  // ✅ Verificaciones lógicas
   bool get hasRuc => ruc != null && ruc!.isNotEmpty;
   bool get hasObs => obs != null && obs!.isNotEmpty;
 
-  // ✅ Representación legible
   String get resumenAuditoria {
     final rucStr = hasRuc ? 'RUC: $ruc' : 'Sin RUC';
     final obsStr = hasObs ? obs : 'Sin observaciones';
     return '$rucStr • $estadoFormatted • $obsStr';
+  }
+
+  @override
+  String toString() {
+    return 'ReporteAuditoriaDetalle(id: $id, idAd: $idAd, idAdDet: $idAdDet, categoria: $categoria, total: $total)';
   }
 }
