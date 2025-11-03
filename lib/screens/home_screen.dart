@@ -298,19 +298,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     });
 
     try {
-      final revision = await _apiService.getReportesRendicionAuditoria(
+      final revision = await _apiService.getReportesRendicionRevision(
         id: '1',
-        idad: '1',
+        idrev: '1',
         user: UserService().currentUserCode,
         ruc: CompanyService().companyRuc,
       );
       if (!mounted) return;
-      /* 
+
       setState(() {
-        _revision = _auditoria;
+        _revision = revision;
         _allRevision = List.from(revision);
         _isLoading = false;
-      }); */
+      });
     } catch (e) {
       if (!mounted) return;
 
@@ -390,7 +390,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   void _actualizarRevision(ReporteRevision revisionModel) {
     setState(() {
-      final index = _revision.indexWhere((i) => i.idAd == revisionModel.idAd);
+      final index = _revision.indexWhere((i) => i.idRev == revisionModel.idRev);
       if (index != -1) {
         _revision[index] = revisionModel;
       }
@@ -538,8 +538,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           tabColors: const [Colors.green],
           tabViews: [
             InformesRevisionList(
-              revisio: _revision,
-              revision: [],
+              revision: _revision,
               onRevisionUpdated: _actualizarRevision,
               onRevisionDeleted: _eliminarRevision,
               showEmptyStateButton: false,

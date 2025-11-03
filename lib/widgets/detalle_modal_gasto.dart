@@ -520,10 +520,12 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
                       _buildAmountSection(),
                       const SizedBox(height: 16),
                       _buildFacturaDataSection(),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       if (_reporte!.politica?.toUpperCase() ==
                           'GASTOS DE MOVILIDAD')
                         _buildMovilidadSection(),
+                      const SizedBox(height: 8),
+                      _buildFacturaNotaSection(),
                     ],
                   )
                 : const Center(child: Text('No se encontraron datos.')),
@@ -847,7 +849,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
         _buildReadOnlyField('Politica', _reporte!.politica ?? 'N/A'),
         _buildReadOnlyField('Tipo Gasto', _reporte!.tipogasto ?? 'N/A'),
         _buildReadOnlyField('Categoria', _reporte!.categoria ?? 'N/A'),
-        _buildReadOnlyField('Proveedor', _reporte!.proveedor ?? 'N/A'),
+        _buildReadOnlyField('Razon Social', _reporte!.proveedor ?? 'N/A'),
         _buildReadOnlyField('RUC Emisor', _reporte!.ruc ?? 'N/A'),
         _buildReadOnlyField('RUC Cliente', _reporte?.ruccliente ?? 'N/A'),
       ],
@@ -926,6 +928,20 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
         _buildReadOnlyField('Motivo Viajes', _reporte?.motivoviaje ?? 'N/A'),
         _buildReadOnlyField('Transporte', _reporte?.tipomovilidad ?? 'N/A'),
         _buildReadOnlyField('Placa', _reporte?.placa ?? 'N/A'),
+      ],
+    );
+  }
+
+  // Sección de Datos de la Factura
+  Widget _buildFacturaNotaSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Observacion',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        _buildReadOnlyField('Comentario', _reporte?.obs ?? 'N/A'),
       ],
     );
   }

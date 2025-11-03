@@ -26,6 +26,7 @@ class ReporteRevision {
   final int cantidadDesaprobado;
   final double totalDesaprobado;
   final String? usuario;
+  final String? usuarioAuditor;
 
   ReporteRevision({
     required this.idRev,
@@ -52,6 +53,7 @@ class ReporteRevision {
     required this.cantidadDesaprobado,
     required this.totalDesaprobado,
     required this.usuario,
+    required this.usuarioAuditor,
   });
 
   factory ReporteRevision.fromJson(Map<String, dynamic> json) {
@@ -99,6 +101,7 @@ class ReporteRevision {
       cantidadDesaprobado: _i(json['cantidadDesaprobado']),
       totalDesaprobado: _d(json['totalDesaprobado']),
       usuario: json['usuario']?.toString(),
+      usuarioAuditor: json['usuarioAuditor']?.toString(),
     );
   }
 
@@ -128,6 +131,7 @@ class ReporteRevision {
       'cantidadDesaprobado': cantidadDesaprobado,
       'totalDesaprobado': totalDesaprobado,
       'usuario': usuario,
+      'usuarioAuditor': usuarioAuditor,
     };
   }
 

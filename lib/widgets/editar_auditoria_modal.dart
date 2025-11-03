@@ -35,7 +35,8 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
     detallesFiltrados = widget.detalles;
     // Inicializar todos como seleccionados por defecto
     for (var det in widget.detalles) {
-      detallesSeleccionados[det.idInfDet] = true;
+      detallesSeleccionados[det.idInfDet] = false;
+      todosMarcados = false;
     }
   }
 
@@ -270,8 +271,8 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
 
                           // Icono documento
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 20,
+                            height: 20,
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(8),
@@ -290,9 +291,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  det.ruc ?? 'Sin RUC',
+                                  det.proveedor ?? det.ruc ?? 'SIN RUC',
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black,
                                   ),

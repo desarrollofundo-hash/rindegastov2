@@ -1,7 +1,6 @@
-import 'package:flu2/models/reporte_auditioria_model.dart';
+
 import 'package:flu2/models/reporte_revision_model.dart';
 import 'package:flu2/utils/navigation_utils.dart';
-import 'package:flu2/widgets/auditoria_detalle_modal.dart';
 import 'package:flu2/widgets/revision_detalle_modal.dart';
 import 'package:flutter/material.dart';
 import 'package:flu2/widgets/empty_state.dart';

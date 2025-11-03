@@ -52,7 +52,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       try {
         reportesRevision = await _apiService
             .getReportesRendicionRevision_Detalle(
-              idRev: widget.revision.idRev.toString(),
+              idrev: widget.revision.idRev.toString(),
             );
       } catch (apiError) {
         // fallback: dejar la lista vacía para mostrar el estado "No hay gastos"
@@ -75,57 +75,25 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     }
   }
 
-  Future<void> _enviarInforme() async {
+  Future<void> _FinalizarDocumento() async {
     try {
       setState(() => _isLoading = true);
       print("🚀 Iniciando envío de informe...");
 
-      // 1️⃣ GUARDAR CABECERA (saveRendicionAuditoria)
-      final cabeceraPayload = {
-        "idRev": 0,
-        "idAd": widget.revision.idAd,
-        "idUser": widget.revision.idUser,
-        "dni": widget.revision.dni,
-        "ruc": widget.revision.ruc,
-        "obs": widget.revision.obs ?? "",
-        "estadoActual": "EN REVISION",
-        "estado": "S",
-        "fecCre": DateTime.now().toIso8601String(),
-        "useReg": widget.revision.idUser,
-        "hostname": "",
-        "fecEdit": DateTime.now().toIso8601String(),
-        "useEdit": widget.revision.idUser,
-        "useElim": 0,
-      };
-
-      print("📤 Enviando cabecera: $cabeceraPayload");
-
-      final idAd = await _apiService.saveRendicionAuditoria(cabeceraPayload);
-      if (idAd == null) throw Exception("Error al guardar cabecera.");
-
-      print("✅ Cabecera guardada con idAd: $idAd");
-
-      // 2️⃣ GUARDAR DETALLES: usamos los campos del modelo ReporteInformeDetalle
-      if (_detalles.isEmpty) {
-        print('⚠️ No hay detalles para enviar.');
-      }
-
       for (final detalless in _detalles) {
         final detallePayload = {
-          "idRev": idAd, // Relación con la cabecera
+          "idRev": detalless.idRev, // Relación con la cabecera
           "idAd": detalless.idAd,
           "idAdDet": detalless.idAdDet, // usar idrend como id de factura
           "idRend": detalless.idRend,
           // Preferir el idUser del detalle; si no está, usar el del informe
-          "idUser": detalless.idUser != 0
-              ? detalless.idUser
-              : widget.revision.idUser,
+          "idUser": detalless.idUser,
           // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del revision
           "dni": (widget.revision.dni ?? '').toString(),
           // Usar ruc del detalle si existe, si no, el ruc del revision
-          "ruc": (detalless.ruc ?? widget.revision.ruc ?? '').toString(),
+          "ruc": widget.revision.ruc.toString(),
           "obs": detalless.obs ?? '',
-          "estadoActual": detalless.estadoActual ?? 'EN REVISION',
+          "estadoActual": 'FINALIZADO',
           "estado": detalless.estado ?? 'S',
           "fecCre": detalless.fecCre ?? DateTime.now().toIso8601String(),
           "useReg": detalless.idUser != 0
@@ -147,7 +115,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
 
         if (!detalleGuardado) {
           throw Exception(
-            'Error al guardar el detalle de la rendición de auditoría para id ${detalless.idRev}',
+            'Error al guardar el detalle revision para id ${detalless.idRev}',
           );
         }
 
@@ -155,15 +123,15 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Informe enviado correctamente")),
+        const SnackBar(content: Text("✅ Revision finalizado correctamente")),
       );
       Navigator.pop(context);
     } catch (e, stack) {
-      print("❌ Error al enviar informe: $e");
+      print("❌ Error al finalizar revision: $e");
       print(stack);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error al enviar informe: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al finalizar revision: $e")),
+      );
     } finally {
       setState(() => _isLoading = false);
     }
@@ -196,7 +164,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
 
           appBar: AppBar(
             backgroundColor: Colors.white,
-            elevation: 0.5,
+            elevation: 0.1,
             leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
               onPressed: () => Navigator.of(context).pop(true),
@@ -204,6 +172,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
             title: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                const SizedBox(height: 2),
                 const Text(
                   'DETALLE REVISION',
                   style: TextStyle(
@@ -220,7 +189,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                     const Text(
                       'RENDIDOR: ',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Colors.blue,
                         fontStyle: FontStyle.normal,
                         fontWeight: FontWeight.w600,
@@ -229,13 +198,40 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                     Text(
                       widget.revision.usuario.toString(), // ← valor dinámico
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
                       ),
                     ),
                   ],
                 ),
+
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'AUDITOR: ',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color.fromARGB(255, 9, 136, 13),
+                        fontStyle: FontStyle.normal,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      widget.revision.usuarioAuditor
+                          .toString(), // ← valor dinámico
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 2),
               ],
             ),
             centerTitle: true,
@@ -600,22 +596,27 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                       // Botón Editar
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () async {
-                            // Abres el modal y esperas a que se cierre
-                            final result = await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => EditarRevisionModal(
-                                  revision: widget.revision,
-                                  detalles: _detalles,
-                                ),
-                              ),
-                            );
+                          onPressed:
+                              widget.revision.estadoActual == 'EN REVISION'
+                              ? () async {
+                                  // Abre el modal y espera a que se cierre
+                                  final result = await Navigator.of(context)
+                                      .push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EditarRevisionModal(
+                                                revision: widget.revision,
+                                                detalles: _detalles,
+                                              ),
+                                        ),
+                                      );
 
-                            // Si el modal devolvió "true" (por ejemplo, tras guardar cambios), recargas
-                            if (result == true) {
-                              _loadDetalles();
-                            }
-                          },
+                                  // Si el modal devuelve true (por ejemplo tras guardar cambios), recarga los detalles
+                                  if (result == true) {
+                                    _loadDetalles(); // <-- Método que refresca tu lista o detalles
+                                  }
+                                } // Si no está en 'EN INFORME', el botón queda deshabilitado
+                              : null, // 🔒 Deshabilitado si no está en estado 'Informe'
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
                               color: Colors.blue,
@@ -626,10 +627,13 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          child: const Text(
-                            'Editar auditoria',
+                          child: Text(
+                            'Editar Revision',
                             style: TextStyle(
-                              color: Colors.blue,
+                              color:
+                                  widget.revision.estadoActual == 'EN REVISION'
+                                  ? Colors.blue
+                                  : Colors.grey, // gris cuando está bloqueado
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -641,12 +645,15 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                       // Botón Enviar
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(true);
-                          },
-                          //_enviarInforme,
+                          onPressed:
+                              widget.revision.estadoActual == 'EN REVISION'
+                              ? _FinalizarDocumento
+                              : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor:
+                                widget.revision.estadoActual == 'EN REVISION'
+                                ? Colors.green
+                                : Colors.grey, // gris si bloqueado
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -655,7 +662,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                             elevation: 2,
                           ),
                           child: const Text(
-                            'Enviar Revision',
+                            'FINALIZAR',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -703,8 +710,8 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
           children: [
             // Imagen placeholder
             Container(
-              width: 40,
-              height: 40,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
@@ -723,10 +730,12 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    detalle.ruc ?? 'Proveedor no especificado',
+                    detalle.proveedor ??
+                        detalle.ruc ??
+                        'Proveedor no especificado',
                     maxLines: 1,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),

@@ -735,7 +735,6 @@ class ApiService {
     }
   }
 
-
   //RENDICION REVISION
   Future<List<ReporteRevision>> getReportesRendicionRevision({
     required String id,
@@ -858,24 +857,12 @@ class ApiService {
       throw Exception(
         'Sin conexión al servidor. Verifica tu conexión a internet y que el servidor esté disponible.',
       );
-    } on HttpException catch (e) {
-      debugPrint('🌐 Error HTTP: $e');
-      throw Exception('Error de protocolo HTTP: $e');
-    } on FormatException catch (e) {
-      debugPrint('📝 Error de formato: $e');
-      throw Exception('El servidor devolvió datos en formato incorrecto');
-    } on Exception catch (e) {
-      debugPrint('❌ Error general: $e');
-      rethrow;
-    } catch (e) {
-      debugPrint('💥 Error no manejado: $e');
-      throw Exception('Error inesperado: $e');
     }
   }
 
   // REPORTES RENDICION INFORME DETALLE
   Future<List<ReporteRevisionDetalle>> getReportesRendicionRevision_Detalle({
-    required String idRev,
+    required String idrev,
   }) async {
     /*     debugPrint('🚀 Iniciando petición a API...');
     debugPrint('📍 URL base: $baseUrl/reporte/rendiciongasto');
@@ -902,7 +889,7 @@ class ApiService {
       // Construir la URL con los parámetros dinámicos
       final uri = Uri.parse(
         '$baseUrl/reporte/rendicionrevision_detalle',
-      ).replace(queryParameters: {'idrev': idRev});
+      ).replace(queryParameters: {'idrev': idrev});
       /* 
       debugPrint('📡 Realizando petición HTTP GET...');
       debugPrint('🌍 URL final: $uri');
@@ -991,18 +978,6 @@ class ApiService {
       throw Exception(
         'Sin conexión al servidor. Verifica tu conexión a internet y que el servidor esté disponible.',
       );
-    } on HttpException catch (e) {
-      debugPrint('🌐 Error HTTP: $e');
-      throw Exception('Error de protocolo HTTP: $e');
-    } on FormatException catch (e) {
-      debugPrint('📝 Error de formato: $e');
-      throw Exception('El servidor devolvió datos en formato incorrecto');
-    } on Exception catch (e) {
-      debugPrint('❌ Error general: $e');
-      rethrow;
-    } catch (e) {
-      debugPrint('💥 Error no manejado: $e');
-      throw Exception('Error inesperado: $e');
     }
   }
 
@@ -2819,7 +2794,6 @@ class ApiService {
     }
   }
 
-
   //------------------- GUARDAR RENDICIÓN AUDITORÍA (CABECERA) ------------------------//
   Future<int?> saveRendicionRevision(
     Map<String, dynamic> informeDetalleData,
@@ -3128,6 +3102,4 @@ class ApiService {
       );
     }
   }
-
-
 }

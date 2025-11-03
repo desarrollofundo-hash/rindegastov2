@@ -117,13 +117,11 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           "idAdDet": detalless.id, // usar idrend como id de factura
           "idRend": detalless.idRend,
           // Preferir el idUser del detalle; si no está, usar el del auditoria
-          "idUser": detalless.idUser != 0
-              ? detalless.idUser
-              : widget.auditoria.idUser,
+          "idUser": detalless.idUser,
           // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
           "dni": (widget.auditoria.dni ?? '').toString(),
           // Usar ruc del detalle si existe, si no, el ruc del auditoria
-          "ruc": (detalless.ruc ?? widget.auditoria.ruc ?? '').toString(),
+          "ruc": widget.auditoria.ruc ?? '',
           "obs": detalless.obs ?? '',
           "estadoActual": 'EN REVISION',
           "estado": 'S',
@@ -504,9 +502,6 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                   const SizedBox(height: 12),
                               itemBuilder: (context, index) {
                                 final detalle = _detalles[index];
-                                print(
-                                  '🏗️ Building card for item $index: ${detalle.proveedor}',
-                                );
                                 return _buildGastoCard(detalle, context);
                               },
                             ),
@@ -659,6 +654,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                           ),
                         ),
                       ),
+                    
                     ],
                   ),
                 ),
@@ -703,8 +699,8 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           children: [
             // Imagen placeholder
             Container(
-              width: 40,
-              height: 40,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
@@ -723,10 +719,12 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    detalle.ruc ?? 'Proveedor no especificado',
+                    detalle.proveedor ??
+                        detalle.ruc ??
+                        'Proveedor no especificado',
                     maxLines: 1,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),

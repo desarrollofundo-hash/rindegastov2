@@ -81,6 +81,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
@@ -88,7 +89,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
-          'Editar revision',
+          'EDITAR REVISION',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -177,7 +178,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Todos',
+                          'All',
                           style: TextStyle(
                             color: todosMarcados
                                 ? Colors.white
@@ -192,32 +193,77 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
                 ),
 
                 const Spacer(),
-                // 🔹 Botón RECHAZAR (condicional)
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _getSeleccionadosCount() > 0
+
+                //BOTON APROBAR
+                // 🟩 Botón "APROBAR"
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _getSeleccionadosCount() > 0
                         ? () {
                             // Acción solo si hay seleccionados
-                            _eliminarRevision();
+                            _eliminarRevision(); // 👈 tu función para aprobar
                           }
-                        : null, // 🔸 Desactiva el botón si no hay seleccionados
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _getSeleccionadosCount() > 0
-                          ? Colors.red
-                          : Colors.grey.shade300, // Color según estado
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(5),
+                        : null, // Desactiva si no hay selección
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                      padding: const EdgeInsets.symmetric(vertical: 1),
-                    ),
-                    child: Text(
-                      'RECHAZAR',
-                      style: TextStyle(
+                      decoration: BoxDecoration(
                         color: _getSeleccionadosCount() > 0
-                            ? Colors.white
-                            : Colors.grey.shade600,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                            ? const Color.fromARGB(255, 18, 164, 22)
+                            : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'APROBAR',
+                        style: TextStyle(
+                          color: _getSeleccionadosCount() > 0
+                              ? Colors.white
+                              : Colors.grey.shade600,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                // 🟥 Botón "RECHAZAR"
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: _getSeleccionadosCount() > 0
+                        ? () {
+                            // Acción solo si hay seleccionados
+                            _eliminarRevision(); // 👈 tu función para rechazar
+                          }
+                        : null, // Desactiva si no hay selección
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getSeleccionadosCount() > 0
+                            ? Colors.red
+                            : Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'RECHAZAR',
+                        style: TextStyle(
+                          color: _getSeleccionadosCount() > 0
+                              ? Colors.white
+                              : Colors.grey.shade600,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
@@ -225,6 +271,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
               ],
             ),
           ),
+
           const SizedBox(height: 16),
 
           // Lista de detalles
@@ -272,8 +319,8 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
 
                           // Icono documento
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 20,
+                            height: 20,
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(8),
@@ -292,9 +339,9 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  det.ruc ?? 'Sin RUC',
+                                  det.proveedor ?? det.ruc ?? 'SIN RUC',
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black,
                                   ),
@@ -434,7 +481,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
       // 3️⃣ Guardar DETALLES seleccionados (estadoACTUAL = RECHAZADO)
-      debugPrint("INICIO GUARDAR ELIMINAR:");
+      debugPrint("INICIO ELIMINAR:");
       for (final gasto in gastosSeleccionadosList) {
         final detalleData = {
           "idRev": gasto.idRev, // Relación con la cabecera

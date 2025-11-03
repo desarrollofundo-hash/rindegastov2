@@ -330,8 +330,8 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
 
                           // Icono de documento
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 20,
+                            height: 20,
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(8),
@@ -350,9 +350,9 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  gasto.ruc ?? 'CORPORACION D...',
+                                  gasto.proveedor ?? gasto.ruc ?? 'SIN RUC',
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black,
                                   ),
@@ -472,8 +472,9 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
                             });
                           },
                           title: Text(
-                            factura.ruc ?? 'SIN RUC',
+                            factura.proveedor ?? factura.ruc ?? 'SIN RUC',
                             style: TextStyle(
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: isSelected
                                   ? Colors.blue.shade700
@@ -508,6 +509,7 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
                               child: Text(
                                 'S/. ${factura.total?.toStringAsFixed(2) ?? '0.00'}',
                                 style: TextStyle(
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
                                   color: isSelected
                                       ? Colors.blue.shade700

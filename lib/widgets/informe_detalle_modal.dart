@@ -691,8 +691,8 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           children: [
             // Imagen placeholder
             Container(
-              width: 40,
-              height: 40,
+              width: 20,
+              height: 20,
               decoration: BoxDecoration(
                 color: Colors.grey[200],
                 borderRadius: BorderRadius.circular(8),
@@ -711,10 +711,12 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    detalle.ruc ?? 'Proveedor no especificado',
+                    detalle.proveedor ??
+                        detalle.ruc ??
+                        'Proveedor no especificado',
                     maxLines: 1,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
                     ),
