@@ -728,9 +728,33 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                         : 'Sin categoría',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
-                  Text(
-                    formatDate(detalle.fecha),
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  Row(
+                    children: [
+                      Text(
+                        formatDate(detalle.fecha),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      SizedBox(width: 8), // Espacio entre los textos
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 0,
+                        ), // Espaciado interno
+                        decoration: BoxDecoration(
+                          color: Colors.red, // Fondo del texto
+                          borderRadius: BorderRadius.circular(
+                            6,
+                          ), // Bordes redondeados
+                        ),
+                        child: Text(
+                          '${diferenciaEnDias(detalle.fecha.toString(), detalle.feccre.toString())} DIAS',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white, // Color del texto
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

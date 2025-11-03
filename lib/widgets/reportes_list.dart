@@ -362,14 +362,48 @@ class _ReportesListState extends State<ReportesList> {
                                             color: Colors.grey,
                                           ),
                                           const SizedBox(width: 4),
+                                          // Fecha + etiqueta de días juntos
                                           Expanded(
-                                            child: Text(
-                                              formatDate(reporte.fecha),
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  formatDate(reporte.fecha),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.black54,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(
+                                                  width: 4,
+                                                ), // pequeño espacio visual
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 2,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors
+                                                        .red, // Fondo de la etiqueta
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    '${diferenciaEnDias(reporte.fecha.toString(), reporte.fecha.toString())} DÍAS',
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],

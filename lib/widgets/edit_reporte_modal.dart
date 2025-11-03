@@ -1673,6 +1673,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         categoria: _categoriaController.text,
         tipoGasto: _tipoGastoController.text,
         ruc: _rucController.text,
+        razonsocial: _razonSocialController.text,
         tipoComprobante: _tipoComprobanteController.text,
         serie: _serieController.text,
         numero: _numeroController.text,
@@ -1688,6 +1689,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         lugarOrigen: _origenController.text,
         lugarDestino: _destinoController.text,
         tipoMovilidad: _tipoMovilidadController.text,
+        placa: _placaController.text,
         selectedImage: _selectedImage,
         apiEvidencia: null,
       );

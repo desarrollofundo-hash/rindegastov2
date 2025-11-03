@@ -203,7 +203,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
                     onTap: _getSeleccionadosCount() > 0
                         ? () {
                             // Acción solo si hay seleccionados
-                            _eliminarRevision(); // 👈 tu función para aprobar
+                            _aprobarAuditoria(); // 👈 tu función para aprobar
                           }
                         : null, // Desactiva si no hay selección
                     child: Container(
@@ -241,7 +241,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
                     onTap: _getSeleccionadosCount() > 0
                         ? () {
                             // Acción solo si hay seleccionados
-                            _eliminarRevision(); // 👈 tu función para rechazar
+                            _rechazarAuditoria(); // 👈 tu función para rechazar
                           }
                         : null, // Desactiva si no hay selección
                     child: Container(
@@ -460,7 +460,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
     );
   }
 
-  void _eliminarRevision() async {
+  void _rechazarAuditoria() async {
     // Filtrar gastos seleccionados y no seleccionados
     debugPrint("SECCION ELIMINAR:");
 
@@ -481,7 +481,7 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
       // 3️⃣ Guardar DETALLES seleccionados (estadoACTUAL = RECHAZADO)
-      debugPrint("INICIO ELIMINAR:");
+      debugPrint("GUARDAR RECHAZAR:");
       for (final gasto in gastosSeleccionadosList) {
         final detalleData = {
           "idRev": gasto.idRev, // Relación con la cabecera
@@ -489,25 +489,25 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
           "idAdDet": gasto.idAdDet, // usar idrend como id de factura
           "idRend": gasto.idRend,
           // Preferir el idUser del detalle; si no está, usar el del informe
-          "idUser": gasto.idUser,
+          //"idUser": gasto.idUser,
           // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del informe
-          "dni": ('').toString(),
+          //"dni": ('').toString(),
           // Usar ruc del detalle si existe, si no, el ruc del informe
-          "ruc": (gasto.ruc ?? '').toString(),
-          "obs": gasto.obs ?? '',
+          //"ruc": (gasto.ruc ?? '').toString(),
+          //"obs": gasto.obs ?? '',
           "estadoActual": 'RECHAZADO',
-          "estado": gasto.estado ?? 'S',
-          "fecCre": gasto.fecCre,
-          "useReg": gasto.idUser,
-          "hostname": 'FLUTTER',
+          //"estado": gasto.estado ?? 'S',
+          //"fecCre": gasto.fecCre,
+          //"useReg": gasto.idUser,
+          //"hostname": 'FLUTTER',
           "fecEdit": DateTime.now().toIso8601String(),
-          "useEdit": gasto.idUser,
-          "useElim": 0,
+          "useEdit": UserService().currentUserCode,
+          //"useElim": 0,
         };
 
         debugPrint("Guardar detalle rechazado:");
 
-        final ok = await _apiService.saveRendicionAuditoriaDetalle(detalleData);
+        final ok = await _apiService.saveRendicionRevisionDetalle(detalleData);
         if (!ok) {
           throw Exception(
             'Error al guardar detalle del gasto ${gasto.idAdDet}',
@@ -546,6 +546,124 @@ class _EditarRevisionModalState extends State<EditarRevisionModal> {
               ],
             ),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+
+        // Volver después de 1 seg
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.of(context).pop(true);
+        });
+      }
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(
+              'Error al crear/actualizar el informe: ${e.toString()}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+  }
+
+  void _aprobarAuditoria() async {
+    // Filtrar gastos seleccionados y no seleccionados
+    debugPrint("SECCION APROBAR:");
+
+    final gastosSeleccionadosList = detallesFiltrados
+        .where((g) => detallesSeleccionados[g.idAdDet] == true)
+        .toList();
+    final gastosNoSeleccionadosList = detallesFiltrados
+        .where((g) => detallesSeleccionados[g.idAdDet] != true)
+        .toList();
+
+    if (detallesFiltrados.isEmpty) return;
+
+    try {
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+      // 3️⃣ Guardar DETALLES seleccionados (estadoACTUAL = RECHAZADO)
+      debugPrint("GUARDAR APROBAR:");
+      for (final gasto in gastosSeleccionadosList) {
+        final detalleData = {
+          "idRev": gasto.idRev, // Relación con la cabecera
+          "idAd": gasto.idAd,
+          "idAdDet": gasto.idAdDet, // usar idrend como id de factura
+          "idRend": gasto.idRend,
+          // Preferir el idUser del detalle; si no está, usar el del informe
+          //"idUser": gasto.idUser,
+          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del informe
+          //"dni": ('').toString(),
+          // Usar ruc del detalle si existe, si no, el ruc del informe
+          //"ruc": (gasto.ruc ?? '').toString(),
+          //"obs": gasto.obs ?? '',
+          "estadoActual": 'APROBADO',
+          //"estado": gasto.estado ?? 'S',
+          //"fecCre": gasto.fecCre,
+          //"useReg": gasto.idUser,
+          //"hostname": 'FLUTTER',
+          "fecEdit": DateTime.now().toIso8601String(),
+          "useEdit": UserService().currentUserCode,
+          //"useElim": 0,
+        };
+
+        debugPrint("Guardar detalle rechazado:");
+
+        final ok = await _apiService.saveRendicionRevisionDetalle(detalleData);
+        if (!ok) {
+          throw Exception(
+            'Error al guardar detalle del gasto ${gasto.idAdDet}',
+          );
+        }
+      }
+
+      // 5️⃣ Cerrar loading
+      if (mounted) Navigator.of(context).pop();
+
+      // 6️⃣ Mostrar mensaje de éxito
+      if (mounted) {
+        final total = gastosSeleccionadosList.length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GASTOS APROBADOS (${_getSeleccionadosCount()})',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color.fromARGB(255, 34, 167, 38),
             duration: const Duration(seconds: 4),
           ),
         );

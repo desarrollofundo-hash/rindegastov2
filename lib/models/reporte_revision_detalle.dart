@@ -3,6 +3,7 @@ class ReporteRevisionDetalle {
   final int idRev;
   final int idAd;
   final int idAdDet;
+  final int idInf;
   final int idRend;
   final int idUser;
   final String? obs;
@@ -34,6 +35,7 @@ class ReporteRevisionDetalle {
     required this.idRev,
     required this.idAd,
     required this.idAdDet,
+    required this.idInf,
     required this.idRend,
     required this.idUser,
     this.obs,
@@ -65,6 +67,7 @@ class ReporteRevisionDetalle {
       idRev: json['idrev'] ?? 0,
       idAd: json['idas'] ?? 0,
       idAdDet: json['idaddet'] ?? 0,
+      idInf: json['idinf'] ?? 0,
       idRend: json['idrend'] ?? 0,
       idUser: json['iduser'] ?? 0,
       obs: json['obs'],
@@ -97,6 +100,7 @@ class ReporteRevisionDetalle {
       'idrev': idRev,
       'idad': idAd,
       'idaddet': idAdDet,
+      'idinf': idInf,
       'idrend': idRend,
       'iduser': idUser,
       'obs': obs,

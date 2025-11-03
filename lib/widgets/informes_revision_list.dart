@@ -282,8 +282,7 @@ class InformesRevisionList extends StatelessWidget {
           final result = await showDialog(
             context: context,
             builder: (BuildContext context) => RevisionDetalleModal(
-              revision: revisionn,
-              onRefresh: onRefresh, // <-- sigue pasando el callback
+              revision: revisionn, // <-- sigue pasando el callback
             ),
           );
 

@@ -68,6 +68,51 @@ String formatDate(String? fecha) {
   return fecha;
 }
 
+int diferenciaEnDias(String fecha1, String fecha2) {
+  DateTime? parseDate(String fecha) {
+    try {
+      DateTime? dateTime;
+
+      // Formato ISO: 2025-10-04T00:00:00
+      if (fecha.contains('T')) {
+        dateTime = DateTime.tryParse(fecha);
+      }
+      // Formato dd/MM/yyyy
+      else if (fecha.contains('/')) {
+        final parts = fecha.split('/');
+        if (parts.length == 3) {
+          dateTime = DateTime.tryParse(
+            '${parts[2]}-${parts[1].padLeft(2, '0')}-${parts[0].padLeft(2, '0')}',
+          );
+        }
+      }
+      // Formato yyyy-MM-dd
+      else if (fecha.contains('-')) {
+        dateTime = DateTime.tryParse(fecha);
+      }
+
+      return dateTime;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  final DateTime? d1 = parseDate(fecha1);
+  final DateTime? d2 = parseDate(fecha2);
+
+  if (d1 == null || d2 == null) {
+    throw FormatException('Una o ambas fechas no tienen un formato válido');
+  }
+
+  // Calcula la diferencia en días (valor absoluto)
+  return d1.difference(d2).inDays.abs();
+}
+
+void main() {
+  print(diferenciaEnDias('01/11/2025', '2025-10-29')); // ➜ 3
+  print(diferenciaEnDias('2025-10-04T00:00:00', '2025-10-01')); // ➜ 3
+}
+
 /// Muestra un SnackBar con un mensaje en la pantalla
 void showMessageError(
   BuildContext context,

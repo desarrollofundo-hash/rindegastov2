@@ -77,7 +77,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
   Future<void> _enviarAuditoria() async {
     try {
       setState(() => _isLoading = true);
-      print("🚀 Iniciando envío de auditoria...");
+      print("🚀 Iniciando envío de auditoría...");
 
       // 1️⃣ GUARDAR CABECERA (saveRendicionAuditoria)
       final cabeceraPayload = {
@@ -87,7 +87,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         "idUser": widget.auditoria.idUser,
         "dni": widget.auditoria.dni,
         "ruc": widget.auditoria.ruc,
-        "obs": widget.auditoria.obs ?? "",
+        "obs": "",
         "estadoActual": "EN REVISION",
         "estado": "S",
         "fecCre": DateTime.now().toIso8601String(),
@@ -111,10 +111,16 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       }
 
       for (final detalless in _detalles) {
+        // Verifica si el detalle está RECHAZADO y no lo envía
+        if (detalless.estadoActual == 'RECHAZADO') {
+          continue; // No enviar el detalle, pasa al siguiente
+        }
+
         final detallePayload = {
           "idRev": idRev, // Relación con la cabecera
           "idAd": detalless.idAd,
           "idAdDet": detalless.id, // usar idrend como id de factura
+          "idInf": detalless.idInf,
           "idRend": detalless.idRend,
           // Preferir el idUser del detalle; si no está, usar el del auditoria
           "idUser": detalless.idUser,
@@ -122,7 +128,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           "dni": (widget.auditoria.dni ?? '').toString(),
           // Usar ruc del detalle si existe, si no, el ruc del auditoria
           "ruc": widget.auditoria.ruc ?? '',
-          "obs": detalless.obs ?? '',
+          "obs": '',
           "estadoActual": 'EN REVISION',
           "estado": 'S',
           "fecCre": DateTime.now().toIso8601String(),
@@ -133,7 +139,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           "useElim": 0,
         };
 
-        print("📤 Enviando detalle (id: ${detalless.id}): $detallePayload");
+        print("📤 Enviando detalle con ID: ${detalless.id}: $detallePayload");
 
         final detalleGuardado = await _apiService.saveRendicionRevisionDetalle(
           detallePayload,
@@ -141,7 +147,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
 
         if (!detalleGuardado) {
           throw Exception(
-            'Error al guardar el detalle de auditoria a revision id ${detalless.id}',
+            'Error al guardar el detalle de auditoría a revisión id ${detalless.id}',
           );
         }
       }
@@ -151,22 +157,14 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           backgroundColor: Colors.green, // Fondo verde
           content: Row(
             children: const [
-              Icon(
-                Icons.check_circle,
-                color: Colors.white,
-              ), // Check verde (puedes dejarlo blanco si prefieres contraste)
+              Icon(Icons.check_circle, color: Colors.white),
               SizedBox(width: 10),
-              Text(
-                "Auditoría enviada correctamente",
-                style: TextStyle(
-                  color: Colors.white,
-                ), // Texto blanco para contraste
-              ),
+              Text("ENVIADO A REVISION", style: TextStyle(color: Colors.white)),
             ],
           ),
           duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior
-              .floating, // Hace que flote sobre el contenido (opcional)
+          behavior:
+              SnackBarBehavior.floating, // Hace que flote sobre el contenido
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
@@ -179,7 +177,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       print(stack);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Error al enviar auditoria: $e")));
+      ).showSnackBar(SnackBar(content: Text("Error al enviar auditoría: $e")));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -209,20 +207,52 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             .maxFinite, // Usa toda la altura disponible desde el margen superior
         child: Scaffold(
           backgroundColor: Colors.grey[50],
+
           appBar: AppBar(
             backgroundColor: Colors.white,
-            elevation: 0.5,
+            elevation: 0.1,
             leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
               onPressed: () => Navigator.of(context).pop(true),
             ),
-            title: const Text(
-              'AUDITORIA DETALLE',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
+            title: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 2),
+                const Text(
+                  'DETALLE AUDITORIA',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+
+                const SizedBox(height: 2),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'RENDIDOR: ',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.blue,
+                        fontStyle: FontStyle.normal,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      widget.auditoria.usuario.toString(), // ← valor dinámico
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+              ],
             ),
             centerTitle: true,
             actions: [
@@ -232,6 +262,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               ),
             ],
           ),
+
           body: Column(
             children: [
               // Cabecera ultra compacta
@@ -654,7 +685,6 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                           ),
                         ),
                       ),
-                    
                     ],
                   ),
                 ),
@@ -736,9 +766,34 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                         : 'Sin categoría',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
-                  Text(
-                    formatDate(detalle.fecha),
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+
+                  Row(
+                    children: [
+                      Text(
+                        formatDate(detalle.fecha),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      SizedBox(width: 8), // Espacio entre los textos
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 0,
+                        ), // Espaciado interno
+                        decoration: BoxDecoration(
+                          color: Colors.red, // Fondo del texto
+                          borderRadius: BorderRadius.circular(
+                            6,
+                          ), // Bordes redondeados
+                        ),
+                        child: Text(
+                          '${diferenciaEnDias(detalle.fecha.toString(), detalle.fecCre.toString())} DIAS',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white, // Color del texto
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

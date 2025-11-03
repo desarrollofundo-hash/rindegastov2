@@ -1,6 +1,8 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/models/reporte_revision_detalle.dart';
 import 'package:flu2/models/reporte_revision_model.dart';
+import 'package:flu2/models/user_company.dart';
+import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/detalle_modal_gasto.dart';
 import 'package:flu2/widgets/editar_auditoria_modal.dart';
@@ -10,13 +12,11 @@ import '../models/reporte_auditoria_detalle.dart';
 import '../services/api_service.dart';
 
 class RevisionDetalleModal extends StatefulWidget {
-  final ReporteRevision revision;
-  final VoidCallback? onRefresh; // callback opcional
+  final ReporteRevision revision;// callback opcional
 
   const RevisionDetalleModal({
     super.key,
-    required this.revision,
-    this.onRefresh,
+    required this.revision
   });
 
   @override
@@ -30,6 +30,8 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
   bool _isLoading = true;
   bool _isSending = false;
   final ApiService _apiService = ApiService();
+
+  final _notaController = TextEditingController();
 
   @override
   void initState() {
@@ -75,7 +77,15 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     }
   }
 
-  Future<void> _FinalizarDocumento() async {
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _apiService.dispose();
+    _notaController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _aprobarDocumento() async {
     try {
       setState(() => _isLoading = true);
       print("🚀 Iniciando envío de informe...");
@@ -85,6 +95,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
           "idRev": detalless.idRev, // Relación con la cabecera
           "idAd": detalless.idAd,
           "idAdDet": detalless.idAdDet, // usar idrend como id de factura
+          "idInf": detalless.idInf,
           "idRend": detalless.idRend,
           // Preferir el idUser del detalle; si no está, usar el del informe
           "idUser": detalless.idUser,
@@ -92,24 +103,20 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
           "dni": (widget.revision.dni ?? '').toString(),
           // Usar ruc del detalle si existe, si no, el ruc del revision
           "ruc": widget.revision.ruc.toString(),
-          "obs": detalless.obs ?? '',
-          "estadoActual": 'FINALIZADO',
-          "estado": detalless.estado ?? 'S',
-          "fecCre": detalless.fecCre ?? DateTime.now().toIso8601String(),
-          "useReg": detalless.idUser != 0
-              ? detalless.idUser
-              : widget.revision.idUser,
+          "obs": _notaController.text,
+          "estadoActual": 'APROBADO',
+          "estado": 'S',
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": UserService().currentUserCode,
           "hostname": 'FLUTTER',
           "fecEdit": DateTime.now().toIso8601String(),
-          "useEdit": detalless.idUser != 0
-              ? detalless.idUser
-              : widget.revision.idUser,
+          "useEdit": UserService().currentUserCode,
           "useElim": 0,
         };
 
         print("📤 Enviando detalle (id: ${detalless.idRev}): $detallePayload");
 
-        final detalleGuardado = await _apiService.saveRendicionAuditoriaDetalle(
+        final detalleGuardado = await _apiService.saveRendicionRevisionDetalle(
           detallePayload,
         );
 
@@ -122,26 +129,110 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         print("✅ Detalle ${detalless.idRev} guardado correctamente");
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Revision finalizado correctamente")),
-      );
+      showMessageError(context, "DOCUMENTO APROBADO");
       Navigator.pop(context);
     } catch (e, stack) {
-      print("❌ Error al finalizar revision: $e");
+      print("❌ Error al aprobar revision: $e");
       print(stack);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al finalizar revision: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error al aprobar revision: $e")));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _apiService.dispose();
-    super.dispose();
+  Future<void> _rechazarDocumento() async {
+    try {
+      setState(() => _isLoading = true);
+      print("🚀 Iniciando envío...");
+
+      for (final detalless in _detalles) {
+        final detallePayload = {
+          "idRev": detalless.idRev, // Relación con la cabecera
+          "idAd": detalless.idAd,
+          "idAdDet": detalless.idAdDet, // usar idrend como id de factura
+          "idInf": detalless.idInf,
+          "idRend": detalless.idRend,
+          // Preferir el idUser del detalle; si no está, usar el del informe
+          "idUser": detalless.idUser,
+          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del revision
+          "dni": (widget.revision.dni ?? '').toString(),
+          // Usar ruc del detalle si existe, si no, el ruc del revision
+          "ruc": widget.revision.ruc.toString(),
+          "obs": _notaController.text,
+          "estadoActual": 'RECHAZADO',
+          "estado": 'S',
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": UserService().currentUserCode,
+          "hostname": 'FLUTTER',
+          "fecEdit": DateTime.now().toIso8601String(),
+          "useEdit": UserService().currentUserCode,
+          "useElim": 0,
+        };
+
+        print(
+          "📤 Rechazando detalle (id: ${detalless.idRev}): $detallePayload",
+        );
+
+        final detalleGuardado = await _apiService.saveRendicionRevisionDetalle(
+          detallePayload,
+        );
+
+        showMessageError(context, "DOCUMENTO RECHAZADO");
+
+        if (!detalleGuardado) {
+          throw Exception('Error al guardar el rechazo ${detalless.idRev}');
+        }
+      }
+
+      Navigator.pop(context);
+    } catch (e, stack) {
+      print("❌ Error al finalizar rechazado: $e");
+      print(stack);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error al finalizar rechazo: $e")));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _mostrarDialogoComentario(BuildContext context) {
+    // Controlador para el cuadro de texto();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('MOTIVO DE RECHAZO'),
+          backgroundColor: Colors.white,
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _notaController,
+                decoration: InputDecoration(
+                  hintText: 'Escribe un comentario...',
+                ),
+                maxLines: 4,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                // Aquí puedes manejar el comentario si e
+                // Cerrar el diálogo
+                _rechazarDocumento();
+                Navigator.pop(context);
+              },
+              child: Text('ACEPTAR'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -598,25 +689,9 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         child: OutlinedButton(
                           onPressed:
                               widget.revision.estadoActual == 'EN REVISION'
-                              ? () async {
-                                  // Abre el modal y espera a que se cierre
-                                  final result = await Navigator.of(context)
-                                      .push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              EditarRevisionModal(
-                                                revision: widget.revision,
-                                                detalles: _detalles,
-                                              ),
-                                        ),
-                                      );
+                              ? () => _mostrarDialogoComentario(context)
+                              : null,
 
-                                  // Si el modal devuelve true (por ejemplo tras guardar cambios), recarga los detalles
-                                  if (result == true) {
-                                    _loadDetalles(); // <-- Método que refresca tu lista o detalles
-                                  }
-                                } // Si no está en 'EN INFORME', el botón queda deshabilitado
-                              : null, // 🔒 Deshabilitado si no está en estado 'Informe'
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
                               color: Colors.blue,
@@ -628,7 +703,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           child: Text(
-                            'Editar Revision',
+                            'RECHAZAR',
                             style: TextStyle(
                               color:
                                   widget.revision.estadoActual == 'EN REVISION'
@@ -647,7 +722,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         child: ElevatedButton(
                           onPressed:
                               widget.revision.estadoActual == 'EN REVISION'
-                              ? _FinalizarDocumento
+                              ? _aprobarDocumento
                               : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -662,7 +737,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                             elevation: 2,
                           ),
                           child: const Text(
-                            'FINALIZAR',
+                            'APROBAR',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -747,9 +822,33 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         : 'Sin categoría',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
-                  Text(
-                    formatDate(detalle.fecha),
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  Row(
+                    children: [
+                      Text(
+                        formatDate(detalle.fecha),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      SizedBox(width: 8), // Espacio entre los textos
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 0,
+                        ), // Espaciado interno
+                        decoration: BoxDecoration(
+                          color: Colors.red, // Fondo del texto
+                          borderRadius: BorderRadius.circular(
+                            6,
+                          ), // Bordes redondeados
+                        ),
+                        child: Text(
+                          '${diferenciaEnDias(detalle.fecha.toString(), detalle.fecCre.toString())} DIAS',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white, // Color del texto
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
