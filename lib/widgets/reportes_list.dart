@@ -394,7 +394,7 @@ class _ReportesListState extends State<ReportesList> {
                                                         ),
                                                   ),
                                                   child: Text(
-                                                    '${diferenciaEnDias(reporte.fecha.toString(), reporte.fecha.toString())} DÍAS',
+                                                    '${diferenciaEnDias(reporte.fecha.toString(), reporte.feccre.toString())} DÍAS',
                                                     style: const TextStyle(
                                                       fontSize: 11,
                                                       color: Colors.white,

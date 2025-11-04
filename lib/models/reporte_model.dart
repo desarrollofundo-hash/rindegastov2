@@ -28,6 +28,7 @@ class Reporte {
   final String? lugarorigen;
   final String? lugardestino;
   final String? tipomovilidad;
+  final String? feccre;
   final String? obs;
   final String? evidencia;
 
@@ -61,6 +62,7 @@ class Reporte {
     this.lugarorigen,
     this.lugardestino,
     this.tipomovilidad,
+    this.feccre,
     this.obs,
     this.evidencia,
   });
@@ -99,6 +101,7 @@ class Reporte {
         lugarorigen: _parseStringSafe(json['lugarorigen']),
         lugardestino: _parseStringSafe(json['lugardestino']),
         tipomovilidad: _parseStringSafe(json['tipomovilidad']),
+        feccre: _parseStringSafe(json['feccre']),
         obs: _parseStringSafe(json['obs']),
         evidencia: _parseStringSafe(json['evidencia']),
       );
@@ -166,6 +169,7 @@ class Reporte {
       'lugarorigen': lugarorigen,
       'lugardestino': lugardestino,
       'tipomovilidad': tipomovilidad,
+      'feccre': feccre,
       'obs': obs,
       'evidencia': evidencia,
     };

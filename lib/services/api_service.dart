@@ -6,6 +6,7 @@ import 'package:flu2/models/reporte_auditoria_detalle.dart';
 import 'package:flu2/models/reporte_informe_detalle.dart';
 import 'package:flu2/models/reporte_revision_detalle.dart';
 import 'package:flu2/models/reporte_revision_model.dart';
+import 'package:flu2/models/rol_usuario_app_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
@@ -181,16 +182,7 @@ class ApiService {
       throw Exception(
         'Sin conexión al servidor. Verifica tu conexión a internet y que el servidor esté disponible.',
       );
-    } on HttpException catch (e) {
-      debugPrint('🌐 Error HTTP: $e');
-      throw Exception('Error de protocolo HTTP: $e');
-    } on FormatException catch (e) {
-      debugPrint('📝 Error de formato: $e');
-      throw Exception('El servidor devolvió datos en formato incorrecto');
-    } on Exception catch (e) {
-      debugPrint('❌ Error general: $e');
-      rethrow;
-    } catch (e) {
+    }  catch (e) {
       debugPrint('💥 Error no manejado: $e');
       throw Exception('Error inesperado: $e');
     }
@@ -2330,6 +2322,121 @@ class ApiService {
       debugPrint('🔌 Error de conexión al obtener empresas: $e');
       throw Exception(
         'Sin conexión al servidor. Verifica tu conexión a internet.',
+      );
+    }
+  }
+
+
+  // REPORTES ROL USUARIO
+  Future<List<RolUsuarioApp>> getRolUsuarioApp({
+    required String iduser,
+    required String idapp,
+  }) async {
+    /*     debugPrint('🚀 Iniciando petición a API...');
+    debugPrint('📍 URL base: $baseUrl/reporte/rendiciongasto');
+    debugPrint('🏗️ Plataforma: ${Platform.operatingSystem}');
+    debugPrint('🔧 Modo: ${kReleaseMode ? 'Release' : 'Debug'}'); */
+
+    try {
+      // Diagnóstico de conectividad en debug
+      if (!kReleaseMode) {
+        final diagnostic = await ConnectivityHelper.fullConnectivityDiagnostic(
+          baseUrl,
+        );
+        debugPrint('🔬 Diagnóstico completo: $diagnostic');
+
+        if (!diagnostic['internetConnection']) {
+          throw Exception('❌ Sin conexión a internet');
+        }
+
+        if (!diagnostic['serverReachable']) {
+          throw Exception('❌ No se puede alcanzar el servidor $baseUrl');
+        }
+      }
+
+      // Construir la URL con los parámetros dinámicos
+      final uri = Uri.parse(
+        '$baseUrl/login/rol_usuario_app',
+      ).replace(queryParameters: {'iduser': iduser, 'idapp': idapp});
+      /* 
+      debugPrint('📡 Realizando petición HTTP GET...');
+      debugPrint('🌍 URL final: $uri');
+ */
+      final response = await client
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json; charset=UTF-8',
+              'User-Agent': 'Flutter-App/${Platform.operatingSystem}',
+              'Connection': 'keep-alive',
+              'Cache-Control': 'no-cache',
+            },
+          )
+          .timeout(timeout);
+      /* 
+      debugPrint('📊 Respuesta recibida - Status: ${response.statusCode}');
+      debugPrint('📦 Headers: ${response.headers}');
+      debugPrint('📏 Tamaño de respuesta: ${response.body.length} bytes'); */
+
+      if (response.statusCode == 200) {
+        debugPrint('✅ Status 200 - Procesando JSON...');
+
+        if (response.body.isEmpty) {
+          throw Exception('⚠️ Respuesta vacía del servidor');
+        }
+
+        try {
+          final List<dynamic> jsonData = json.decode(response.body);
+          /*   debugPrint(
+            '🎯 JSON parseado correctamente. Items: ${jsonData.length}',
+          ); */
+
+          if (jsonData.isEmpty) {
+            debugPrint('⚠️ La API devolvió una lista vacía');
+            return [];
+          }
+
+          final roluser = <RolUsuarioApp>[];
+          int errores = 0;
+
+          for (int i = 0; i < jsonData.length; i++) {
+            try {
+              final rol = RolUsuarioApp.fromJson(jsonData[i]);
+              roluser.add(rol);
+            } catch (e) {
+              errores++;
+              /*               debugPrint('⚠️ Error al parsear item $i: $e');
+ */
+              if (errores < 5) {
+                debugPrint('📄 JSON problemático: ${jsonData[i]}');
+              }
+            }
+          }
+
+          if (errores > 0) {
+            /*             debugPrint('⚠️ Se encontraron $errores errores de parsing');
+ */
+          }
+
+          /*    debugPrint(
+            '✅ ${reportes.length} reportes procesados correctamente ($errores errores)',
+          ); */
+          return roluser;
+        } catch (e) {
+          throw Exception('Error al procesar respuesta del servidor: $e');
+        }
+      } else {
+        /*      debugPrint('❌ Status ${response.statusCode}');
+        debugPrint('📄 Response body: ${response.body}'); */
+        throw Exception(
+          'Error del servidor (${response.statusCode}): ${response.reasonPhrase}',
+        );
+      }
+    } on SocketException catch (e) {
+      debugPrint('🔌 Error de conexión (SocketException): $e');
+      throw Exception(
+        'Sin conexión al servidor. Verifica tu conexión a internet y que el servidor esté disponible.',
       );
     }
   }
