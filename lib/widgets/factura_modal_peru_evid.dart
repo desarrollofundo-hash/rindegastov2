@@ -362,9 +362,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _totalController = TextEditingController(
       text: widget.facturaData.total ?? '',
     );
-    _monedaController = TextEditingController(
-      text: widget.facturaData.moneda ?? 'PEN',
-    );
+    _monedaController = TextEditingController();
     _rucClienteController = TextEditingController(
       text: widget.facturaData.rucCliente ?? '',
     );

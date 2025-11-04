@@ -42,7 +42,7 @@ class UserCompany {
   final String placa;
   final String ruc;
 
-  const UserCompany({
+    UserCompany({
     required this.id,
     required this.iduser,
     required this.dni,

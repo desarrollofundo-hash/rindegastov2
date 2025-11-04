@@ -12,12 +12,9 @@ import '../models/reporte_auditoria_detalle.dart';
 import '../services/api_service.dart';
 
 class RevisionDetalleModal extends StatefulWidget {
-  final ReporteRevision revision;// callback opcional
+  final ReporteRevision revision; // callback opcional
 
-  const RevisionDetalleModal({
-    super.key,
-    required this.revision
-  });
+  const RevisionDetalleModal({super.key, required this.revision});
 
   @override
   State<RevisionDetalleModal> createState() => RevisionDetalleModalState();
@@ -652,10 +649,12 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                               _buildDetailRow(
                                 'Aprobados',
                                 '${widget.revision.cantidadAprobado} (${widget.revision.totalAprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.green,
                               ),
                               _buildDetailRow(
                                 'Desaprobados',
                                 '${widget.revision.cantidadDesaprobado} (${widget.revision.totalDesaprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.red,
                               ),
                             ]),
                             if (widget.revision.nota != null &&
@@ -1022,7 +1021,11 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    Color? valueColor, // 👈 parámetro opcional
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -1042,10 +1045,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
+                color: valueColor ?? Colors.black87, // 👈 usa el color dinámico
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:flu2/models/reporte_model.dart';
 import 'package:flu2/screens/informes/detalle_informe_screen.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/detalle_modal_gasto.dart';
+import 'package:flu2/widgets/edit_reporte_modal.dart';
 import 'package:flu2/widgets/editar_auditoria_modal.dart';
 import 'package:flutter/material.dart';
 import '../models/reporte_informe_model.dart';
@@ -575,10 +576,12 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                               _buildDetailRow(
                                 'Aprobados',
                                 '${widget.auditoria.cantidadAprobado} (${widget.auditoria.totalAprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.green,
                               ),
                               _buildDetailRow(
-                                'Desaprobados',
+                                'Rechazados',
                                 '${widget.auditoria.cantidadDesaprobado} (${widget.auditoria.totalDesaprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.red,
                               ),
                             ]),
                             if (widget.auditoria.nota != null &&
@@ -728,21 +731,25 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         child: Row(
           children: [
             // Imagen placeholder
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                Icons.receipt_long,
-                color: Colors.grey[600],
-                size: 24,
+            GestureDetector(
+              onTap: () {
+                // Aquí se maneja lo que ocurre al hacer clic en el ícono
+                _mostrarEditarReporte(detalle.toReporte());
+                // Puedes agregar la lógica para abrir un modal, editar el valor, etc.
+              },
+              child: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.edit, color: Colors.green, size: 30),
               ),
             ),
-            const SizedBox(width: 16),
-
+            const SizedBox(
+              width: 16,
+            ), // Espacio entre el ícono y el siguiente elemento
             // Información del gasto
             Expanded(
               child: Column(
@@ -838,6 +845,18 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     );
   }
 
+  void _mostrarEditarReporte(Reporte reporte) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) => EditReporteModal(reporte: reporte),
+    );
+  }
+
   Widget _buildDetailSection(String title, List<Widget> children) {
     return Container(
       width: double.infinity,
@@ -872,6 +891,43 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     );
   }
 
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    Color? valueColor, // 👈 parámetro opcional
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: valueColor ?? Colors.black87, // 👈 usa el color dinámico
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /*
   Widget _buildDetailRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -903,4 +959,5 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       ),
     );
   }
+*/
 }

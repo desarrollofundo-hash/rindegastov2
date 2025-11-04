@@ -759,7 +759,7 @@ class ReportesListController {
                 width: double.maxFinite,
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: const Text(
-                  'Previsualización',
+                  'Previsualización DOC IA',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
@@ -778,13 +778,13 @@ class ReportesListController {
                             style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
-                        Padding(
+                        /*Padding(
                           padding: const EdgeInsets.only(bottom: 12.0),
                           child: SelectableText(
                             analisis,
                             style: const TextStyle(fontSize: 13),
                           ),
-                        ),
+                        ),*/
                       ],
                       SizedBox(
                         width: MediaQuery.of(ctx2).size.width * 0.8,
@@ -878,7 +878,7 @@ class ReportesListController {
             borderRadius: BorderRadius.circular(16),
           ),
           title: const Text(
-            'Previsualización de Documento',
+            'Previsualización Doc IA PDF',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
@@ -888,11 +888,11 @@ class ReportesListController {
             children: [
               if (qr != null && qr.trim().isNotEmpty) ...[
                 const Text(
-                  'Datos extraídos (QR):',
+                  'Datos PDF',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
-                const SizedBox(height: 4),
-                SelectableText(qr, style: const TextStyle(fontSize: 13)),
+                /*const SizedBox(height: 4),
+                SelectableText(qr, style: const TextStyle(fontSize: 13)),*/
                 const SizedBox(height: 12),
               ],
               SizedBox(
@@ -983,11 +983,13 @@ class ReportesListController {
   }
 */
 
+/*
   Future<void> procesarFacturaConIA(
     BuildContext context,
     File imagenFactura,
     String politicaSeleccionada, // nueva política a usar al abrir modal
-  ) async {
+  ) 
+  async {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Row(
@@ -1199,6 +1201,7 @@ class ReportesListController {
                 onCancel: () => Navigator.of(context).pop(),
               ),
             );
+          
           }
         }
       }
@@ -1322,6 +1325,7 @@ class ReportesListController {
       );
     }
   }
+*/
 
   void mostrarDatosExtraidos(BuildContext context, Map<String, String> datos) {
     showDialog(

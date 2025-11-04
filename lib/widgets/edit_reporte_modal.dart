@@ -1,9 +1,14 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flu2/models/apiruc_model.dart';
+import 'package:flu2/models/user_company.dart';
+import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
+import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:printing/printing.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/reporte_model.dart';
@@ -38,12 +43,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
   late TextEditingController _tipoComprobanteController;
   late TextEditingController _serieController;
   late TextEditingController _numeroController;
-  late TextEditingController _fechaController;
+  late TextEditingController _igvController;
   late TextEditingController _totalController;
+  late TextEditingController _fechaEmisionController;
   late TextEditingController _monedaController;
   late TextEditingController _rucClienteController;
-  late TextEditingController _glosaController;
-  late TextEditingController _obsController;
+  late TextEditingController _notaController;
   // Campos de movilidad
   late TextEditingController _origenController;
   late TextEditingController _destinoController;
@@ -52,9 +57,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
   late TextEditingController _placaController;
 
   // Campos adicionales usados en el formulario
-  late TextEditingController _igvController;
-  late TextEditingController _fechaEmisionController;
-  late TextEditingController _notaController;
 
   // Estado
   bool _isLoading = false;
@@ -66,6 +68,16 @@ class _EditReporteModalState extends State<EditReporteModal> {
   // Servicios y controlador
   final ApiService _apiService = ApiService();
   late final EditReporteController _controller;
+
+  ///ApiRuc
+  bool _isLoadingApiRuc = false;
+  String? _errorApiRuc;
+  ApiRuc? _apiRucData;
+
+  // Variables para el lector SUNAT
+  bool _isScanning = false;
+  bool _hasScannedData = false;
+  final NuevoGastoLogic _logic = NuevoGastoLogic();
 
   // Image / file picker
   final ImagePicker _picker = ImagePicker();
@@ -106,25 +118,30 @@ class _EditReporteModalState extends State<EditReporteModal> {
   /// Como `Reporte` no tiene un campo `estado`, comprobamos varios campos
   /// que en el proyecto se usan en distintos contextos para representar el estado.
   bool _isEnInforme() {
-    final candidates = [
-      widget.reporte.categoria,
-      widget.reporte.estadoActual,
-      widget.reporte.tipogasto,
-      widget.reporte.obs,
-      widget.reporte.glosa,
-    ];
-    for (final v in candidates) {
-      if (v != null) {
-        final value = v.trim().toUpperCase();
-        if (value == 'EN AUDITORIA' ||
-            value == 'EN REVISION' ||
-            value == 'APROBADO' ||
-            value == 'RECHAZADO' ||
-            value == 'DESAPROBADO') {
-          return true;
-        }
+    final companyValue = CompanyService().currentUserArea;
+    final estadoValue = widget.reporte.estadoActual;
+
+    // Verificar el valor de companyPlaca (tercero)
+    if (companyValue != null) {
+      final value = companyValue.trim().toUpperCase();
+      if (value == 'CONTABILIDAD') {
+        return false;
       }
     }
+
+    // Verificar el valor de estadoActual (widget.reporte)
+    if (estadoValue != null) {
+      final value = estadoValue.trim().toUpperCase();
+      if (value == 'EN AUDITORIA' ||
+          value == 'CONTABILIDAD' || // Aquí sí bloqueamos CONTABILIDAD
+          value == 'EN REVISION' ||
+          value == 'APROBADO' ||
+          value == 'RECHAZADO' ||
+          value == 'DESAPROBADO') {
+        return true;
+      }
+    }
+
     return false;
   }
 
@@ -288,6 +305,41 @@ class _EditReporteModalState extends State<EditReporteModal> {
     }
   }
 
+  /// Cargar información del RUC desde la API
+  Future<void> _loadApiRuc(String ruc) async {
+    if (mounted) {
+      setState(() {
+        _isLoadingApiRuc = true;
+        _errorApiRuc = null;
+      });
+    }
+
+    try {
+      // ✅ Aquí la llamada correcta al método de la API
+      final apiRuc = await _apiService.getApiRuc(ruc: ruc);
+
+      if (mounted) {
+        setState(() {
+          _apiRucData = apiRuc;
+          _isLoadingApiRuc = false;
+
+          // 👇 Aquí actualizas el TextEditingController después de obtener los datos
+          _razonSocialController.text = apiRuc.nombreRazonSocial ?? 'S/N';
+        });
+      }
+
+      debugPrint('✅ RUC cargado correctamente: ${apiRuc.ruc}');
+    } catch (e) {
+      debugPrint('❌ Error al cargar RUC: $e');
+      if (mounted) {
+        setState(() {
+          _errorApiRuc = e.toString();
+          _isLoadingApiRuc = false;
+        });
+      }
+    }
+  }
+
   void _initializeControllers() {
     _politicaController = TextEditingController(
       text: widget.reporte.politica ?? '',
@@ -309,7 +361,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _numeroController = TextEditingController(
       text: widget.reporte.numero ?? '',
     );
-    _fechaController = TextEditingController(text: widget.reporte.fecha ?? '');
+    _fechaEmisionController = TextEditingController(text: widget.reporte.fecha ?? '');
     _totalController = TextEditingController(
       text: widget.reporte.total?.toString() ?? '',
     );
@@ -319,8 +371,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _rucClienteController = TextEditingController(
       text: widget.reporte.ruccliente ?? '',
     );
-    _glosaController = TextEditingController(text: widget.reporte.glosa ?? '');
-    _obsController = TextEditingController(text: widget.reporte.obs ?? '');
 
     // Movilidad
     _origenController = TextEditingController(
@@ -335,17 +385,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _tipoMovilidadController = TextEditingController(
       text: widget.reporte.tipomovilidad ?? '',
     );
-    _placaController = TextEditingController(
-      text: widget.reporte.placa ?? '',
-    );
+    _placaController = TextEditingController(text: widget.reporte.placa ?? '');
 
     // Nuevos controladores
     _igvController = TextEditingController(
       text: widget.reporte.igv?.toString() ?? '',
     );
-    // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible
-    final formattedFecha = formatDate(widget.reporte.fecha);
-    _fechaEmisionController = TextEditingController(text: formattedFecha);
+    // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible    
     _notaController = TextEditingController(text: widget.reporte.obs ?? '');
   }
 
@@ -371,12 +417,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _tipoComprobanteController.dispose();
     _serieController.dispose();
     _numeroController.dispose();
-    _fechaController.dispose();
     _totalController.dispose();
     _monedaController.dispose();
     _rucClienteController.dispose();
-    _glosaController.dispose();
-    _obsController.dispose();
     _igvController.dispose();
     _fechaEmisionController.dispose();
     _notaController.dispose();
@@ -765,11 +808,185 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ],
                   ),
                 ),
+
+              Row(
+                children: [
+                  const Icon(Icons.qr_code_scanner, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Lector de Código QR',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _isScanning ? null : _scanQRCode,
+                    icon: Icon(
+                      _isScanning
+                          ? Icons.hourglass_empty
+                          : Icons.qr_code_scanner,
+                      size: 16,
+                    ),
+                    label: Text(_isScanning ? 'Escaneando...' : 'Escanear QR'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 1),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// Método para escanear código QR
+  Future<void> _scanQRCode() async {
+    setState(() {
+      _isScanning = true;
+    });
+
+    try {
+      // Navegar a la pantalla de escáner
+      final qrData = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (context) => _QRScannerScreen()),
+      );
+
+      if (qrData != null && qrData.isNotEmpty) {
+        _processQRData(qrData);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al escanear QR: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isScanning = false;
+      });
+    }
+  }
+
+  /// Procesar los datos del QR y llenar los campos
+  void _processQRData(String qrData) {
+    try {
+      setState(() {
+        _hasScannedData = true;
+      });
+
+      // Parsear el QR de SUNAT (formato típico separado por |)
+      final parts = qrData.split('|');
+
+      if (parts.length >= 6) {
+        // Formato típico de QR SUNAT:
+        // RUC|Tipo|Serie|Número|IGV|Total|Fecha|TipoDoc|DocReceptor
+
+        // Envolver las asignaciones en setState y escribir en ambos controladores
+        setState(() {
+          // RUC del emisor
+          if (parts[0].isNotEmpty) {
+            _rucController.text = parts[0];
+            _loadApiRuc(_rucController.text);
+          }
+
+          // Tipo de comprobante (texto) -> actualizar controlador UI y el usado en guardado
+          if (parts[1].isNotEmpty) {
+            String tipoDoc = parts[1];
+            String tipoTexto;
+            switch (tipoDoc) {
+              case '01':
+                tipoTexto = 'FACTURA ELECTRONICA';
+                break;
+              case '03':
+                tipoTexto = 'BOLETA DE VENTA';
+                break;
+              case '07':
+                tipoTexto = 'NOTA DE CREDITO';
+                break;
+              case '08':
+                tipoTexto = 'NOTA DE DEBITO';
+                break;
+              case '09':
+                tipoTexto = 'GUIA DE REMISION';
+                break;
+              default:
+                tipoTexto = 'COMPROBANTE';
+            }
+            _tipoComprobanteController.text = tipoTexto;
+          }
+
+          // Serie
+          if (parts[2].isNotEmpty) {
+            _serieController.text = parts[2];
+          }
+
+          // Número de factura
+          if (parts[3].isNotEmpty) {
+            _numeroController.text = parts[3];
+          }
+
+          // Igv de factura
+          if (parts[4].isNotEmpty) {
+            _igvController.text = parts[4];
+          }
+          /*
+          // Número de documento (combinado para compatibilidad)
+          if (parts[2].isNotEmpty && parts[3].isNotEmpty) {
+            _numeroDocumentoController.text = '${parts[2]}-${parts[3]}';
+          }
+          */
+
+          // Total
+          if (parts[5].isNotEmpty) {
+            _totalController.text = parts[5];
+          }
+
+          // Fecha (si está disponible)
+          if (parts.length > 6 && parts[6].isNotEmpty) {
+            final fechaNormalizada = formatDate(parts[6]);
+            _fechaEmisionController.text = fechaNormalizada;
+          }
+
+          // Ruc
+          if (parts[8].isNotEmpty) {
+            _rucClienteController.text = parts[8];
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Datos del QR aplicados correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        throw Exception('Formato de QR no válido');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al procesar QR: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _hasScannedData = false;
+      });
+    }
   }
 
   /// Renderizar evidencia cuando llega en base64 o como URL
@@ -2289,6 +2506,282 @@ class _EditReporteModalState extends State<EditReporteModal> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Pantalla del escáner QR para códigos SUNAT
+class _QRScannerScreen extends StatefulWidget {
+  @override
+  State<_QRScannerScreen> createState() => _QRScannerScreenState();
+}
+
+class _QRScannerScreenState extends State<_QRScannerScreen> {
+  MobileScannerController cameraController = MobileScannerController();
+  bool _isProcessing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('Escanear Código QR'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flash_on),
+            onPressed: () => cameraController.toggleTorch(),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Cámara escáner
+          MobileScanner(controller: cameraController, onDetect: _onQRDetected),
+
+          // Overlay con marco de escaneo
+          Container(
+            decoration: ShapeDecoration(
+              shape: QrScannerOverlayShape(
+                borderColor: Colors.blue,
+                borderRadius: 10,
+                borderLength: 30,
+                borderWidth: 10,
+                cutOutSize: 250,
+              ),
+            ),
+          ),
+
+          // Instrucciones
+          Positioned(
+            bottom: 100,
+            left: 0,
+            right: 0,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Enfoque el código QR de la factura SUNAT\npara extraer los datos automáticamente',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+
+          // Indicador de procesamiento
+          if (_isProcessing)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.blue),
+                    SizedBox(height: 16),
+                    Text(
+                      'Procesando código QR...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _onQRDetected(BarcodeCapture capture) {
+    if (_isProcessing) return;
+
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isNotEmpty) {
+      final String? qrData = barcodes.first.rawValue;
+      if (qrData != null && qrData.isNotEmpty) {
+        setState(() {
+          _isProcessing = true;
+        });
+
+        // Pequeño delay para mostrar el indicador de procesamiento
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.pop(context, qrData);
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
+  }
+}
+
+/// Shape personalizado para el overlay del escáner QR
+class QrScannerOverlayShape extends ShapeBorder {
+  const QrScannerOverlayShape({
+    this.borderColor = Colors.blue,
+    this.borderWidth = 3.0,
+    this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
+    this.borderRadius = 0,
+    this.borderLength = 40,
+    double? cutOutSize,
+  }) : cutOutSize = cutOutSize ?? 250;
+
+  final Color borderColor;
+  final double borderWidth;
+  final Color overlayColor;
+  final double borderRadius;
+  final double borderLength;
+  final double cutOutSize;
+
+  @override
+  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(10);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return Path()
+      ..fillType = PathFillType.evenOdd
+      ..addPath(getOuterPath(rect), Offset.zero);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    Path getLeftTopPath(Rect rect) {
+      return Path()
+        ..moveTo(rect.left, rect.bottom)
+        ..lineTo(rect.left, rect.top + borderRadius)
+        ..quadraticBezierTo(
+          rect.left,
+          rect.top,
+          rect.left + borderRadius,
+          rect.top,
+        )
+        ..lineTo(rect.right, rect.top);
+    }
+
+    return getLeftTopPath(rect)
+      ..lineTo(rect.right, rect.bottom)
+      ..lineTo(rect.left, rect.bottom)
+      ..lineTo(rect.left, rect.top);
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    final width = rect.width;
+    final height = rect.height;
+    final cutOutWidth = cutOutSize < width ? cutOutSize : width - borderWidth;
+    final cutOutHeight = cutOutSize < height
+        ? cutOutSize
+        : height - borderWidth;
+
+    final backgroundPath = Path()
+      ..addRect(rect)
+      ..addOval(
+        Rect.fromCenter(
+          center: rect.center,
+          width: cutOutWidth,
+          height: cutOutHeight,
+        ),
+      )
+      ..fillType = PathFillType.evenOdd;
+
+    final backgroundPaint = Paint()
+      ..color = overlayColor
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(backgroundPath, backgroundPaint);
+
+    // Dibujar las esquinas del marco
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth;
+
+    final path = Path();
+
+    // Esquina superior izquierda
+    path.moveTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2 + borderLength,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2 + borderLength,
+      rect.center.dy - cutOutHeight / 2,
+    );
+
+    // Esquina superior derecha
+    path.moveTo(
+      rect.center.dx + cutOutWidth / 2 - borderLength,
+      rect.center.dy - cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2 + borderLength,
+    );
+
+    // Esquina inferior derecha
+    path.moveTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2 - borderLength,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2 - borderLength,
+      rect.center.dy + cutOutHeight / 2,
+    );
+
+    // Esquina inferior izquierda
+    path.moveTo(
+      rect.center.dx - cutOutWidth / 2 + borderLength,
+      rect.center.dy + cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2 - borderLength,
+    );
+
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  ShapeBorder scale(double t) {
+    return QrScannerOverlayShape(
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      overlayColor: overlayColor,
     );
   }
 }

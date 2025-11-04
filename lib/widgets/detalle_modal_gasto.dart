@@ -849,8 +849,8 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
         _buildReadOnlyField('Politica', _reporte!.politica ?? 'N/A'),
         _buildReadOnlyField('Tipo Gasto', _reporte!.tipogasto ?? 'N/A'),
         _buildReadOnlyField('Categoria', _reporte!.categoria ?? 'N/A'),
-        _buildReadOnlyField('Razon Social', _reporte!.proveedor ?? 'N/A'),
         _buildReadOnlyField('RUC Emisor', _reporte!.ruc ?? 'N/A'),
+        _buildReadOnlyField('Razon Social', _reporte!.proveedor ?? 'N/A'),
         _buildReadOnlyField('RUC Cliente', _reporte?.ruccliente ?? 'N/A'),
       ],
     );

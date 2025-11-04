@@ -1,3 +1,5 @@
+import 'package:flu2/models/reporte_model.dart';
+
 class ReporteAuditoriaDetalle {
   final int id;
   final int idAd;
@@ -121,6 +123,43 @@ class ReporteAuditoriaDetalle {
       'lugardestino': lugarDestino,
       'tipomovilidad': tipoMovilidad,
     };
+  }
+
+  Reporte toReporte() {
+    return Reporte(
+      idrend: idRend,
+      iduser: idUser,
+      dni: null, // Puedes asignar valores por defecto o lo que corresponda
+      politica: politica,
+      categoria: categoria,
+      tipogasto: tipoGasto,
+      ruc: ruc,
+      proveedor: proveedor,
+      tipocomprobante: tipoComprobante,
+      serie: serie,
+      numero: numero,
+      igv: igv,
+      fecha: fecha,
+      total: total,
+      moneda: moneda,
+      ruccliente: rucCliente,
+      desempr: null, // Asigna valores como correspondan
+      dessed: null, // Asigna valores como correspondan
+      gerencia: null, // Asigna valores como correspondan
+      area: null, // Asigna valores como correspondan
+      idcuenta: null, // Asigna valores como correspondan
+      consumidor: null, // Asigna valores como correspondan
+      placa: null, // Asigna valores como correspondan
+      estadoActual: estadoActual,
+      glosa: null, // Asigna valores como correspondan
+      motivoviaje: motivoViaje,
+      lugarorigen: lugarOrigen,
+      lugardestino: lugarDestino,
+      tipomovilidad: tipoMovilidad,
+      feccre: fecCre,
+      obs: obs,
+      evidencia: null, // Asigna valores como correspondan
+    );
   }
 
   // Métodos auxiliares

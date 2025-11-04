@@ -544,10 +544,12 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                               _buildDetailRow(
                                 'Aprobados',
                                 '${widget.informe.cantidadAprobado} (${widget.informe.totalAprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.green,
                               ),
                               _buildDetailRow(
-                                'Desaprobados',
+                                'Rechazados',
                                 '${widget.informe.cantidadDesaprobado} (${widget.informe.totalDesaprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.red,
                               ),
                             ]),
                             if (widget.informe.nota != null &&
@@ -833,7 +835,11 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    Color? valueColor, // 👈 parámetro opcional
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -853,10 +859,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
+                color: valueColor ?? Colors.black87, // 👈 usa el color dinámico
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
