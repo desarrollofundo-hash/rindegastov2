@@ -637,7 +637,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                       Expanded(
                         child: ElevatedButton(
                           onPressed: widget.informe.estadoActual == 'EN INFORME'
-                              ? _enviarInforme
+                              ? _mostrarConfirmacionEnvio //_enviarInforme
                               : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -669,6 +669,44 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
         ),
       ),
     );
+  }
+
+
+  Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Confirmar envío',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            '¿Estás seguro que deseas enviar este informe?',
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // ❌ No
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () => Navigator.of(context).pop(true), // ✅ Sí
+              child: const Text('Sí, enviar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _enviarInforme();
+    }
   }
 
   Widget _buildGastoCard(ReporteInformeDetalle detalle, BuildContext context) {

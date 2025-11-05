@@ -74,6 +74,41 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     }
   }
 
+  Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Confirmar envío',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Desea aprobar el informe?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // ❌ No
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () => Navigator.of(context).pop(true), // ✅ Sí
+              child: const Text('Sí, Aprobar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _aprobarDocumento();
+    }
+  }
+
   Future<void> _aprobarDocumento() async {
     try {
       setState(() => _isLoading = true);
@@ -753,7 +788,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         child: ElevatedButton(
                           onPressed:
                               widget.revision.estadoActual == 'EN REVISION'
-                              ? _aprobarDocumento
+                              ? _mostrarConfirmacionEnvio //_aprobarDocumento
                               : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
                             backgroundColor:

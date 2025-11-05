@@ -546,7 +546,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           controller: _searchController,
           focusNode: _searchFocusNode,
         ),
-        body: TabbedScreen(
+        body: 
+            InformesAuditoriaList(
+              auditorias: _auditoria,
+              onAuditoriaUpdated: _actualizarAuditoria,
+              onAuditoriaDeleted: _eliminarAuditoria,
+              showEmptyStateButton: false,
+              onRefresh: loadAuditoria,
+            ),
+        ),
+        /*body: TabbedScreen(
           tabLabels: const ["Todos"],
           tabColors: const [Colors.green],
           tabViews: [
@@ -558,8 +567,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onRefresh: loadAuditoria,
             ),
           ],
-        ),
-      ),
+        ), */
+      
     );
   }
 
