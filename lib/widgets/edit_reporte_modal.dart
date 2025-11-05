@@ -121,19 +121,29 @@ class _EditReporteModalState extends State<EditReporteModal> {
     final companyValue = CompanyService().currentUserArea;
     final estadoValue = widget.reporte.estadoActual;
 
-    // Verificar el valor de companyPlaca (tercero)
+    // 🔹 Verificar primero si el área es CONTABILIDAD
     if (companyValue != null) {
-      final value = companyValue.trim().toUpperCase();
-      if (value == 'CONTABILIDAD') {
+      final area = companyValue.trim().toUpperCase();
+
+      // ✅ Nueva condición especial:
+      // Si el área es CONTABILIDAD y el estado está en revisión o aprobado → TRUE
+      if (area == 'CONTABILIDAD' &&
+          (estadoValue?.trim().toUpperCase() == 'EN REVISION' ||
+              estadoValue?.trim().toUpperCase() == 'APROBADO')) {
+        return true;
+      }
+
+      // En cualquier otro caso, si es contabilidad → sigue siendo FALSE
+      if (area == 'CONTABILIDAD') {
         return false;
       }
     }
 
-    // Verificar el valor de estadoActual (widget.reporte)
+    // 🔹 Verificar estados que bloquean (independientemente del área)
     if (estadoValue != null) {
       final value = estadoValue.trim().toUpperCase();
       if (value == 'EN AUDITORIA' ||
-          value == 'CONTABILIDAD' || // Aquí sí bloqueamos CONTABILIDAD
+          value == 'CONTABILIDAD' ||
           value == 'EN REVISION' ||
           value == 'APROBADO' ||
           value == 'RECHAZADO' ||

@@ -167,6 +167,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     // Configurar valores por defecto
     _selectedMoneda = 'PEN';
     _selectedComprobante = 'FACTURA ELECTRONICA';
+
+    final isGastoMovilidad =
+        widget.politicaSeleccionada.value != "GASTO DE MOVILIDAD";
   }
 
   @override
@@ -600,7 +603,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Guarda el gasto utilizando la API
   Future<void> _guardarGasto() async {
-    if (_formKey.currentState!.validate()) {
+    if (widget.politicaSeleccionada.value != "GASTOS DE MOVILIDAD") {
       if (_selectedFile == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -934,7 +937,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   children: [
                     _buildImageSection(),
                     const SizedBox(height: 10),
-                    _buildLectorSunatSection(),
+                    if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+                      _buildLectorSunatSection(),
                     const SizedBox(height: 10),
                     _buildDatosGeneralesSection(),
                     const SizedBox(height: 10),
@@ -1042,10 +1046,18 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   ElevatedButton.icon(
                     onPressed: _pickImage,
                     icon: Icon(
-                      (_selectedFile == null) ? Icons.add : Icons.edit,
+                      (widget.politicaSeleccionada.value !=
+                                  "GASTOS DE MOVILIDAD" &&
+                              _selectedFile == null)
+                          ? Icons.add
+                          : Icons.edit,
                     ),
                     label: Text(
-                      (_selectedFile == null) ? 'Agregar' : 'Cambiar',
+                      (widget.politicaSeleccionada.value !=
+                                  "GASTOS DE MOVILIDAD" &&
+                              _selectedFile == null)
+                          ? 'Agregar'
+                          : 'Cambiar',
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -1131,10 +1143,18 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   border: Border.all(
-                    color: (_selectedFile == null)
+                    color:
+                        (widget.politicaSeleccionada.value !=
+                                "GASTOS DE MOVILIDAD" &&
+                            _selectedFile == null)
                         ? Colors.red.shade300
                         : Colors.grey.shade300,
-                    width: (_selectedFile == null) ? 2 : 1,
+                    width:
+                        (widget.politicaSeleccionada.value !=
+                                "GASTOS DE MOVILIDAD" &&
+                            _selectedFile == null)
+                        ? 2
+                        : 1,
                   ),
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -1143,17 +1163,31 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   children: [
                     Icon(
                       Icons.attach_file,
-                      color: (_selectedFile == null) ? Colors.red : Colors.grey,
+                      color:
+                          (widget.politicaSeleccionada.value !=
+                                  "GASTOS DE MOVILIDAD" &&
+                              _selectedFile == null)
+                          ? Colors.red
+                          : Colors.grey,
                       size: 40,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Agregar evidencia (Obligatorio)',
+                      (widget.politicaSeleccionada.value !=
+                              "GASTOS DE MOVILIDAD")
+                          ? 'Agregar evidencia (Obligatorio)'
+                          : 'Agregar evidencia (Opcional)',
                       style: TextStyle(
-                        color: (_selectedFile == null)
+                        color:
+                            (widget.politicaSeleccionada.value !=
+                                    "GASTOS DE MOVILIDAD" &&
+                                _selectedFile == null)
                             ? Colors.red
                             : Colors.grey,
-                        fontWeight: (_selectedFile == null)
+                        fontWeight:
+                            (widget.politicaSeleccionada.value !=
+                                    "GASTOS DE MOVILIDAD" &&
+                                _selectedFile == null)
                             ? FontWeight.bold
                             : FontWeight.normal,
                       ),
@@ -1436,88 +1470,85 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Datos de la Factura',
+          'Datos de comprobante',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.green,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 2),
 
         // Campos que se muestran solo si NO es planilla de movilidad
         if (!esPlanillaMovilidad) ...[
           // RUC Emisor
-          TextFormField(
-            controller: _rucProveedorController,
-            decoration: const InputDecoration(
-              labelText: 'RUC Emisor',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.badge),
+          if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+            TextFormField(
+              controller: _rucProveedorController,
+              decoration: const InputDecoration(
+                labelText: 'RUC Emisor',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.badge),
+              ),
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (value) {
+                if (value.length == 11) {
+                  _loadApiRuc(value);
+                } else {
+                  showMessageError(context, 'El RUC debe tener 11 dígitos');
+                }
+              },
+              validator: (value) {
+                if (value != null && value.isNotEmpty && value.length != 11) {
+                  return 'El RUC debe tener 11 dígitos';
+                }
+                return null;
+              },
             ),
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (value) {
-              if (value.length == 11) {
-                _loadApiRuc(value);
-              } else {
-                showMessageError(context, 'El RUC debe tener 11 dígitos');
-              }
-            },
-            validator: (value) {
-              if (value != null && value.isNotEmpty && value.length != 11) {
-                return 'El RUC debe tener 11 dígitos';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
           // Razón Social
-          TextFormField(
-            controller: _razonSocialController,
-            decoration: InputDecoration(
-              labelText: 'Razón Social',
-              hintText: 'Ingresa Razón Social',
-              floatingLabelBehavior: FloatingLabelBehavior.always,
-              border: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+          if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+            TextFormField(
+              controller: _razonSocialController,
+              decoration: InputDecoration(
+                labelText: 'Razón Social',
+                hintText: 'Ingresa Razón Social',
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+                border: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.green, width: 2),
+                ),
+                errorBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.red, width: 2),
+                ),
+                prefixIcon: const Icon(Icons.business, color: Colors.grey),
               ),
-              enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-              ),
-              focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.green, width: 2),
-              ),
-              errorBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.red, width: 2),
-              ),
-              prefixIcon: const Icon(Icons.business, color: Colors.grey),
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'El proveedor es obligatorio';
-              }
-              return null;
-            },
-          ),
           const SizedBox(height: 12),
 
           // RUC Cliente
-          TextFormField(
-            controller: _rucClienteController,
-            decoration: const InputDecoration(
-              labelText: 'RUC Cliente',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.business),
-              suffixIcon: Icon(Icons.lock, color: Colors.grey),
+          if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+            TextFormField(
+              controller: _rucClienteController,
+              decoration: const InputDecoration(
+                labelText: 'RUC Cliente',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.business),
+                suffixIcon: Icon(Icons.lock, color: Colors.grey),
+              ),
+              enabled: false,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            enabled: false,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
           const SizedBox(height: 8),
 
           // Tipo de Comprobante
@@ -1601,44 +1632,32 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           const SizedBox(height: 12),
 
           // Serie y Número de Factura
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _serieFacturaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Serie *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.receipt_long),
+          if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _serieFacturaController,
+                    decoration: const InputDecoration(
+                      labelText: 'Serie *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.receipt_long),
+                    ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Serie es obligatoria';
-                    }
-                    return null;
-                  },
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextFormField(
-                  controller: _numeroFacturaController,
-                  decoration: const InputDecoration(
-                    labelText: 'Número *',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.confirmation_number),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _numeroFacturaController,
+                    decoration: const InputDecoration(
+                      labelText: 'Número *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.confirmation_number),
+                    ),
                   ),
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Número es obligatorio';
-                    }
-                    return null;
-                  },
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           const SizedBox(height: 12),
         ],
 
@@ -1666,7 +1685,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 },
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 12),
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _selectedMoneda,
@@ -2250,6 +2269,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             prefixIcon: Icon(Icons.badge),
           ),
           keyboardType: TextInputType.text,
+          validator: (value) {
+            if (widget.politicaSeleccionada.value == "GASTOS DE MOVILIDAD") {
+              if (value == null || value.isEmpty) {
+                return 'Origen Obligatorio';
+              }
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 12),
 
@@ -2262,6 +2289,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             prefixIcon: Icon(Icons.badge),
           ),
           keyboardType: TextInputType.text,
+          validator: (value) {
+            if (widget.politicaSeleccionada.value == "GASTOS DE MOVILIDAD") {
+              if (value == null || value.isEmpty) {
+                return 'Destino Obligatorio';
+              }
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 12),
 
@@ -2274,6 +2309,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             prefixIcon: Icon(Icons.badge),
           ),
           keyboardType: TextInputType.text,
+          validator: (value) {
+            if (widget.politicaSeleccionada.value == "GASTOS DE MOVILIDAD") {
+              if (value == null || value.isEmpty) {
+                return 'Motivo Viaje Obligatorio';
+              }
+            }
+            return null;
+          },
         ),
         const SizedBox(height: 12),
 

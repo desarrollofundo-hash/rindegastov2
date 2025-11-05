@@ -504,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           focusNode: _searchFocusNode,
         ),
         body: TabbedScreen(
-          tabLabels: const ["Todos", "Borrador"],
+          tabLabels: const ["Todos", "Aprobado", "Rechazado"],
           tabColors: const [Colors.indigo, Colors.indigo],
           tabViews: [
             InformesReporteList(
@@ -517,7 +517,27 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onRefresh: _loadInformes,
             ),
             InformesReporteList(
-              informes: _informes.where((i) => i.estado == "Borrador").toList(),
+              informes: _informes
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'aprobado',
+                    ),
+                  )
+                  .toList(),
+              informe: [],
+              onInformeUpdated: _actualizarInforme,
+              onInformeDeleted: _eliminarInforme,
+              showEmptyStateButton: false,
+              onRefresh: _loadInformes,
+            ),
+            InformesReporteList(
+              informes: _informes
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'rechazado',
+                    ),
+                  )
+                  .toList(),
               informe: [],
               onInformeUpdated: _actualizarInforme,
               onInformeDeleted: _eliminarInforme,
@@ -536,7 +556,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.white,
-
         appBar: CustomAppBar(
           hintText: "Buscar en Auditoría...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
@@ -546,7 +565,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           controller: _searchController,
           focusNode: _searchFocusNode,
         ),
-        body: 
+
+        // 🔹 TabbedScreen con 3 pestañas
+        body: TabbedScreen(
+          tabLabels: const ["Todos", "Pendiente", "Rechazado"],
+          tabColors: const [Colors.green, Colors.orange, Colors.red],
+
+          tabViews: [
+            // 🟢 TAB 1: Todos
             InformesAuditoriaList(
               auditorias: _auditoria,
               onAuditoriaUpdated: _actualizarAuditoria,
@@ -554,21 +580,38 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               showEmptyStateButton: false,
               onRefresh: loadAuditoria,
             ),
-        ),
-        /*body: TabbedScreen(
-          tabLabels: const ["Todos"],
-          tabColors: const [Colors.green],
-          tabViews: [
+
+            //  TAB 2: Pendiente
             InformesAuditoriaList(
-              auditorias: _auditoria,
+              auditorias: _auditoria
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'en auditoria',
+                    ),
+                  )
+                  .toList(),
+              onAuditoriaUpdated: _actualizarAuditoria,
+              onAuditoriaDeleted: _eliminarAuditoria,
+              showEmptyStateButton: false,
+              onRefresh: loadAuditoria,
+            ),
+
+            // 🔴 TAB 3: Rechazado
+            InformesAuditoriaList(
+              auditorias: _auditoria
+                  .where(
+                    (a) =>
+                        (a.estadoActual ?? '').toLowerCase().contains('rechaz'),
+                  )
+                  .toList(),
               onAuditoriaUpdated: _actualizarAuditoria,
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
               onRefresh: loadAuditoria,
             ),
           ],
-        ), */
-      
+        ),
+      ),
     );
   }
 
@@ -589,11 +632,41 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           focusNode: _searchFocusNode,
         ),
         body: TabbedScreen(
-          tabLabels: const ["Todos"],
+          tabLabels: const ["Todos", "Pendiente", "Aprobado"],
           tabColors: const [Colors.green],
           tabViews: [
             InformesRevisionList(
               revision: _revision,
+              onRevisionUpdated: _actualizarRevision,
+              onRevisionDeleted: _eliminarRevision,
+              showEmptyStateButton: false,
+              onRefresh: _loadRevision,
+            ),
+
+            //TAB 2
+            InformesRevisionList(
+              revision: _revision
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'en revision',
+                    ),
+                  )
+                  .toList(),
+              onRevisionUpdated: _actualizarRevision,
+              onRevisionDeleted: _eliminarRevision,
+              showEmptyStateButton: false,
+              onRefresh: _loadRevision,
+            ),
+
+            //TAB 3
+            InformesRevisionList(
+              revision: _revision
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'aprobado',
+                    ),
+                  )
+                  .toList(),
               onRevisionUpdated: _actualizarRevision,
               onRevisionDeleted: _eliminarRevision,
               showEmptyStateButton: false,
@@ -792,7 +865,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _removeFabOverlay();
     }
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     // ✅ Función auxiliar para verificar si el usuario tiene acceso por idSubMenu
     bool _tienePermiso(int idSubMenu) {
