@@ -367,7 +367,6 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     }
   }
 
-
   Future<void> _enviarAuditoriaRevision() async {
     try {
       setState(() => _isLoading = true);
@@ -411,41 +410,42 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
 
       for (final detalless in _detalles) {
         // Verifica si el detalle está RECHAZADO y no lo envía
-        if (detalless.estadoActual == 'RECHAZADO') {
-          final detallePayload = {
-            "idRev": idRev, // Relación con la cabecera
-            "idAd": detalless.idAd,
-            "idAdDet": detalless.id, // usar idrend como id de factura
-            "idInf": detalless.idInf,
-            "idRend": detalless.idRend,
-            // Preferir el idUser del detalle; si no está, usar el del auditoria
-            "idUser": detalless.idUser,
-            // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
-            "dni": (widget.auditoria.dni ?? '').toString(),
-            // Usar ruc del detalle si existe, si no, el ruc del auditoria
-            "ruc": widget.auditoria.ruc ?? '',
-            "obs": widget.auditoria.obsRechazo,
-            "estadoActual": 'EN REVISION',
-            "estado": 'S',
-            "fecCre": DateTime.now().toIso8601String(),
-            "useReg": UserService().currentUserCode,
-            "hostname": 'FLUTTER',
-            "fecEdit": DateTime.now().toIso8601String(),
-            "useEdit": UserService().currentUserCode,
-            "useElim": 0,
-          };
+        //if (detalless.estadoActual == 'RECHAZADO') {
+        final detallePayload = {
+          "idRev": idRev, // Relación con la cabecera
+          "idAd": detalless.idAd,
+          "idAdDet": detalless.id, // usar idrend como id de factura
+          "idInf": detalless.idInf,
+          "idRend": detalless.idRend,
+          // Preferir el idUser del detalle; si no está, usar el del auditoria
+          "idUser": detalless.idUser,
+          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
+          "dni": (widget.auditoria.dni ?? '').toString(),
+          // Usar ruc del detalle si existe, si no, el ruc del auditoria
+          "ruc": widget.auditoria.ruc ?? '',
+          "obs": widget.auditoria.obsRechazo,
+          "estadoActual": 'EN REVISION',
+          "estado": 'S',
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": UserService().currentUserCode,
+          "hostname": 'FLUTTER',
+          "fecEdit": DateTime.now().toIso8601String(),
+          "useEdit": UserService().currentUserCode,
+          "useElim": 0,
+        };
 
-          print("📤 Enviando detalle con ID: ${detalless.id}: $detallePayload");
+        print("📤 Enviando detalle con ID: ${detalless.id}: $detallePayload");
 
-          final detalleGuardado = await _apiService
-              .saveRendicionRevisionDetalle(detallePayload);
+        final detalleGuardado = await _apiService.saveRendicionRevisionDetalle(
+          detallePayload,
+        );
 
-          if (!detalleGuardado) {
-            throw Exception(
-              'Error al guardar el detalle de auditoría a revisión id ${detalless.id}',
-            );
-          }
+        if (!detalleGuardado) {
+          throw Exception(
+            'Error al guardar el detalle de auditoría a revisión id ${detalless.id}',
+          );
         }
+        //}
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -489,7 +489,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.only(top: 100), // Solo margen superior
+      insetPadding: const EdgeInsets.only(top: 10), // Solo margen superior
       clipBehavior: Clip.antiAliasWithSaveLayer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -850,10 +850,6 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                 '#${widget.auditoria.idInf}',
                               ),
                               _buildDetailRow(
-                                'Usuario',
-                                widget.auditoria.idUser.toString(),
-                              ),
-                              _buildDetailRow(
                                 'RUC',
                                 widget.auditoria.ruc ?? 'N/A',
                               ),
@@ -879,6 +875,15 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                                 valueColor: Colors.red,
                               ),
                             ]),
+
+                            const SizedBox(height: 10),
+                            _buildDetailSection('Motivo de rechazo', [
+                              _buildDetailRow(
+                                'Motivo: ',
+                                widget.auditoria.obsRechazo.toString(),
+                              ),
+                            ]),
+
                             if (widget.auditoria.nota != null &&
                                 widget.auditoria.nota!.isNotEmpty) ...[
                               const SizedBox(height: 20),
@@ -1027,7 +1032,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     );
   }
 
-/*
+  /*
   Future<void> _habilitarAuditoria() async {
     try {
       setState(() => _isLoading = true);

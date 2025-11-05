@@ -194,7 +194,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.only(top: 100), // Solo margen superior
+      insetPadding: const EdgeInsets.only(top: 10), // Solo margen superior
       clipBehavior: Clip.antiAliasWithSaveLayer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -550,6 +550,14 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                                 'Rechazados',
                                 '${widget.informe.cantidadDesaprobado} (${widget.informe.totalDesaprobado.toStringAsFixed(2)} PEN)',
                                 valueColor: Colors.red,
+                              ),
+                            ]),
+
+                            const SizedBox(height: 10),
+                            _buildDetailSection('Motivo de rechazo', [
+                              _buildDetailRow(
+                                'Motivo: ',
+                                widget.informe.obs.toString(),
                               ),
                             ]),
                             if (widget.informe.nota != null &&
