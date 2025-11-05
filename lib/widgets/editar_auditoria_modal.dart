@@ -26,12 +26,15 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
   List<ReporteAuditoriaDetalle> detallesFiltrados = [];
   Map<int, bool> detallesSeleccionados = {};
   bool todosMarcados = true;
-
+  
+  late TextEditingController _notaController;
+  
   final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
+    _notaController = TextEditingController();
     detallesFiltrados = widget.detalles;
     // Inicializar todos como seleccionados por defecto
     for (var det in widget.detalles) {
@@ -197,7 +200,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                     onPressed: _getSeleccionadosCount() > 0
                         ? () {
                             // Acción solo si hay seleccionados
-                            _eliminarAuditoria();
+                            _mostrarDialogoComentario(context);
                           }
                         : null, // 🔸 Desactiva el botón si no hay seleccionados
                     style: ElevatedButton.styleFrom(
@@ -412,7 +415,72 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
     );
   }
 
-  void _eliminarAuditoria() async {
+
+  void _mostrarDialogoComentario(BuildContext context) {
+    // Controlador para el cuadro de texto();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String comentario = '';
+        String error = '';
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('MOTIVO DE RECHAZO'),
+              backgroundColor: Colors.white,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _notaController,
+                    onChanged: (value) {
+                      setState(() {
+                        comentario = value;
+                        error = ''; // Limpia el error al escribir
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText:
+                          'Ejemplo: la factura 1728 es rechazada porque ...',
+                    ),
+                    maxLines: 4,
+                  ),
+                  if (error.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        error,
+                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (comentario.trim().length < 5) {
+                      setState(() {
+                        error = 'Debe escribir al menos 5 caracteres';
+                      });
+                    } else {
+                      _rechazarAuditoria();
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('ACEPTAR'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _rechazarAuditoria() async {
     // Filtrar gastos seleccionados y no seleccionados
     debugPrint("SECCION ELIMINAR:");
 
@@ -443,10 +511,10 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
           // Preferir el idUser del detalle; si no está, usar el del informe
           "idUser": gasto.idUser,
           // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del informe
-          "dni": ('').toString(),
+          "dni": widget.auditoria.dni,
           // Usar ruc del detalle si existe, si no, el ruc del informe
           "ruc": (gasto.ruc ?? '').toString(),
-          "obs": gasto.obs ?? '',
+          "obs": _notaController.text,
           "estadoActual": 'RECHAZADO',
           "estado": gasto.estado ?? 'S',
           "fecCre": gasto.fecCre,

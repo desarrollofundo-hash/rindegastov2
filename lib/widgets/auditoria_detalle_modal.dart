@@ -184,6 +184,119 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     }
   }
 
+  Future<void> _actualizarAuditoria() async {
+    try {
+      setState(() => _isLoading = true);
+      print("🚀 Iniciando envío de auditoría...");
+
+      // 1️⃣ GUARDAR CABECERA (saveRendicionAuditoria)
+      final cabeceraPayload = {
+        "idRev": widget.auditoria.idRev,
+        "idAd": widget.auditoria.idAd,
+        "idInf": widget.auditoria.idInf,
+        "idUser": widget.auditoria.idUser,
+        "dni": widget.auditoria.dni,
+        "ruc": widget.auditoria.ruc,
+        "obs": "",
+        "estadoActual": "EN REVISION",
+        "estado": "S",
+        "fecCre": DateTime.now().toIso8601String(),
+        "useReg": UserService().currentUserCode,
+        "hostname": "FLUTTER",
+        "fecEdit": DateTime.now().toIso8601String(),
+        "useEdit": UserService().currentUserCode,
+        "useElim": 0,
+      };
+
+      print("📤 Enviando cabecera: $cabeceraPayload");
+
+      //final idrendicion;
+      final idRev;
+      if (widget.auditoria.idRev == 0) {
+        idRev = await _apiService.saveRendicionRevision(cabeceraPayload);
+        if (idRev == null) throw Exception("Error al guardar cabecera.");
+      } else {
+        idRev = widget.auditoria.idRev;
+      }
+
+      // 2️⃣ GUARDAR DETALLES: usamos los campos del modelo ReporteauditoriaDetalle
+      if (_detalles.isEmpty) {
+        print('⚠️ No hay detalles para enviar.');
+      }
+
+      for (final detalless in _detalles) {
+        // Verifica si el detalle está RECHAZADO y no lo envía
+        if (detalless.estadoActual == 'RECHAZADO') {
+          continue; // No enviar el detalle, pasa al siguiente
+        }
+
+        final detallePayload = {
+          "idRev": idRev, // Relación con la cabecera
+          "idAd": detalless.idAd,
+          "idAdDet": detalless.id, // usar idrend como id de factura
+          "idInf": detalless.idInf,
+          "idRend": detalless.idRend,
+          // Preferir el idUser del detalle; si no está, usar el del auditoria
+          "idUser": detalless.idUser,
+          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
+          "dni": (widget.auditoria.dni ?? '').toString(),
+          // Usar ruc del detalle si existe, si no, el ruc del auditoria
+          "ruc": widget.auditoria.ruc ?? '',
+          "obs": '',
+          "estadoActual": 'EN REVISION',
+          "estado": 'S',
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": UserService().currentUserCode,
+          "hostname": 'FLUTTER',
+          "fecEdit": DateTime.now().toIso8601String(),
+          "useEdit": UserService().currentUserCode,
+          "useElim": 0,
+        };
+
+        print("📤 Enviando detalle con ID: ${detalless.id}: $detallePayload");
+
+        final detalleGuardado = await _apiService.saveRendicionRevisionDetalle(
+          detallePayload,
+        );
+
+        if (!detalleGuardado) {
+          throw Exception(
+            'Error al guardar el detalle de auditoría a revisión id ${detalless.id}',
+          );
+        }
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green, // Fondo verde
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text("ENVIADO A REVISION", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          behavior:
+              SnackBarBehavior.floating, // Hace que flote sobre el contenido
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+      );
+
+      Navigator.of(context).pop(true);
+    } catch (e, stack) {
+      print("❌ Error al enviar informe: $e");
+      print(stack);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error al enviar auditoría: $e")));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -610,54 +723,87 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                   top: false,
                   child: Row(
                     children: [
-                      // Botón Editar
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed:
-                              widget.auditoria.estadoActual == 'EN AUDITORIA'
-                              ? () async {
-                                  // Abre el modal y espera a que se cierre
-                                  final result = await Navigator.of(context)
-                                      .push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              EditarAuditoriaModal(
-                                                auditoria: widget.auditoria,
-                                                detalles: _detalles,
-                                              ),
-                                        ),
-                                      );
-
-                                  // Si el modal devuelve true (por ejemplo tras guardar cambios), recarga los detalles
-                                  if (result == true) {
-                                    _loadDetalles(); // <-- Método que refresca tu lista o detalles
-                                  }
-                                } // Si no está en 'EN INFORME', el botón queda deshabilitado
-                              : null, // 🔒 Deshabilitado si no está en estado 'Informe'
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Colors.blue,
-                              width: 2,
+                      // Botón Habilitar
+                      if (widget.auditoria.estadoActual == 'RECHAZADO')
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed:
+                                _actualizarAuditoria, //_habilitarAuditoria,
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Colors.blue,
+                                width: 2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: Text(
-                            'Editar auditoria',
-                            style: TextStyle(
-                              color:
-                                  widget.auditoria.estadoActual ==
-                                      'EN AUDITORIA'
-                                  ? Colors.blue
-                                  : Colors.grey, // gris cuando está bloqueado
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                            child: const Text(
+                              'Habilitar',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      const SizedBox(width: 16),
+
+                      // Botón Editar
+                      if (widget.auditoria.estadoActual != 'RECHAZADO')
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed:
+                                widget.auditoria.estadoActual ==
+                                        'EN AUDITORIA' ||
+                                    widget.auditoria.estadoActual == 'RECHAZADO'
+                                ? () async {
+                                    // Abre el modal y espera a que se cierre
+                                    final result = await Navigator.of(context)
+                                        .push(
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                EditarAuditoriaModal(
+                                                  auditoria: widget.auditoria,
+                                                  detalles: _detalles,
+                                                ),
+                                          ),
+                                        );
+
+                                    // Si el modal devuelve true (por ejemplo tras guardar cambios), recarga los detalles
+                                    if (result == true) {
+                                      _loadDetalles(); // <-- Método que refresca tu lista o detalles
+                                    }
+                                  } // Si no está en 'EN INFORME', el botón queda deshabilitado
+                                : null, // 🔒 Deshabilitado si no está en estado 'Informe'
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Colors.blue,
+                                width: 2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: Text(
+                              'Editar auditoria',
+                              style: TextStyle(
+                                color:
+                                    widget.auditoria.estadoActual ==
+                                            'EN AUDITORIA' ||
+                                        widget.auditoria.estadoActual ==
+                                            'RECHAZADO'
+                                    ? Colors.blue
+                                    : Colors.grey, // gris cuando está bloqueado
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
                       const SizedBox(width: 16),
 
                       // Botón Enviar
@@ -665,7 +811,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                         child: ElevatedButton(
                           onPressed:
                               widget.auditoria.estadoActual == 'EN AUDITORIA'
-                              ? _enviarAuditoria
+                              ? _actualizarAuditoria //_enviarAuditoria
                               : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -697,6 +843,84 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         ),
       ),
     );
+  }
+
+  Future<void> _habilitarAuditoria() async {
+    try {
+      setState(() => _isLoading = true);
+      print("🚀 habilitando auditoría...");
+
+      // 2️⃣ GUARDAR DETALLES: usamos los campos del modelo ReporteauditoriaDetalle
+      if (_detalles.isEmpty) {
+        print('⚠️ No hay detalles para enviar.');
+      }
+
+      for (final detalless in _detalles) {
+        // Verifica si el detalle está RECHAZADO y no lo envía
+        if (detalless.estadoActual == 'RECHAZADO') {
+          final detallePayload = {
+            "idRev": detalless.idRev, // Relación con la cabecera
+            "idAd": detalless.idAd,
+            "idAdDet": detalless.id, // usar idrend como id de factura
+            "idInf": detalless.idInf,
+            "idRend": detalless.idRend,
+            // Preferir el idUser del detalle; si no está, usar el del auditoria
+            "idUser": detalless.idUser,
+            // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
+            "dni": (widget.auditoria.dni ?? '').toString(),
+            // Usar ruc del detalle si existe, si no, el ruc del auditoria
+            "ruc": widget.auditoria.ruc ?? '',
+            "obs": '',
+            "estadoActual": 'HABILITADO',
+            "estado": 'S',
+            "fecCre": DateTime.now().toIso8601String(),
+            "useReg": UserService().currentUserCode,
+            "hostname": 'FLUTTER',
+            "fecEdit": DateTime.now().toIso8601String(),
+            "useEdit": UserService().currentUserCode,
+            "useElim": 0,
+          };
+
+          print("📤 Habilitando: ${detalless.id}: $detallePayload");
+
+          final detalleGuardado = await _apiService
+              .saveRendicionRevisionDetalle(detallePayload);
+
+          if (!detalleGuardado) {
+            throw Exception('Error al habilitar auditoría ${detalless.id}');
+          }
+        }
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green, // Fondo verde
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text("INFORME HABILITADO", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          behavior:
+              SnackBarBehavior.floating, // Hace que flote sobre el contenido
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+      );
+
+      Navigator.of(context).pop(true);
+    } catch (e, stack) {
+      print("❌ Error al habilitar informe: $e");
+      print(stack);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error al habilitar auditoría: $e")),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Widget _buildGastoCard(
@@ -732,21 +956,33 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           children: [
             // Imagen placeholder
             GestureDetector(
-              onTap: () {
-                // Aquí se maneja lo que ocurre al hacer clic en el ícono
-                _mostrarEditarReporte(detalle.toReporte());
-                // Puedes agregar la lógica para abrir un modal, editar el valor, etc.
-              },
+              onTap: widget.auditoria.estadoActual == 'EN AUDITORIA'
+                  ? () {
+                      _mostrarEditarReporte(detalle.toReporte());
+                    }
+                  : null, // 🔒 Si no está en AUDITORIA, no hace nada
               child: Container(
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: widget.auditoria.estadoActual == 'EN AUDITORIA'
+                        ? Colors.green
+                        : Colors.grey, // cambia color si está deshabilitado
+                  ),
                 ),
-                child: const Icon(Icons.edit, color: Colors.green, size: 30),
+                child: Icon(
+                  Icons.edit,
+                  color: widget.auditoria.estadoActual == 'EN AUDITORIA'
+                      ? Colors.green
+                      : Colors.grey, // gris si está deshabilitado
+                  size: 30,
+                ),
               ),
             ),
+
             const SizedBox(
               width: 16,
             ), // Espacio entre el ícono y el siguiente elemento

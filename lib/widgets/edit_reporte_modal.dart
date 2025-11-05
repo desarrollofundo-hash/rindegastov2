@@ -361,7 +361,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _numeroController = TextEditingController(
       text: widget.reporte.numero ?? '',
     );
-    _fechaEmisionController = TextEditingController(text: widget.reporte.fecha ?? '');
+    _fechaEmisionController = TextEditingController(
+      text: formatDate(widget.reporte.fecha),
+    );
     _totalController = TextEditingController(
       text: widget.reporte.total?.toString() ?? '',
     );
@@ -391,7 +393,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _igvController = TextEditingController(
       text: widget.reporte.igv?.toString() ?? '',
     );
-    // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible    
+    // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible
     _notaController = TextEditingController(text: widget.reporte.obs ?? '');
   }
 

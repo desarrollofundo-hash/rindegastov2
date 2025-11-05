@@ -30,6 +30,7 @@ class ReporteAuditoriaDetalle {
   final String? lugarOrigen;
   final String? lugarDestino;
   final String? tipoMovilidad;
+  final int idRev;
 
   ReporteAuditoriaDetalle({
     required this.id,
@@ -59,6 +60,7 @@ class ReporteAuditoriaDetalle {
     this.lugarOrigen,
     this.lugarDestino,
     this.tipoMovilidad,
+    required this.idRev,
   });
 
   factory ReporteAuditoriaDetalle.fromJson(Map<String, dynamic> json) {
@@ -90,6 +92,7 @@ class ReporteAuditoriaDetalle {
       lugarOrigen: json['lugarorigen'],
       lugarDestino: json['lugardestino'],
       tipoMovilidad: json['tipomovilidad'],
+      idRev: json['idrev'] ?? 0,
     );
   }
 
@@ -122,6 +125,7 @@ class ReporteAuditoriaDetalle {
       'lugarorigen': lugarOrigen,
       'lugardestino': lugarDestino,
       'tipomovilidad': tipoMovilidad,
+      'idrev': idRev,
     };
   }
 

@@ -74,14 +74,6 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     }
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    _apiService.dispose();
-    _notaController.dispose();
-    super.dispose();
-  }
-
   Future<void> _aprobarDocumento() async {
     try {
       setState(() => _isLoading = true);
@@ -90,7 +82,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       for (final detalless in _detalles) {
         final detallePayload = {
           "idRev": detalless.idRev, // Relación con la cabecera
-          "idAd": detalless.idAd,
+          "idAd": widget.revision.idAd,
           "idAdDet": detalless.idAdDet, // usar idrend como id de factura
           "idInf": detalless.idInf,
           "idRend": detalless.idRend,
@@ -127,7 +119,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       }
 
       showMessageError(context, "DOCUMENTO APROBADO");
-      Navigator.pop(context);
+      Navigator.of(context).pop(true);
     } catch (e, stack) {
       print("❌ Error al aprobar revision: $e");
       print(stack);
@@ -139,6 +131,14 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     }
   }
 
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _apiService.dispose();
+    //_notaController.dispose();
+    super.dispose();
+  }
+
   Future<void> _rechazarDocumento() async {
     try {
       setState(() => _isLoading = true);
@@ -147,7 +147,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       for (final detalless in _detalles) {
         final detallePayload = {
           "idRev": detalless.idRev, // Relación con la cabecera
-          "idAd": detalless.idAd,
+          "idAd": widget.revision.idAd,
           "idAdDet": detalless.idAdDet, // usar idrend como id de factura
           "idInf": detalless.idInf,
           "idRend": detalless.idRend,
@@ -183,7 +183,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         }
       }
 
-      Navigator.pop(context);
+      Navigator.of(context).pop(true);
     } catch (e, stack) {
       print("❌ Error al finalizar rechazado: $e");
       print(stack);
@@ -201,32 +201,59 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('MOTIVO DE RECHAZO'),
-          backgroundColor: Colors.white,
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _notaController,
-                decoration: InputDecoration(
-                  hintText: 'Escribe un comentario...',
-                ),
-                maxLines: 4,
+        String comentario = '';
+        String error = '';
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('MOTIVO DE RECHAZO'),
+              backgroundColor: Colors.white,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _notaController,
+                    onChanged: (value) {
+                      setState(() {
+                        comentario = value;
+                        error = ''; // Limpia el error al escribir
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText:
+                          'Ejemplo: la factura 1728 es rechazada porque ...',
+                    ),
+                    maxLines: 4,
+                  ),
+                  if (error.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        error,
+                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                // Aquí puedes manejar el comentario si e
-                // Cerrar el diálogo
-                _rechazarDocumento();
-                Navigator.pop(context);
-              },
-              child: Text('ACEPTAR'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (comentario.trim().length < 5) {
+                      setState(() {
+                        error = 'Debe escribir al menos 5 caracteres';
+                      });
+                    } else {
+                      _rechazarDocumento();
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('ACEPTAR'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

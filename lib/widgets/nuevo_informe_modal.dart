@@ -571,4 +571,5 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
       style: const TextStyle(color: Colors.black87),
     );
   }
+
 }

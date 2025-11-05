@@ -43,30 +43,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   final NuevoGastoLogic _logic = NuevoGastoLogic();
 
   // Controladores para todos los campos
-  late TextEditingController _proveedorController;
-  late TextEditingController _fechaController;
-  late TextEditingController _totalController;
-  late TextEditingController _monedaController;
+  late TextEditingController _politicaController;
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
-  late TextEditingController _rucProveedorController;
   late TextEditingController _razonSocialController;
+  late TextEditingController _rucProveedorController;
+  late TextEditingController _rucClienteController;
+  late TextEditingController _tipoComprobanteController;
+  late TextEditingController _fechaController;
   late TextEditingController _serieFacturaController;
   late TextEditingController _numeroFacturaController;
-  late TextEditingController _numeroDocumentoController;
-  late TextEditingController _politicaController;
-  late TextEditingController _rucController;
-  late TextEditingController _tipoComprobanteController;
-  late TextEditingController _serieController;
-  late TextEditingController _numeroController;
-  late TextEditingController _igvController;
-  late TextEditingController _rucClienteController;
-  late TextEditingController _notaController;
-  late TextEditingController _motivoViajeController;
+  late TextEditingController _totalController;
+  late TextEditingController _monedaController;
+
   late TextEditingController _origenController;
   late TextEditingController _destinoController;
+  late TextEditingController _motivoViajeController;
   late TextEditingController _movilidadController;
   late TextEditingController _placaController;
+  late TextEditingController _notaController;
 
   late final EditReporteController _controller;
 
@@ -88,6 +83,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   DropdownOption? _selectedTipoGasto;
   DropdownOption? _selectedTipoMovilidad;
   String? _selectedComprobante;
+
+  bool _boolMostrar = true; // controla si se muestran los campos
+  bool _validar = true; // controla si deben validarse
 
   ///ApiRuc
   bool _isLoadingApiRuc = false;
@@ -127,39 +125,36 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   }
 
   void _initializeControllers() {
-    _proveedorController = TextEditingController();
-    _fechaController = TextEditingController(
-      text: DateTime.now().toString().split(' ')[0], // Fecha actual por defecto
+    // Controladores adicionales que faltaban
+    _politicaController = TextEditingController(
+      text: widget.politicaSeleccionada.value,
     );
-    _totalController = TextEditingController();
-    _monedaController = TextEditingController(text: 'PEN'); // PEN por defecto
     _categoriaController = TextEditingController();
     _tipoGastoController = TextEditingController(
       text: CompanyService().companyTipogasto,
     );
     _rucProveedorController = TextEditingController();
     _razonSocialController = TextEditingController();
+    _rucClienteController = TextEditingController();
+    _tipoComprobanteController = TextEditingController();
+    _fechaController = TextEditingController(
+      text: DateTime.now().toString().split(' ')[0], // Fecha actual por defecto
+    );
     _serieFacturaController = TextEditingController();
     _numeroFacturaController = TextEditingController();
-    _numeroDocumentoController = TextEditingController();
-    _notaController = TextEditingController();
-    _motivoViajeController = TextEditingController();
+
+    _totalController = TextEditingController();
+    _monedaController = TextEditingController(text: 'PEN'); // PEN
+
     _origenController = TextEditingController();
     _destinoController = TextEditingController();
+    _motivoViajeController = TextEditingController();
     _movilidadController = TextEditingController(text: 'TAXI');
+
+    _notaController = TextEditingController();
     _placaController = TextEditingController(
       text: CompanyService().companyPlaca,
     );
-
-    // Controladores adicionales que faltaban
-    _politicaController = TextEditingController(
-      text: widget.politicaSeleccionada.value,
-    );
-    _rucController = TextEditingController();
-    _tipoComprobanteController = TextEditingController();
-    _serieController = TextEditingController();
-    _numeroController = TextEditingController();
-    _igvController = TextEditingController();
 
     // Inicializar RUC Cliente con el RUC de la empresa actual (no editable)
     // El RUC Cliente siempre debe ser el de la empresa que registra el gasto
@@ -176,32 +171,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   @override
   void dispose() {
-    _proveedorController.dispose();
-    _fechaController.dispose();
-    _totalController.dispose();
-    _monedaController.dispose();
+    _politicaController.dispose();
     _categoriaController.dispose();
     _tipoGastoController.dispose();
     _rucProveedorController.dispose();
     _razonSocialController.dispose();
+    _rucClienteController.dispose();
+    _tipoComprobanteController.dispose();
+    _fechaController.dispose();
     _serieFacturaController.dispose();
     _numeroFacturaController.dispose();
-    _numeroDocumentoController.dispose();
+
+    _totalController.dispose();
+    _monedaController.dispose();
     _notaController.dispose();
 
-    // Dispose de controladores adicionales
-    _politicaController.dispose();
-    _rucController.dispose();
-    _tipoComprobanteController.dispose();
-    _serieController.dispose();
-    _numeroController.dispose();
-    _igvController.dispose();
-    _rucClienteController.dispose();
-
     //movilidad
-    _motivoViajeController.dispose();
     _origenController.dispose();
     _destinoController.dispose();
+    _motivoViajeController.dispose();
     _movilidadController.dispose();
     _placaController.dispose();
 
@@ -661,11 +649,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           politica: _politicaController.text,
           categoria: _categoriaController.text,
           tipoGasto: _tipoGastoController.text,
-          ruc: _rucController.text,
+          ruc: _rucProveedorController.text,
           tipoComprobante: _tipoComprobanteController.text,
-          serie: _serieController.text,
-          numero: _numeroController.text,
-          igv: _igvController.text,
+          serie: _serieFacturaController.text,
+          numero: _numeroFacturaController.text,
+          igv: '0',
           fecha: fechaSQL,
           total: _totalController.text,
           moneda: _monedaController.text,
@@ -1023,154 +1011,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     );
   }
 
-  /*
-  /// Construir la sección de adjuntar archivos
-  Widget _buildImageSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.attach_file, color: Colors.green),
-                const SizedBox(width: 8),
-                const Text(
-                  'Adjuntar Evidencia',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const Text(
-                  ' *',
-                  style: TextStyle(color: Colors.red, fontSize: 16),
-                ),
-                const Spacer(),
-                if (_isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  ElevatedButton.icon(
-                    onPressed: _pickImage,
-                    icon: Icon(
-                      (_selectedFile == null)
-                          ? Icons.add
-                          : Icons.edit,
-                    ),
-                    label: Text(
-                      (_selectedFile == null)
-                          ? 'Agregar'
-                          : 'Cambiar',
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Mostrar archivo seleccionado
-            if (_selectedFile != null)
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: _selectedFileType == 'image'
-                    ? Container(
-                        height: 200,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(_selectedFile!, fit: BoxFit.cover),
-                        ),
-                      )
-                    : Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.picture_as_pdf,
-                              color: Colors.green,
-                              size: 40,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Archivo PDF seleccionado',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _selectedFileName ?? 'archivo.pdf',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 24,
-                            ),
-                          ],
-                        ),
-                      ),
-              )
-            else
-              Container(
-                height: 100,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  border: Border.all(color: Colors.red.shade300, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.attach_file, color: Colors.red, size: 40),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Agregar evidencia (Obligatorio)',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Imagen o PDF',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-*/
-
   /// Construir la sección de imagen
   Widget _buildImageSection() {
     return Card(
@@ -1338,7 +1178,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   Future<void> _handleTapEvidencia() async {
     try {
       String nombreArchivo =
-          '${_rucController.text}_${_serieController.text}_${_numeroController.text}';
+          '${_rucClienteController.text}_${_serieFacturaController.text}_${_numeroFacturaController.text}';
 
       // 1️⃣ Si hay un archivo local seleccionado
       if (_selectedFile != null) {
@@ -1587,6 +1427,282 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     );
   }
 
+  /// Construir la sección de datos personalizados
+  Widget _buildDatosFacturaSection() {
+    final bool esPlanillaMovilidad =
+        _selectedCategoria?.value == 'Planilla de movilidad';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Datos de la Factura',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.green,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Campos que se muestran solo si NO es planilla de movilidad
+        if (!esPlanillaMovilidad) ...[
+          // RUC Emisor
+          TextFormField(
+            controller: _rucProveedorController,
+            decoration: const InputDecoration(
+              labelText: 'RUC Emisor',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.badge),
+            ),
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            onFieldSubmitted: (value) {
+              if (value.length == 11) {
+                _loadApiRuc(value);
+              } else {
+                showMessageError(context, 'El RUC debe tener 11 dígitos');
+              }
+            },
+            validator: (value) {
+              if (value != null && value.isNotEmpty && value.length != 11) {
+                return 'El RUC debe tener 11 dígitos';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Razón Social
+          TextFormField(
+            controller: _razonSocialController,
+            decoration: InputDecoration(
+              labelText: 'Razón Social',
+              hintText: 'Ingresa Razón Social',
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              border: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.green, width: 2),
+              ),
+              errorBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.red, width: 2),
+              ),
+              prefixIcon: const Icon(Icons.business, color: Colors.grey),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'El proveedor es obligatorio';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // RUC Cliente
+          TextFormField(
+            controller: _rucClienteController,
+            decoration: const InputDecoration(
+              labelText: 'RUC Cliente',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.business),
+              suffixIcon: Icon(Icons.lock, color: Colors.grey),
+            ),
+            enabled: false,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Tipo de Comprobante
+          DropdownButtonFormField<String>(
+            value: _selectedComprobante,
+            decoration: const InputDecoration(
+              labelText: 'Tipo Comprobante',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.edit_document),
+            ),
+            items: tipocomprobante.map((comprobante) {
+              return DropdownMenuItem<String>(
+                value: comprobante,
+                child: Text(comprobante),
+              );
+            }).toList(),
+            onChanged: (value) {
+              setState(() {
+                _selectedComprobante = value;
+                _tipoComprobanteController.text = value ?? '';
+              });
+            },
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Seleccione';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Fecha
+          TextFormField(
+            controller: _fechaController,
+            decoration: InputDecoration(
+              labelText: 'Fecha Emisión',
+              hintText: 'DD/MM/AAAA',
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              floatingLabelStyle: const TextStyle(
+                color: Colors.green,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+              border: const UnderlineInputBorder(),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.grey.shade400, width: 1.5),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.green, width: 2.5),
+              ),
+              prefixIcon: Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: const Icon(Icons.calendar_month, color: Colors.green),
+              ),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.expand_more, color: Colors.green),
+                onPressed: _selectDate,
+                tooltip: 'Seleccionar fecha',
+              ),
+              filled: true,
+              fillColor: _fechaController.text.isEmpty
+                  ? Colors.grey.shade50
+                  : Colors.deepPurple.shade50.withOpacity(0.3),
+            ),
+            readOnly: true,
+            onTap: _selectDate,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: _fechaController.text.isEmpty
+                  ? Colors.grey.shade600
+                  : Colors.black87,
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, selecciona una fecha';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          // Serie y Número de Factura
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _serieFacturaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Serie *',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.receipt_long),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Serie es obligatoria';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: TextFormField(
+                  controller: _numeroFacturaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Número *',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.confirmation_number),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Número es obligatorio';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Total y Moneda (siempre visibles)
+        Row(
+          children: [
+            Expanded(
+              flex: 1,
+              child: TextFormField(
+                controller: _totalController,
+                decoration: const InputDecoration(
+                  labelText: 'Total',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.attach_money),
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'El total es obligatorio';
+                  }
+                  if (double.tryParse(value) == null) {
+                    return 'Ingrese un valor válido';
+                  }
+                  return null;
+                },
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: _selectedMoneda,
+                decoration: const InputDecoration(
+                  labelText: 'Moneda',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.monetization_on),
+                ),
+                items: _monedas.map((moneda) {
+                  return DropdownMenuItem<String>(
+                    value: moneda,
+                    child: Text(moneda),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMoneda = value;
+                    _monedaController.text = value ?? '';
+                  });
+                },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Seleccione una moneda';
+                  }
+                  return null;
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  /*
   /// Construir la sección de datos personalizados
   Widget _buildDatosFacturaSection() {
     return Column(
@@ -1869,10 +1985,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           ],
         ),
         const SizedBox(height: 12),
-      
       ],
     );
   }
+*/
 
   /// Construir la sección de categoría
   Widget _buildCategoriaSection() {
@@ -1941,6 +2057,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         setState(() {
           _selectedCategoria = value;
           _categoriaController.text = value?.value ?? '';
+          // Cambia visibilidad según categoría
+          _boolMostrar = value?.value != 'PLANILLA DE MOVILIDAD';
         });
       },
       validator: (value) {
@@ -2397,8 +2515,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           // RUC del emisor
           if (parts[0].isNotEmpty) {
             _rucProveedorController.text = parts[0];
-            _rucController.text = parts[0];
-            _loadApiRuc(_rucController.text);
+            _rucClienteController.text = parts[0];
+            _loadApiRuc(_rucClienteController.text);
           }
 
           // Tipo de comprobante (texto) -> actualizar controlador UI y el usado en guardado
@@ -2430,18 +2548,18 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           // Serie
           if (parts[2].isNotEmpty) {
             _serieFacturaController.text = parts[2];
-            _serieController.text = parts[2];
+            _serieFacturaController.text = parts[2];
           }
 
           // Número de factura
           if (parts[3].isNotEmpty) {
             _numeroFacturaController.text = parts[3];
-            _numeroController.text = parts[3];
+            _numeroFacturaController.text = parts[3];
           }
 
           // Número de documento (combinado para compatibilidad)
           if (parts[2].isNotEmpty && parts[3].isNotEmpty) {
-            _numeroDocumentoController.text = '${parts[2]}-${parts[3]}';
+            _numeroFacturaController.text = '${parts[2]}-${parts[3]}';
           }
 
           // Total
@@ -2488,14 +2606,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
       // Limpiar los campos que se llenaron automáticamente
       _rucProveedorController.clear();
-      _rucController.clear();
+      _rucClienteController.clear();
       _razonSocialController.clear();
       _serieFacturaController.clear();
-      _serieController.clear();
+      _serieFacturaController.clear();
       _numeroFacturaController.clear();
-      _numeroController.clear();
+      _numeroFacturaController.clear();
       _tipoComprobanteController.clear();
-      _numeroDocumentoController.clear();
+      _numeroFacturaController.clear();
       _totalController.clear();
       _fechaController.text = DateTime.now().toString().split(' ')[0];
     });
