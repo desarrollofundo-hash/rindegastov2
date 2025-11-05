@@ -262,7 +262,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.only(top: 100), // Solo margen superior
+      insetPadding: const EdgeInsets.only(top: 10), // Solo margen superior
       clipBehavior: Clip.antiAliasWithSaveLayer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -655,10 +655,6 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                                 '#${widget.revision.idAd}',
                               ),
                               _buildDetailRow(
-                                'Usuario',
-                                widget.revision.idUser.toString(),
-                              ),
-                              _buildDetailRow(
                                 'RUC',
                                 widget.revision.ruc ?? 'N/A',
                               ),
@@ -667,7 +663,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                                 widget.revision.dni ?? 'N/A',
                               ),
                             ]),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 10),
                             _buildDetailSection('Estadísticas', [
                               _buildDetailRow(
                                 'Total Gastos',
@@ -679,11 +675,20 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                                 valueColor: Colors.green,
                               ),
                               _buildDetailRow(
-                                'Desaprobados',
+                                'Rechazados',
                                 '${widget.revision.cantidadDesaprobado} (${widget.revision.totalDesaprobado.toStringAsFixed(2)} PEN)',
                                 valueColor: Colors.red,
                               ),
                             ]),
+
+                            const SizedBox(height: 10),
+                            _buildDetailSection('Motivo de rechazo', [
+                              _buildDetailRow(
+                                'Motivo: ',
+                                widget.revision.obs.toString(),
+                              ),
+                            ]),
+
                             if (widget.revision.nota != null &&
                                 widget.revision.nota!.isNotEmpty) ...[
                               const SizedBox(height: 20),

@@ -184,7 +184,79 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     }
   }
 
-  Future<void> _actualizarAuditoria() async {
+  Future<void> _mostrarConfirmacionHabilitar() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Habilitar',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('¿Estás seguro que desea habilitar el informe?'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // ❌ No
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () => Navigator.of(context).pop(true), // ✅ Sí
+              child: const Text('Sí, habilitar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _habilitarAuditoria();
+    }
+  }
+
+  Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Confirmar envío',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            '¿Estás seguro que deseas enviar este informe a revisión?',
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // ❌ No
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () => Navigator.of(context).pop(true), // ✅ Sí
+              child: const Text('Sí, enviar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _enviarAuditoriaRevision();
+    }
+  }
+
+  Future<void> _habilitarAuditoria() async {
     try {
       setState(() => _isLoading = true);
       print("🚀 Iniciando envío de auditoría...");
@@ -197,8 +269,8 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         "idUser": widget.auditoria.idUser,
         "dni": widget.auditoria.dni,
         "ruc": widget.auditoria.ruc,
-        "obs": "",
-        "estadoActual": "EN REVISION",
+        "obs": widget.auditoria.obs,
+        "estadoActual": "EN AUDITORIA",
         "estado": "S",
         "fecCre": DateTime.now().toIso8601String(),
         "useReg": UserService().currentUserCode,
@@ -208,7 +280,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         "useElim": 0,
       };
 
-      print("📤 Enviando cabecera: $cabeceraPayload");
+      print("📤 Id Rev: $widget.auditoria.idRev");
 
       //final idrendicion;
       final idRev;
@@ -219,6 +291,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         idRev = widget.auditoria.idRev;
       }
 
+      print("📤 Id Rev despues: $idRev");
       // 2️⃣ GUARDAR DETALLES: usamos los campos del modelo ReporteauditoriaDetalle
       if (_detalles.isEmpty) {
         print('⚠️ No hay detalles para enviar.');
@@ -227,42 +300,151 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       for (final detalless in _detalles) {
         // Verifica si el detalle está RECHAZADO y no lo envía
         if (detalless.estadoActual == 'RECHAZADO') {
-          continue; // No enviar el detalle, pasa al siguiente
+          final detallePayload = {
+            "idRev": idRev, // Relación con la cabecera
+            "idAd": detalless.idAd,
+            "idAdDet": detalless.id, // usar idrend como id de factura
+            "idInf": detalless.idInf,
+            "idRend": detalless.idRend,
+            // Preferir el idUser del detalle; si no está, usar el del auditoria
+            "idUser": detalless.idUser,
+            // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
+            "dni": (widget.auditoria.dni ?? '').toString(),
+            // Usar ruc del detalle si existe, si no, el ruc del auditoria
+            "ruc": widget.auditoria.ruc ?? '',
+            "obs": widget.auditoria.obsRechazo,
+            "estadoActual": 'EN AUDITORIA',
+            "estado": 'S',
+            "fecCre": DateTime.now().toIso8601String(),
+            "useReg": UserService().currentUserCode,
+            "hostname": 'FLUTTER',
+            "fecEdit": DateTime.now().toIso8601String(),
+            "useEdit": UserService().currentUserCode,
+            "useElim": 0,
+          };
+
+          print("📤 Enviando detalle con ID: ${detalless.id}: $detallePayload");
+
+          final detalleGuardado = await _apiService
+              .saveRendicionRevisionDetalle(detallePayload);
+
+          if (!detalleGuardado) {
+            throw Exception(
+              'Error al guardar el detalle de auditoría a revisión id ${detalless.id}',
+            );
+          }
         }
+      }
 
-        final detallePayload = {
-          "idRev": idRev, // Relación con la cabecera
-          "idAd": detalless.idAd,
-          "idAdDet": detalless.id, // usar idrend como id de factura
-          "idInf": detalless.idInf,
-          "idRend": detalless.idRend,
-          // Preferir el idUser del detalle; si no está, usar el del auditoria
-          "idUser": detalless.idUser,
-          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
-          "dni": (widget.auditoria.dni ?? '').toString(),
-          // Usar ruc del detalle si existe, si no, el ruc del auditoria
-          "ruc": widget.auditoria.ruc ?? '',
-          "obs": '',
-          "estadoActual": 'EN REVISION',
-          "estado": 'S',
-          "fecCre": DateTime.now().toIso8601String(),
-          "useReg": UserService().currentUserCode,
-          "hostname": 'FLUTTER',
-          "fecEdit": DateTime.now().toIso8601String(),
-          "useEdit": UserService().currentUserCode,
-          "useElim": 0,
-        };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.green, // Fondo verde
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text("INFORME HABILITADO", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          behavior:
+              SnackBarBehavior.floating, // Hace que flote sobre el contenido
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+      );
 
-        print("📤 Enviando detalle con ID: ${detalless.id}: $detallePayload");
+      Navigator.of(context).pop(true);
+    } catch (e, stack) {
+      print("❌ Error al enviar informe: $e");
+      print(stack);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error al enviar auditoría: $e")));
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
-        final detalleGuardado = await _apiService.saveRendicionRevisionDetalle(
-          detallePayload,
-        );
 
-        if (!detalleGuardado) {
-          throw Exception(
-            'Error al guardar el detalle de auditoría a revisión id ${detalless.id}',
-          );
+  Future<void> _enviarAuditoriaRevision() async {
+    try {
+      setState(() => _isLoading = true);
+      print("🚀 Iniciando envío de auditoría...");
+
+      // 1️⃣ GUARDAR CABECERA (saveRendicionAuditoria)
+      final cabeceraPayload = {
+        "idRev": widget.auditoria.idRev,
+        "idAd": widget.auditoria.idAd,
+        "idInf": widget.auditoria.idInf,
+        "idUser": widget.auditoria.idUser,
+        "dni": widget.auditoria.dni,
+        "ruc": widget.auditoria.ruc,
+        "obs": widget.auditoria.obs,
+        "estadoActual": "EN REVISION",
+        "estado": "S",
+        "fecCre": DateTime.now().toIso8601String(),
+        "useReg": UserService().currentUserCode,
+        "hostname": "FLUTTER",
+        "fecEdit": DateTime.now().toIso8601String(),
+        "useEdit": UserService().currentUserCode,
+        "useElim": 0,
+      };
+
+      print("📤 Id Rev: $widget.auditoria.idRev");
+
+      //final idrendicion;
+      final idRev;
+      if (widget.auditoria.idRev == 0) {
+        idRev = await _apiService.saveRendicionRevision(cabeceraPayload);
+        if (idRev == null) throw Exception("Error al guardar cabecera.");
+      } else {
+        idRev = widget.auditoria.idRev;
+      }
+
+      print("📤 Id Rev despues: $idRev");
+      // 2️⃣ GUARDAR DETALLES: usamos los campos del modelo ReporteauditoriaDetalle
+      if (_detalles.isEmpty) {
+        print('⚠️ No hay detalles para enviar.');
+      }
+
+      for (final detalless in _detalles) {
+        // Verifica si el detalle está RECHAZADO y no lo envía
+        if (detalless.estadoActual == 'RECHAZADO') {
+          final detallePayload = {
+            "idRev": idRev, // Relación con la cabecera
+            "idAd": detalless.idAd,
+            "idAdDet": detalless.id, // usar idrend como id de factura
+            "idInf": detalless.idInf,
+            "idRend": detalless.idRend,
+            // Preferir el idUser del detalle; si no está, usar el del auditoria
+            "idUser": detalless.idUser,
+            // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del auditoria
+            "dni": (widget.auditoria.dni ?? '').toString(),
+            // Usar ruc del detalle si existe, si no, el ruc del auditoria
+            "ruc": widget.auditoria.ruc ?? '',
+            "obs": widget.auditoria.obsRechazo,
+            "estadoActual": 'EN REVISION',
+            "estado": 'S',
+            "fecCre": DateTime.now().toIso8601String(),
+            "useReg": UserService().currentUserCode,
+            "hostname": 'FLUTTER',
+            "fecEdit": DateTime.now().toIso8601String(),
+            "useEdit": UserService().currentUserCode,
+            "useElim": 0,
+          };
+
+          print("📤 Enviando detalle con ID: ${detalless.id}: $detallePayload");
+
+          final detalleGuardado = await _apiService
+              .saveRendicionRevisionDetalle(detallePayload);
+
+          if (!detalleGuardado) {
+            throw Exception(
+              'Error al guardar el detalle de auditoría a revisión id ${detalless.id}',
+            );
+          }
         }
       }
 
@@ -728,7 +910,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                         Expanded(
                           child: OutlinedButton(
                             onPressed:
-                                _actualizarAuditoria, //_habilitarAuditoria,
+                                _mostrarConfirmacionHabilitar, //_habilitarAuditoria,
                             style: OutlinedButton.styleFrom(
                               side: const BorderSide(
                                 color: Colors.blue,
@@ -811,7 +993,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                         child: ElevatedButton(
                           onPressed:
                               widget.auditoria.estadoActual == 'EN AUDITORIA'
-                              ? _actualizarAuditoria //_enviarAuditoria
+                              ? _mostrarConfirmacionEnvio //_enviarAuditoria
                               : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -845,6 +1027,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     );
   }
 
+/*
   Future<void> _habilitarAuditoria() async {
     try {
       setState(() => _isLoading = true);
@@ -922,6 +1105,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       setState(() => _isLoading = false);
     }
   }
+*/
 
   Widget _buildGastoCard(
     ReporteAuditoriaDetalle detalle,
