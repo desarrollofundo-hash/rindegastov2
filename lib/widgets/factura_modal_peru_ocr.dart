@@ -42,8 +42,9 @@ class FacturaModalPeruOCR extends StatelessWidget {
         ocrData['Igv']!.replaceAll(',', '').replaceAll(' ', ''),
       );
     }
-    final moneda = ocrData['Moneda'] ?? 'PEN';
+    final moneda = FacturaOcrData.getTipoMoneda(ocrData['Moneda'] ?? 'PEN');
     final rucCliente = ocrData['RUC Cliente'] ?? '';
+
     final f = FacturaOcrData();
     f.rucEmisor = ruc.isEmpty ? null : ruc;
     f.razonSocialEmisor =
@@ -59,7 +60,7 @@ class FacturaModalPeruOCR extends StatelessWidget {
     f.subtotal = ocrData['Subtotal'] ?? null;
     f.igv = igv != null ? igv.toString() : (ocrData['IGV'] ?? ocrData['Igv']);
     f.total = total != null ? total.toString() : (ocrData['Total'] ?? null);
-    f.moneda = FacturaOcrData.getTipoMoneda(moneda);
+    f.moneda = moneda;
     f.rucCliente = rucCliente.isEmpty ? null : rucCliente;
     f.razonSocialCliente =
         (ocrData['Razón Social Cliente'] ?? '').toString().trim().isEmpty

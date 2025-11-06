@@ -1,4 +1,7 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
+import 'package:flu2/services/api_service.dart';
+import 'package:flu2/services/company_service.dart';
+import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -23,14 +26,20 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
   List<ReporteAuditoriaDetalle> detallesFiltrados = [];
   Map<int, bool> detallesSeleccionados = {};
   bool todosMarcados = true;
+  
+  late TextEditingController _notaController;
+  
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
     super.initState();
+    _notaController = TextEditingController();
     detallesFiltrados = widget.detalles;
     // Inicializar todos como seleccionados por defecto
     for (var det in widget.detalles) {
-      detallesSeleccionados[det.idInfDet] = true;
+      detallesSeleccionados[det.idInfDet] = false;
+      todosMarcados = false;
     }
   }
 
@@ -144,7 +153,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
 
           // Botón "Todos"
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
                 GestureDetector(
@@ -183,12 +192,37 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                     ),
                   ),
                 ),
+
                 const Spacer(),
-                IconButton(
-                  icon: const Icon(Icons.tune, color: Colors.grey),
-                  onPressed: () {
-                    // Abrir filtros
-                  },
+                // 🔹 Botón RECHAZAR (condicional)
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _getSeleccionadosCount() > 0
+                        ? () {
+                            // Acción solo si hay seleccionados
+                            _mostrarDialogoComentario(context);
+                          }
+                        : null, // 🔸 Desactiva el botón si no hay seleccionados
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _getSeleccionadosCount() > 0
+                          ? Colors.red
+                          : Colors.grey.shade300, // Color según estado
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 1),
+                    ),
+                    child: Text(
+                      'RECHAZAR',
+                      style: TextStyle(
+                        color: _getSeleccionadosCount() > 0
+                            ? Colors.white
+                            : Colors.grey.shade600,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -240,8 +274,8 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
 
                           // Icono documento
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 20,
+                            height: 20,
                             decoration: BoxDecoration(
                               color: Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(8),
@@ -260,9 +294,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  det.ruc ?? 'Sin RUC',
+                                  det.proveedor ?? det.ruc ?? 'SIN RUC',
                                   style: const TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: Colors.black,
                                   ),
@@ -372,57 +406,6 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                   const SizedBox(height: 16),
 
                   // Botones
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Colors.orange,
-                              width: 2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text(
-                            'Cancelar',
-                            style: TextStyle(
-                              color: Colors.orange,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            // Guardar lógica
-                            Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                          ),
-                          child: const Text(
-                            'Guardar',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
                 ],
               ),
             ),
@@ -430,5 +413,188 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
         ],
       ),
     );
+  }
+
+
+  void _mostrarDialogoComentario(BuildContext context) {
+    // Controlador para el cuadro de texto();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String comentario = '';
+        String error = '';
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('MOTIVO DE RECHAZO'),
+              backgroundColor: Colors.white,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _notaController,
+                    onChanged: (value) {
+                      setState(() {
+                        comentario = value;
+                        error = ''; // Limpia el error al escribir
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      hintText:
+                          'Ejemplo: la factura 1728 es rechazada porque ...',
+                    ),
+                    maxLines: 4,
+                  ),
+                  if (error.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        error,
+                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                      ),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (comentario.trim().length < 5) {
+                      setState(() {
+                        error = 'Debe escribir al menos 5 caracteres';
+                      });
+                    } else {
+                      _rechazarAuditoria();
+                      Navigator.pop(context);
+                    }
+                  },
+                  child: const Text('ACEPTAR'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _rechazarAuditoria() async {
+    // Filtrar gastos seleccionados y no seleccionados
+    debugPrint("SECCION ELIMINAR:");
+
+    final gastosSeleccionadosList = detallesFiltrados
+        .where((g) => detallesSeleccionados[g.idInfDet] == true)
+        .toList();
+    final gastosNoSeleccionadosList = detallesFiltrados
+        .where((g) => detallesSeleccionados[g.idInfDet] != true)
+        .toList();
+
+    if (detallesFiltrados.isEmpty) return;
+
+    try {
+      // Mostrar loading
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(child: CircularProgressIndicator()),
+      );
+      // 3️⃣ Guardar DETALLES seleccionados (estadoACTUAL = RECHAZADO)
+      debugPrint("INICIO GUARDAR ELIMINAR:");
+      for (final gasto in gastosSeleccionadosList) {
+        final detalleData = {
+          "idAd": gasto.idAd, // Relación con la cabecera
+          "idInf": gasto.idInf,
+          "idInfDet": gasto.idInfDet, // usar idrend como id de factura
+          "idRend": gasto.idRend,
+          // Preferir el idUser del detalle; si no está, usar el del informe
+          "idUser": gasto.idUser,
+          // El modelo de detalle no tiene 'dni', por eso mantenemos el dni del informe
+          "dni": widget.auditoria.dni,
+          // Usar ruc del detalle si existe, si no, el ruc del informe
+          "ruc": (gasto.ruc ?? '').toString(),
+          "obs": _notaController.text,
+          "estadoActual": 'RECHAZADO',
+          "estado": gasto.estado ?? 'S',
+          "fecCre": gasto.fecCre,
+          "useReg": gasto.idUser,
+          "hostname": 'FLUTTER',
+          "fecEdit": DateTime.now().toIso8601String(),
+          "useEdit": gasto.idUser,
+          "useElim": 0,
+        };
+
+        debugPrint("Guardar detalle rechazado:");
+
+        final ok = await _apiService.saveRendicionAuditoriaDetalle(detalleData);
+        if (!ok) {
+          throw Exception(
+            'Error al guardar detalle del gasto ${gasto.idInfDet}',
+          );
+        }
+      }
+
+      // 5️⃣ Cerrar loading
+      if (mounted) Navigator.of(context).pop();
+
+      // 6️⃣ Mostrar mensaje de éxito
+      if (mounted) {
+        final total = gastosSeleccionadosList.length;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GASTOS RECHAZADOS (${_getSeleccionadosCount()})',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+
+        // Volver después de 1 seg
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) Navigator.of(context).pop(true);
+        });
+      }
+    } catch (e) {
+      if (mounted) Navigator.of(context).pop();
+
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: Text(
+              'Error al crear/actualizar el informe: ${e.toString()}',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 }

@@ -28,6 +28,10 @@ class CompanyService extends ChangeNotifier {
   /// Getter para obtener el nombre de la empresa seleccionada
   String get currentUserCompany => _currentCompany?.empresa ?? '';
 
+  String get currentUserGerencia => _currentCompany?.gerencia ?? '';
+
+  String get currentUserArea => _currentCompany?.area ?? '';
+
   /// Getter para obtener el ID de la empresa seleccionada
   int get companyId => _currentCompany?.id ?? 0;
 
@@ -43,6 +47,7 @@ class CompanyService extends ChangeNotifier {
   /// Getter para obtener el régimen de la empresa seleccionada
   String get companyRegimen => _currentCompany?.regimen ?? '';
   String get companyRuc => _currentCompany?.ruc ?? '';
+  String get companyPlaca => _currentCompany?.placa ?? '';
 
   /// Setter para establecer la empresa seleccionada
   void setCurrentCompany(UserCompany company) {
@@ -74,6 +79,8 @@ class CompanyService extends ChangeNotifier {
       'empresaId': _currentCompany!.id,
       'empresa': _currentCompany!.empresa,
       'sucursal': _currentCompany!.sucursal,
+      'gerencia': _currentCompany!.gerencia,
+      'area': _currentCompany!.area,
       'tipogasto': _currentCompany!.tipogasto,
       'consumidor': _currentCompany!.consumidor,
       'regimen': _currentCompany!.regimen,

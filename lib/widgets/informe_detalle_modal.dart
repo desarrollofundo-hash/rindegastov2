@@ -1,6 +1,7 @@
 import 'package:flu2/models/reporte_model.dart';
 import 'package:flu2/screens/informes/detalle_informe_screen.dart';
 import 'package:flu2/utils/navigation_utils.dart';
+import 'package:flu2/widgets/detalle_modal_gasto.dart';
 import 'package:flutter/material.dart';
 import '../models/reporte_informe_model.dart';
 import '../models/reporte_informe_detalle.dart';
@@ -85,10 +86,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
         "estadoActual": "EN AUDITORIA",
         "estado": "S",
         "fecCre": DateTime.now().toIso8601String(),
-        "useReg": widget.informe.idUser,
+        "useReg": UserService().currentUserCode,
         "hostname": "",
         "fecEdit": DateTime.now().toIso8601String(),
-        "useEdit": widget.informe.idUser,
+        "useEdit": UserService().currentUserCode,
         "useElim": 0,
       };
 
@@ -119,17 +120,13 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           // Usar ruc del detalle si existe, si no, el ruc del informe
           "ruc": (detalless.ruc ?? widget.informe.ruc ?? '').toString(),
           "obs": detalless.obs ?? '',
-          "estadoActual": detalless.estadoactual ?? 'EN AUDITORIA',
-          "estado": detalless.estado ?? 'S',
-          "fecCre": detalless.feccre ?? DateTime.now().toIso8601String(),
-          "useReg": detalless.iduser != 0
-              ? detalless.iduser
-              : widget.informe.idUser,
-          "hostname": detalless.proveedor ?? '',
+          "estadoActual": 'EN AUDITORIA',
+          "estado": 'S',
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": UserService().currentUserCode,
+          "hostname": 'FLUTTER',
           "fecEdit": DateTime.now().toIso8601String(),
-          "useEdit": detalless.iduser != 0
-              ? detalless.iduser
-              : widget.informe.idUser,
+          "useEdit": UserService().currentUserCode,
           "useElim": 0,
         };
 
@@ -149,9 +146,33 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Informe enviado correctamente")),
+        SnackBar(
+          backgroundColor: Colors.green, // Fondo verde
+          content: Row(
+            children: const [
+              Icon(
+                Icons.check_circle,
+                color: Colors.white,
+              ), // Check verde (puedes dejarlo blanco si prefieres contraste)
+              SizedBox(width: 10),
+              Text(
+                "Informe enviada correctamente",
+                style: TextStyle(
+                  color: Colors.white,
+                ), // Texto blanco para contraste
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior
+              .floating, // Hace que flote sobre el contenido (opcional)
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
       );
-      Navigator.pop(context);
+
+      Navigator.of(context).pop(true);
     } catch (e, stack) {
       print("❌ Error al enviar informe: $e");
       print(stack);
@@ -173,7 +194,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      insetPadding: const EdgeInsets.only(top: 100), // Solo margen superior
+      insetPadding: const EdgeInsets.only(top: 10), // Solo margen superior
       clipBehavior: Clip.antiAliasWithSaveLayer,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
@@ -192,7 +213,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
             elevation: 0.5,
             leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(context).pop(true),
             ),
             title: const Text(
               'INFORME DETALLE',
@@ -206,7 +227,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
             actions: [
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.grey),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
           ),
@@ -481,7 +502,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                                 print(
                                   '🏗️ Building card for item $index: ${detalle.proveedor}',
                                 );
-                                return _buildGastoCard(detalle);
+                                return _buildGastoCard(detalle, context);
                               },
                             ),
                           );
@@ -523,10 +544,20 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                               _buildDetailRow(
                                 'Aprobados',
                                 '${widget.informe.cantidadAprobado} (${widget.informe.totalAprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.green,
                               ),
                               _buildDetailRow(
-                                'Desaprobados',
+                                'Rechazados',
                                 '${widget.informe.cantidadDesaprobado} (${widget.informe.totalDesaprobado.toStringAsFixed(2)} PEN)',
+                                valueColor: Colors.red,
+                              ),
+                            ]),
+
+                            const SizedBox(height: 10),
+                            _buildDetailSection('Motivo de rechazo', [
+                              _buildDetailRow(
+                                'Motivo: ',
+                                widget.informe.obs.toString(),
                               ),
                             ]),
                             if (widget.informe.nota != null &&
@@ -559,16 +590,24 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                       Expanded(
                         child: OutlinedButton(
                           onPressed: widget.informe.estadoActual == 'EN INFORME'
-                              ? () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => EditarInformeModal(
-                                        informe: widget.informe,
-                                        gastos: _detalles,
-                                      ),
-                                    ),
-                                  );
-                                }
+                              ? () async {
+                                  // Abre el modal y espera a que se cierre
+                                  final result = await Navigator.of(context)
+                                      .push(
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              EditarInformeModal(
+                                                informe: widget.informe,
+                                                gastos: _detalles,
+                                              ),
+                                        ),
+                                      );
+
+                                  // Si el modal devuelve true (por ejemplo tras guardar cambios), recarga los detalles
+                                  if (result == true) {
+                                    _loadDetalles(); // <-- Método que refresca tu lista o detalles
+                                  }
+                                } // Si no está en 'EN INFORME', el botón queda deshabilitado
                               : null, // 🔒 Deshabilitado si no está en estado 'Informe'
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
@@ -598,7 +637,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                       Expanded(
                         child: ElevatedButton(
                           onPressed: widget.informe.estadoActual == 'EN INFORME'
-                              ? _enviarInforme
+                              ? _mostrarConfirmacionEnvio //_enviarInforme
                               : null, // 🔒 Deshabilitado
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -632,95 +671,178 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
     );
   }
 
-  Widget _buildGastoCard(ReporteInformeDetalle detalle) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // Imagen placeholder
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.receipt_long, color: Colors.grey[600], size: 24),
-          ),
-          const SizedBox(width: 16),
 
-          // Información del gasto
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+  Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Confirmar envío',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text(
+            '¿Estás seguro que deseas enviar este informe?',
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // ❌ No
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              onPressed: () => Navigator.of(context).pop(true), // ✅ Sí
+              child: const Text('Sí, enviar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _enviarInforme();
+    }
+  }
+
+  Widget _buildGastoCard(ReporteInformeDetalle detalle, BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Abrir modal al hacer click
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            // Aquí pasas el detalle que necesites al modal
+            return DetalleModalGasto(id: detalle.idrend.toString());
+          },
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Imagen placeholder
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.receipt_long,
+                color: Colors.grey[600],
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // Información del gasto
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    detalle.proveedor ??
+                        detalle.ruc ??
+                        'Proveedor no especificado',
+                    maxLines: 1,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 0),
+                  Text(
+                    detalle.categoria != null && detalle.categoria!.isNotEmpty
+                        ? '${detalle.categoria}'
+                        : 'Sin categoría',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                  Row(
+                    children: [
+                      Text(
+                        formatDate(detalle.fecha),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      SizedBox(width: 8), // Espacio entre los textos
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 0,
+                          vertical: 0,
+                        ), // Espaciado interno
+                        decoration: BoxDecoration(
+                          color: Colors.red, // Fondo del texto
+                          borderRadius: BorderRadius.circular(
+                            6,
+                          ), // Bordes redondeados
+                        ),
+                        child: Text(
+                          '${diferenciaEnDias(detalle.fecha.toString(), detalle.feccre.toString())} DIAS',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white, // Color del texto
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Monto y estado
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  detalle.ruc ?? 'Proveedor no especificado',
-                  maxLines: 1,
+                  '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
                   ),
                 ),
-                const SizedBox(height: 0),
-                Text(
-                  detalle.categoria != null && detalle.categoria!.isNotEmpty
-                      ? '${detalle.categoria}'
-                      : 'Sin categoría',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                ),
-                Text(
-                  formatDate(detalle.fecha),
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: getStatusColor(detalle.estadoactual),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    detalle.estadoactual ?? 'Sin estado',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             ),
-          ),
-
-          // Monto y estado
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: getStatusColor(detalle.estadoactual),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  detalle.estadoactual ?? 'Sin estado',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -759,7 +881,11 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(
+    String label,
+    String value, {
+    Color? valueColor, // 👈 parámetro opcional
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -779,10 +905,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
+                color: valueColor ?? Colors.black87, // 👈 usa el color dinámico
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),

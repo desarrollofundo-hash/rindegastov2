@@ -22,6 +22,12 @@ class UserCompany {
   /// Sucursal de la empresa
   final String sucursal;
 
+  /// Sucursal de la empresa
+  final String gerencia;
+
+  /// Sucursal de la empresa
+  final String area;
+
   /// Tipo de gasto permitido
   final String tipogasto;
 
@@ -33,19 +39,23 @@ class UserCompany {
 
   /// Destino de la configuración
   final String destino;
+  final String placa;
   final String ruc;
 
-  const UserCompany({
+    UserCompany({
     required this.id,
     required this.iduser,
     required this.dni,
     required this.apeNom,
     required this.empresa,
     required this.sucursal,
+    required this.gerencia,
+    required this.area,
     required this.tipogasto,
     required this.consumidor,
     required this.regimen,
     required this.destino,
+    required this.placa,
     required this.ruc,
   });
 
@@ -58,10 +68,13 @@ class UserCompany {
       apeNom: json['apeNom'] ?? '',
       empresa: json['empresa'] ?? '',
       sucursal: json['sucursal'] ?? '',
+      gerencia: json['gerencia'] ?? '',
+      area: json['area'] ?? '',
       tipogasto: json['tipogasto'] ?? '',
       consumidor: json['consumidor'] ?? '',
       regimen: json['regimen'] ?? '',
       destino: json['destino'] ?? '',
+      placa: json['placa'] ?? '',
       ruc: json['ruc'] ?? '',
     );
   }
@@ -75,10 +88,13 @@ class UserCompany {
       'apeNom': apeNom,
       'empresa': empresa,
       'sucursal': sucursal,
+      'gerencia': gerencia,
+      'area': area,
       'tipogasto': tipogasto,
       'consumidor': consumidor,
       'regimen': regimen,
       'destino': destino,
+      'placa': placa,
       'ruc': ruc,
     };
   }
@@ -89,8 +105,11 @@ class UserCompany {
       'id': id.toString(),
       'name': empresa,
       'sucursal': sucursal,
+      'gerencia': gerencia,
+      'area': area,
       'tipogasto': tipogasto,
       'consumidor': consumidor,
+      'placa': placa,
       'ruc': ruc,
     };
   }
@@ -122,6 +141,9 @@ class UserCompany {
         other.id == id &&
         other.iduser == iduser &&
         other.empresa == empresa &&
+        other.gerencia == gerencia &&
+        other.area == area &&
+        other.placa == placa &&
         other.ruc == ruc;
   }
 
@@ -136,11 +158,14 @@ class UserCompany {
     String? dni,
     String? apeNom,
     String? empresa,
+    String? gerencia,
+    String? area,
     String? sucursal,
     String? tipogasto,
     String? consumidor,
     String? regimen,
     String? destino,
+    String? placa,
     String? ruc,
   }) {
     return UserCompany(
@@ -149,11 +174,14 @@ class UserCompany {
       dni: dni ?? this.dni,
       apeNom: apeNom ?? this.apeNom,
       empresa: empresa ?? this.empresa,
+      gerencia: gerencia ?? this.gerencia,
+      area: area ?? this.area,
       sucursal: sucursal ?? this.sucursal,
       tipogasto: tipogasto ?? this.tipogasto,
       consumidor: consumidor ?? this.consumidor,
       regimen: regimen ?? this.regimen,
       destino: destino ?? this.destino,
+      placa: placa ?? this.placa,
       ruc: ruc ?? this.ruc,
     );
   }

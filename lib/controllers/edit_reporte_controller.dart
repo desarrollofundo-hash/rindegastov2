@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../models/reporte_model.dart';
 import '../services/api_service.dart';
 import '../services/company_service.dart';
+import 'package:path/path.dart' as p;
 
 class EditReporteController {
   final ApiService _apiService;
@@ -77,6 +78,7 @@ class EditReporteController {
     required String categoria,
     required String tipoGasto,
     required String ruc,
+    required String razonsocial,
     required String tipoComprobante,
     required String serie,
     required String numero,
@@ -91,6 +93,7 @@ class EditReporteController {
     String? lugarOrigen,
     String? lugarDestino,
     String? tipoMovilidad,
+    String? placa,
     File? selectedImage,
     String? apiEvidencia,
   }) async {
@@ -117,66 +120,32 @@ class EditReporteController {
         "idRend": reporte.idrend,
         "idUser": reporte.iduser,
         "dni": reporte.dni,
-        "politica": politica.length > 80 ? politica.substring(0, 80) : politica,
-        "categoria": categoria.isEmpty
-            ? "GENERAL"
-            : (categoria.length > 80 ? categoria.substring(0, 80) : categoria),
-        "tipoGasto": tipoGasto.isEmpty
-            ? "GASTO GENERAL"
-            : (tipoGasto.length > 80 ? tipoGasto.substring(0, 80) : tipoGasto),
-        "ruc": ruc.isEmpty
-            ? ""
-            : (ruc.length > 80 ? ruc.substring(0, 80) : ruc),
-        "proveedor": "",
-        "tipoCombrobante": tipoComprobante.isEmpty
-            ? ""
-            : (tipoComprobante.length > 180
-                  ? tipoComprobante.substring(0, 180)
-                  : tipoComprobante),
-        "serie": serie.isEmpty
-            ? ""
-            : (serie.length > 80 ? serie.substring(0, 80) : serie),
-        "numero": numero.isEmpty
-            ? ""
-            : (numero.length > 80 ? numero.substring(0, 80) : numero),
+        "politica": politica,
+        "categoria": categoria,
+        "tipoGasto": tipoGasto,
+        "ruc": ruc,
+        "proveedor": razonsocial,
+        "tipoCombrobante": tipoComprobante,
+        "serie": serie,
+        "numero": numero,
         "igv": double.tryParse(igv) ?? 0.0,
         "fecha": fechaSQL,
         "total": double.tryParse(total) ?? 0.0,
-        "moneda": moneda.isEmpty
-            ? "PEN"
-            : (moneda.length > 80 ? moneda.substring(0, 80) : moneda),
-        "rucCliente": rucCliente.isEmpty
-            ? ""
-            : (rucCliente.length > 80
-                  ? rucCliente.substring(0, 80)
-                  : rucCliente),
-        "desEmp": CompanyService().currentCompany?.empresa ?? '',
+        "moneda": moneda,
+        "rucCliente": rucCliente,
+        "desEmp": reporte.desempr, //CompanyService().currentCompany?.empresa ?? '',
         "desSed": "",
+        //"gerencia": CompanyService().currentCompany?.gerencia ?? '',
+        //"area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
         "consumidor": "",
-        "regimen": "",
-        "destino": "",
+        "placa": placa,
+        "estadoActual": "",
         "glosa": "",
-        "motivoViaje": motivoViaje == null
-            ? ""
-            : (motivoViaje.length > 50
-                  ? motivoViaje.substring(0, 50)
-                  : motivoViaje),
-        "lugarOrigen": lugarOrigen == null
-            ? ""
-            : (lugarOrigen.length > 50
-                  ? lugarOrigen.substring(0, 50)
-                  : lugarOrigen),
-        "lugarDestino": lugarDestino == null
-            ? ""
-            : (lugarDestino.length > 50
-                  ? lugarDestino.substring(0, 50)
-                  : lugarDestino),
-        "tipoMovilidad": tipoMovilidad == null
-            ? ""
-            : (tipoMovilidad.length > 50
-                  ? tipoMovilidad.substring(0, 50)
-                  : tipoMovilidad),
+        "motivoViaje": motivoViaje,
+        "lugarOrigen": lugarOrigen,
+        "lugarDestino": lugarDestino,
+        "tipoMovilidad": tipoMovilidad,
         "obs": nota.length > 1000 ? nota.substring(0, 1000) : nota,
         "estado": "S",
         "fecCre": DateTime.now().toIso8601String(),
@@ -187,19 +156,18 @@ class EditReporteController {
         "useElim": 0,
       };
 
-      final evidencia = selectedImage != null
-          ? await convertImageToBase64(selectedImage)
-          : (apiEvidencia ?? "");
-          
-      debugPrint('API EVIDENCIA: $apiEvidencia');
-      
+      final extension = p.extension(
+        selectedImage!.path,
+      ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
+
       String nombreArchivo =
-          '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}.png';
+          '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}$extension';
 
       final driveId = await _apiService.subirArchivo(
-        evidencia,
+        selectedImage.path,
         nombreArchivo: nombreArchivo,
       );
+
       debugPrint('ID de archivo en Drive: $driveId');
 
       final facturaDataEvidencia = {
@@ -215,7 +183,12 @@ class EditReporteController {
         "useElim": 0,
       };
 
+      debugPrint('Guardando factura');
+
       await _apiService.saveupdateRendicionGasto(facturaData);
+
+      debugPrint('Guardando evidencia');
+
       final success = await _apiService.saveRendicionGastoEvidencia(
         facturaDataEvidencia,
       );

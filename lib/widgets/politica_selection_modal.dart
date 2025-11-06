@@ -96,7 +96,7 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Selecciona la política aplicable para esta factura',
+            'Selecciona la política para Scanear QR',
             style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
           const SizedBox(height: 24),

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flu2/services/company_service.dart';
 import 'package:flutter/material.dart';
 import '../models/dropdown_option.dart';
@@ -76,7 +78,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
       // Filtrar facturas por la política seleccionada y destino "Borrador"
       final facturasFiltradas = todasLasFacturas.where((factura) {
         return factura.politica == widget.politicaSeleccionada.value &&
-            factura.destino == "BORRADOR";
+            factura.estadoActual == "BORRADOR";
       }).toList();
 
       _facturasDisponibles = facturasFiltradas;
@@ -882,7 +884,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
 
   Widget _buildCustomHeader() {
     return Container(
-      padding: const EdgeInsets.only(top: 50, left: 16, right: 16, bottom: 16),
+      padding: const EdgeInsets.only(top: 50, left: 16, right: 16, bottom: 2),
       color: Colors.white,
       child: Row(
         children: [
@@ -1130,17 +1132,6 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Text(
-              'Gastos',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Colors.blue,
-              ),
-            ),
-          ),
           _buildSearchAndFilterBar(),
           Expanded(child: _buildFacturasContent()),
         ],
@@ -1413,18 +1404,28 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                           });
                         },
                         title: Text(
-                          '${factura.ruc ?? 'SIN RUC'} ',
+                          '${factura.proveedor ?? factura.ruc ?? 'SIN RUC'} ',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: isSelected
                                 ? Colors.blue.shade700
                                 : Colors.black87,
+                            fontSize: 12,
                           ),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('${factura.categoria ?? 'Sin categoría'}'),
+                            Text(
+                              '${factura.categoria ?? 'Sin categoría'}',
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.blue.shade600
+                                    : Colors.grey.shade600,
+                                fontSize: 12,
+                              ),
+                            ),
+
                             Text(
                               _formatFechaISO(factura.fecha),
                               style: TextStyle(
@@ -1438,16 +1439,17 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                         ),
                         secondary: Container(
                           width: 80,
-                          height: 40,
+                          height: 20,
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? Colors.blue.shade100
                                 : Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(3),
                           ),
                           child: Center(
                             child: Text(
-                              'S/. ${factura.total?.toStringAsFixed(2) ?? '0.00'}',
+                              '${factura.total?.toStringAsFixed(2) ?? '0.0'}'
+                              ' ${factura.moneda ?? 'PEN'}',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,

@@ -1,6 +1,6 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/models/reporte_revision_model.dart';
-import 'package:flu2/widgets/auditoria_list.dart';
+import 'package:flu2/models/rol_usuario_app_model.dart';
 import 'package:flu2/widgets/informes_auditoria_list.dart';
 import 'package:flu2/widgets/informes_revision_list.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -21,8 +21,6 @@ import '../services/api_service.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
 import '../models/reporte_model.dart';
-import './informes/detalle_informe_screen.dart';
-import '../widgets/informes_revision_list.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -59,17 +57,21 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   List<ReporteRevision> _revision = [];
   List<ReporteRevision> _allRevision = [];
 
+  List<RolUsuarioApp> _rolusuario = [];
+  List<RolUsuarioApp> _allRolUsuario = [];
+
   OverlayEntry? _fabOverlay;
 
   @override
   void initState() {
     super.initState();
+    _loadRolUsuario();
     // Sólo cargar datos si hay usuario y empresa seleccionada. Evita
     // peticiones con parámetros vacíos (que pueden causar 400 Bad Request)
     if (UserService().isLoggedIn && CompanyService().isLoggedIn) {
       _loadReportes();
       _loadInformes();
-      _loadAuditoria();
+      loadAuditoria();
       _loadRevision();
     }
 
@@ -127,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     if (UserService().isLoggedIn && CompanyService().isLoggedIn) {
       _loadReportes();
       _loadInformes();
-      _loadAuditoria();
+      loadAuditoria();
       _loadRevision();
     } else {
       // Si no hay sesión, limpiar listas y forzar rebuild
@@ -149,6 +151,50 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   // ========== MÉTODOS API ==========
+
+  Future<void> _loadRolUsuario() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final rolusuario = await _apiService.getRolUsuarioApp(
+        iduser: UserService().currentUserCode,
+        idapp: '12',
+      );
+      if (!mounted) return;
+
+      setState(() {
+        _rolusuario = rolusuario;
+        _allRolUsuario = List.from(rolusuario);
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      // Mostrar error en SnackBar
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al cargar reportes: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Reintentar',
+              textColor: Colors.white,
+              onPressed: _loadRolUsuario,
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   Future<void> _loadReportes() async {
     if (!mounted) return;
@@ -242,7 +288,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
-  Future<void> _loadAuditoria() async {
+  Future<void> loadAuditoria() async {
     if (!mounted) return;
 
     setState(() {
@@ -282,7 +328,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             action: SnackBarAction(
               label: 'Reintentar',
               textColor: Colors.white,
-              onPressed: _loadAuditoria,
+              onPressed: loadAuditoria,
             ),
           ),
         );
@@ -298,19 +344,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     });
 
     try {
-      final revision = await _apiService.getReportesRendicionAuditoria(
+      final revision = await _apiService.getReportesRendicionRevision(
         id: '1',
-        idad: '1',
+        idrev: '1',
         user: UserService().currentUserCode,
         ruc: CompanyService().companyRuc,
       );
       if (!mounted) return;
-      /* 
+
       setState(() {
-        _revision = _auditoria;
+        _revision = revision;
         _allRevision = List.from(revision);
         _isLoading = false;
-      }); */
+      });
     } catch (e) {
       if (!mounted) return;
 
@@ -390,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   void _actualizarRevision(ReporteRevision revisionModel) {
     setState(() {
-      final index = _informes.indexWhere((i) => i.idInf == revisionModel.idInf);
+      final index = _revision.indexWhere((i) => i.idRev == revisionModel.idRev);
       if (index != -1) {
         _revision[index] = revisionModel;
       }
@@ -458,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           focusNode: _searchFocusNode,
         ),
         body: TabbedScreen(
-          tabLabels: const ["Todos", "Borrador"],
+          tabLabels: const ["Todos", "Aprobado", "Rechazado"],
           tabColors: const [Colors.indigo, Colors.indigo],
           tabViews: [
             InformesReporteList(
@@ -471,7 +517,27 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onRefresh: _loadInformes,
             ),
             InformesReporteList(
-              informes: _informes.where((i) => i.estado == "Borrador").toList(),
+              informes: _informes
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'aprobado',
+                    ),
+                  )
+                  .toList(),
+              informe: [],
+              onInformeUpdated: _actualizarInforme,
+              onInformeDeleted: _eliminarInforme,
+              showEmptyStateButton: false,
+              onRefresh: _loadInformes,
+            ),
+            InformesReporteList(
+              informes: _informes
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'rechazado',
+                    ),
+                  )
+                  .toList(),
               informe: [],
               onInformeUpdated: _actualizarInforme,
               onInformeDeleted: _eliminarInforme,
@@ -490,7 +556,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Colors.white,
-
         appBar: CustomAppBar(
           hintText: "Buscar en Auditoría...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
@@ -500,17 +565,49 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           controller: _searchController,
           focusNode: _searchFocusNode,
         ),
+
+        // 🔹 TabbedScreen con 3 pestañas
         body: TabbedScreen(
-          tabLabels: const ["Todos"],
-          tabColors: const [Colors.green],
+          tabLabels: const ["Todos", "Pendiente", "Rechazado"],
+          tabColors: const [Colors.green, Colors.orange, Colors.red],
+
           tabViews: [
+            // 🟢 TAB 1: Todos
             InformesAuditoriaList(
               auditorias: _auditoria,
-              auditoria: [],
               onAuditoriaUpdated: _actualizarAuditoria,
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
-              onRefresh: _loadAuditoria,
+              onRefresh: loadAuditoria,
+            ),
+
+            //  TAB 2: Pendiente
+            InformesAuditoriaList(
+              auditorias: _auditoria
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'en auditoria',
+                    ),
+                  )
+                  .toList(),
+              onAuditoriaUpdated: _actualizarAuditoria,
+              onAuditoriaDeleted: _eliminarAuditoria,
+              showEmptyStateButton: false,
+              onRefresh: loadAuditoria,
+            ),
+
+            // 🔴 TAB 3: Rechazado
+            InformesAuditoriaList(
+              auditorias: _auditoria
+                  .where(
+                    (a) =>
+                        (a.estadoActual ?? '').toLowerCase().contains('rechaz'),
+                  )
+                  .toList(),
+              onAuditoriaUpdated: _actualizarAuditoria,
+              onAuditoriaDeleted: _eliminarAuditoria,
+              showEmptyStateButton: false,
+              onRefresh: loadAuditoria,
             ),
           ],
         ),
@@ -535,12 +632,41 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           focusNode: _searchFocusNode,
         ),
         body: TabbedScreen(
-          tabLabels: const ["Todos"],
+          tabLabels: const ["Todos", "Pendiente", "Aprobado"],
           tabColors: const [Colors.green],
           tabViews: [
             InformesRevisionList(
-              revisiones: _revision,
-              revision: [],
+              revision: _revision,
+              onRevisionUpdated: _actualizarRevision,
+              onRevisionDeleted: _eliminarRevision,
+              showEmptyStateButton: false,
+              onRefresh: _loadRevision,
+            ),
+
+            //TAB 2
+            InformesRevisionList(
+              revision: _revision
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'en revision',
+                    ),
+                  )
+                  .toList(),
+              onRevisionUpdated: _actualizarRevision,
+              onRevisionDeleted: _eliminarRevision,
+              showEmptyStateButton: false,
+              onRefresh: _loadRevision,
+            ),
+
+            //TAB 3
+            InformesRevisionList(
+              revision: _revision
+                  .where(
+                    (a) => (a.estadoActual ?? '').toLowerCase().contains(
+                      'aprobado',
+                    ),
+                  )
+                  .toList(),
               onRevisionUpdated: _actualizarRevision,
               onRevisionDeleted: _eliminarRevision,
               showEmptyStateButton: false,
@@ -570,7 +696,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         final rucCliente = (r.ruccliente ?? '').toLowerCase();
         final politica = (r.politica ?? '').toLowerCase();
         // Para estado en Reporte usamos 'obs' o 'destino' si aplica
-        final estado = (r.obs ?? r.destino ?? '').toLowerCase();
+        final estado = (r.obs ?? r.estadoActual ?? '').toLowerCase();
 
         return ruc.contains(q) ||
             categoria.contains(q) ||
@@ -740,85 +866,125 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
-  // ========== BUILD PRINCIPAL ACTUALIZADO ==========
-  /* 
   @override
   Widget build(BuildContext context) {
+    // ✅ Función auxiliar para verificar si el usuario tiene acceso por idSubMenu
+    bool _tienePermiso(int idSubMenu) {
+      return _rolusuario.any((item) => item.idSubMenu == idSubMenu);
+    }
+
+    // 🔍 Verificar permisos según los idSubMenu
+    final bool puedeGastos = _tienePermiso(500);
+    final bool puedeInformes = _tienePermiso(501);
+    final bool puedeAuditoria = _tienePermiso(502);
+    final bool puedeRevision = _tienePermiso(503);
+
+    // 🧩 Construir solo las páginas permitidas
     final List<Widget> pages = [
-      _buildPantallaInicio(), // 0 - Gastos
-      _buildPantallaInformes(), // 1 - Informes
-      _buildPantallaAditoria(), // 2 - Auditoría
-      _buildPantallaRevision(), // 3 - Revisión
+      if (puedeGastos) _buildPantallaInicio(), // Gastos
+      if (puedeInformes) _buildPantallaInformes(), // Informes
+      if (puedeAuditoria) _buildPantallaAditoria(), // Auditoría
+      if (puedeRevision) _buildPantallaRevision(), // Revisión
     ];
 
-    return Scaffold(
-      body: pages[_selectedIndex],
-      // FAB moved to OverlayEntry to remain independent from bottomNavigationBar
+    // 🧭 Construir dinámicamente los iconos del menú inferior
+    final List<NavigationDestination> destinations = [
+      if (puedeGastos) _animatedIcon(MdiIcons.cashMultiple, "Gastos", 0),
+      if (puedeInformes) _animatedIcon(Feather.file_text, "Informes", 1),
+      if (puedeAuditoria)
+        _animatedIcon(MdiIcons.shieldCheckOutline, "Auditoría", 2),
+      if (puedeRevision) _animatedIcon(Feather.inbox, "Revisión", 3),
+    ];
 
-      /// 🌈 Fondo degradado + barra de navegación
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Color(0xFF1565C0), // azul medio
-              Color(0xFF0D47A1), // azul oscuro
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 10,
-              offset: Offset(0, -2),
-            ),
-          ],
-        ),
-        child: NavigationBar(
-          backgroundColor:
-              Colors.blueAccent, // 👈 importante para ver el degradado
-          indicatorColor: Colors.white.withOpacity(0.2), // color del resaltado
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) {
-            setState(() => _selectedIndex = index.clamp(0, pages.length - 1));
-          },
-          destinations: [
-            _animatedIcon(Icons.monetization_on, "Gastos", 0),
-            _animatedIcon(Icons.description, "Informes", 1),
-            _animatedIcon(Icons.assignment_turned_in_outlined, "Auditoría", 2),
-            _animatedIcon(Icons.inbox, "Revisión", 3),
-          ],
-        ),
+    // Evitar index fuera de rango si hay menos pestañas disponibles
+    final safeIndex = pages.isEmpty
+        ? 0
+        : _selectedIndex.clamp(0, pages.length - 1);
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: pages.isNotEmpty
+            ? pages[safeIndex]
+            : const Center(child: Text('Sin permisos disponibles')),
       ),
+
+      // 🧊 Barra inferior flotante moderna
+      bottomNavigationBar: pages.isEmpty
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(left: 7, right: 7, bottom: 1),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 400),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 15,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(30),
+                  child: NavigationBarTheme(
+                    data: NavigationBarThemeData(
+                      height: 70,
+                      indicatorColor: Colors.white.withOpacity(0.3),
+                      backgroundColor: Colors.transparent,
+                      labelTextStyle:
+                          WidgetStateProperty.resolveWith<TextStyle>((states) {
+                            return TextStyle(
+                              color: states.contains(WidgetState.selected)
+                                  ? const Color(0xFF1565C0)
+                                  : Colors.grey.shade700,
+                              fontWeight: states.contains(WidgetState.selected)
+                                  ? FontWeight.bold
+                                  : FontWeight.w500,
+                            );
+                          }),
+                    ),
+                    child: NavigationBar(
+                      elevation: 0,
+                      selectedIndex: safeIndex,
+                      onDestinationSelected: (index) async {
+                        _searchController.clear();
+                        _searchFocusNode.unfocus();
+
+                        setState(() {
+                          _selectedIndex = pages.isEmpty
+                              ? 0
+                              : index.clamp(0, pages.length - 1);
+                        });
+
+                        // 🔁 Recargar la data correspondiente
+                        if (puedeGastos && index == 0) {
+                          await _loadReportes();
+                        } else if (puedeInformes && index == 1) {
+                          await _loadInformes();
+                        } else if (puedeAuditoria && index == 2) {
+                          await loadAuditoria();
+                        } else if (puedeRevision && index == 3) {
+                          await _loadRevision();
+                        }
+
+                        WidgetsBinding.instance.addPostFrameCallback(
+                          (_) => _updateFabOverlay(),
+                        );
+                      },
+                      destinations: destinations,
+                    ),
+                  ),
+                ),
+              ),
+            ),
     );
   }
 
-  /// ✨ Ícono animado con rotación y zoom
-  NavigationDestination _animatedIcon(IconData icon, String label, int index) {
-    bool isSelected = _selectedIndex == index;
-
-    return NavigationDestination(
-      icon: AnimatedRotation(
-        duration: const Duration(milliseconds: 400),
-        turns: isSelected ? 1 / 24 : 0, // pequeño giro
-        curve: Curves.easeOutBack,
-        child: AnimatedScale(
-          scale: isSelected ? 1.3 : 1.0, // efecto de zoom
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          child: Icon(
-            icon,
-            color: isSelected
-                ? Colors.white
-                : Colors.white, // colores sobre fondo azul
-            size: 28,
-          ),
-        ),
-      ),
-      label: label,
-    );
-  } */
-
+  /*
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
@@ -876,21 +1042,37 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: NavigationBar(
                 elevation: 0,
                 selectedIndex: _selectedIndex,
-                onDestinationSelected: (index) {
+                onDestinationSelected: (index) async {
                   // Limpiar campo de búsqueda al cambiar de pestaña
                   _searchController.clear();
                   _searchFocusNode.unfocus();
-                  // Resetear las listas a su estado completo
+
                   setState(() {
-                    _reportes = List.from(_allReportes);
-                    _informes = List.from(_allInformes);
                     _selectedIndex = index.clamp(0, pages.length - 1);
                   });
-                  // Actualizar overlay después del frame para insertar/remover el FAB
+
+                  // 🔁 Recargar la data correspondiente a la pestaña seleccionada
+                  switch (index) {
+                    case 0:
+                      await _loadReportes();
+                      break;
+                    case 1:
+                      await _loadInformes();
+                      break;
+                    case 2:
+                      await loadAuditoria();
+                      break;
+                    case 3:
+                      await _loadRevision();
+                      break;
+                  }
+
+                  // Actualizar el FAB overlay después del frame
                   WidgetsBinding.instance.addPostFrameCallback(
                     (_) => _updateFabOverlay(),
                   );
                 },
+
                 destinations: [
                   _animatedIcon(MdiIcons.cashMultiple, "Gastos", 0),
                   _animatedIcon(Feather.file_text, "Informes", 1),
@@ -904,6 +1086,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
     );
   }
+*/
 
   /// 🎨 Ícono animado tipo Material con efecto de rebote
   NavigationDestination _animatedIcon(IconData icon, String label, int index) {

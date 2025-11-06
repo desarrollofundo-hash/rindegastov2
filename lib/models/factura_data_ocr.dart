@@ -27,7 +27,6 @@ class FacturaOcrData {
   // HELPER: Determinar tipo de comprobante según código SUNAT
   static String? getTipoMoneda(String moneda) {
     final tipos = {
-      '()': 'PEN',
       'PEN': 'PEN',
       'USD': 'USD',
       'S': 'PEN',

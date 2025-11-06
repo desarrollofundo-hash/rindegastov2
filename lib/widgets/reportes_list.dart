@@ -120,129 +120,6 @@ class _ReportesListState extends State<ReportesList> {
     );
   }
 
-  /* 
-  Widget _buildList(EstadoReporte filtro) {
-    final data = _controller.filtrarReportes(widget.reportes, filtro);
-
-    return RefreshIndicator(
-      onRefresh: widget.onRefresh,
-      child: data.isEmpty
-          ? ListView(
-              children: const [
-                SizedBox(height: 100),
-                Center(
-                  child: Text(
-                    "No hay reportes disponibles",
-                    style: TextStyle(color: Colors.black, fontSize: 16),
-                  ),
-                ),
-              ],
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                final reporte = data[index];
-                final fechaOriginal = DateTime.tryParse(reporte.fecha ?? '');
-                final fechaCorta = fechaOriginal != null
-                    ? DateFormat('yyyy/MM/dd').format(fechaOriginal)
-                    : 'Fecha inválida';
-
-                return GestureDetector(
-                  onTap: widget.onTap != null
-                      ? () => widget.onTap!(reporte)
-                      : null,
-                  child: Card(
-                    color: Colors.white,
-                    elevation: 1,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 2),
-                    child: Padding(
-                      padding: const EdgeInsets.all(2),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header con número de reporte y estado
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${reporte.ruc} ',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              Text(
-                                '${reporte.total} PEN',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.indigo,
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${reporte.categoria} ',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              Chip(
-                                label: Text(
-                                  '${reporte.destino}',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                backgroundColor: _controller.getEstadoColor(
-                                  reporte.destino,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 1,
-                                  vertical: 0,
-                                ),
-                                labelPadding: const EdgeInsets.symmetric(
-                                  horizontal: 1,
-                                ),
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                              ),
-                            ],
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                fechaCorta,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 1),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-    );
-  }
- */
-
   Widget _buildList(EstadoReporte filtro) {
     final data = _controller.filtrarReportes(widget.reportes, filtro);
 
@@ -324,7 +201,10 @@ class _ReportesListState extends State<ReportesList> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        reporte.ruc ?? '',
+                                        reporte.proveedor ??
+                                            reporte.ruc ??
+                                            reporte.ruccliente ??
+                                            '',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 14,
@@ -362,14 +242,48 @@ class _ReportesListState extends State<ReportesList> {
                                             color: Colors.grey,
                                           ),
                                           const SizedBox(width: 4),
+                                          // Fecha + etiqueta de días juntos
                                           Expanded(
-                                            child: Text(
-                                              formatDate(reporte.fecha),
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Text(
+                                                  formatDate(reporte.fecha),
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.black54,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(
+                                                  width: 4,
+                                                ), // pequeño espacio visual
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 2,
+                                                        vertical: 2,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors
+                                                        .red, // Fondo de la etiqueta
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          6,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    '${diferenciaEnDias(reporte.fecha.toString(), reporte.feccre.toString())} DÍAS',
+                                                    style: const TextStyle(
+                                                      fontSize: 11,
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
@@ -410,7 +324,7 @@ class _ReportesListState extends State<ReportesList> {
                                   vertical: 3,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: getStatusColor(reporte.destino),
+                                  color: getStatusColor(reporte.estadoActual),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -423,7 +337,7 @@ class _ReportesListState extends State<ReportesList> {
                                     ),
                                     const SizedBox(width: 3),
                                     Text(
-                                      reporte.destino ?? '',
+                                      reporte.estadoActual ?? '',
                                       style: const TextStyle(
                                         fontSize: 11,
                                         color: Colors.white,

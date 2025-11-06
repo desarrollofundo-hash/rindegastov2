@@ -26,6 +26,8 @@ class ReporteAuditoria {
   final int cantidadDesaprobado;
   final double totalDesaprobado;
   final String? usuario;
+  final int idRev;
+  final String? obsRechazo;
 
   ReporteAuditoria({
     required this.idAd,
@@ -52,6 +54,8 @@ class ReporteAuditoria {
     required this.cantidadDesaprobado,
     required this.totalDesaprobado,
     required this.usuario,
+    required this.idRev,
+    required this.obsRechazo,
   });
 
   factory ReporteAuditoria.fromJson(Map<String, dynamic> json) {
@@ -99,6 +103,8 @@ class ReporteAuditoria {
       cantidadDesaprobado: _i(json['cantidadDesaprobado']),
       totalDesaprobado: _d(json['totalDesaprobado']),
       usuario: json['usuario']?.toString(),
+      idRev: _i(json['idrev']),
+      obsRechazo: json['obsRechazo']?.toString(),
     );
   }
 
@@ -128,6 +134,8 @@ class ReporteAuditoria {
       'cantidadDesaprobado': cantidadDesaprobado,
       'totalDesaprobado': totalDesaprobado,
       'usuario': usuario,
+      'idrev': idRev,
+      'obsRechazo': obsRechazo,
     };
   }
 
@@ -180,6 +188,6 @@ class ReporteAuditoria {
   /// Sobrescritura de toString para depuración
   @override
   String toString() {
-    return 'ReporteAuditoria{idAd: $idAd, idInf: $idInf, titulo: $titulo, total: $total, cantidad: $cantidad}';
+    return 'ReporteAuditoria{idrev: $idRev,idAd: $idAd, idInf: $idInf, titulo: $titulo, total: $total, cantidad: $cantidad}';
   }
 }

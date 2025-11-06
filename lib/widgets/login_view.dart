@@ -144,7 +144,7 @@ class _LoginViewState extends State<LoginView>
         ),
         const SizedBox(height: 20),
         const Text(
-          "Bienvenido a FcturASA",
+          "ASA Rinde Gastos",
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w700,
@@ -196,7 +196,7 @@ class _LoginViewState extends State<LoginView>
       keyboardType: TextInputType.number,
       style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
-        labelText: "Usuario o Email",
+        labelText: "Dni",
         labelStyle: TextStyle(
           color: _isUserFocused
               ? const Color(0xFF0066FF)

@@ -1,8 +1,14 @@
 import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flu2/models/apiruc_model.dart';
+import 'package:flu2/models/user_company.dart';
+import 'package:flu2/services/user_service.dart';
+import 'package:flu2/utils/navigation_utils.dart';
+import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:printing/printing.dart';
 import 'package:file_picker/file_picker.dart';
 import '../models/reporte_model.dart';
@@ -15,6 +21,7 @@ import '../screens/home_screen.dart';
 import 'package:path/path.dart' as p;
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
 class EditReporteModal extends StatefulWidget {
   final Reporte reporte;
@@ -32,26 +39,24 @@ class _EditReporteModalState extends State<EditReporteModal> {
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
   late TextEditingController _rucController;
-  late TextEditingController _proveedorController;
+  late TextEditingController _razonSocialController;
   late TextEditingController _tipoComprobanteController;
   late TextEditingController _serieController;
   late TextEditingController _numeroController;
-  late TextEditingController _fechaController;
+  late TextEditingController _igvController;
   late TextEditingController _totalController;
+  late TextEditingController _fechaEmisionController;
   late TextEditingController _monedaController;
   late TextEditingController _rucClienteController;
-  late TextEditingController _glosaController;
-  late TextEditingController _obsController;
+  late TextEditingController _notaController;
   // Campos de movilidad
   late TextEditingController _origenController;
   late TextEditingController _destinoController;
   late TextEditingController _motivoViajeController;
   late TextEditingController _tipoMovilidadController;
+  late TextEditingController _placaController;
 
   // Campos adicionales usados en el formulario
-  late TextEditingController _igvController;
-  late TextEditingController _fechaEmisionController;
-  late TextEditingController _notaController;
 
   // Estado
   bool _isLoading = false;
@@ -64,10 +69,19 @@ class _EditReporteModalState extends State<EditReporteModal> {
   final ApiService _apiService = ApiService();
   late final EditReporteController _controller;
 
+  ///ApiRuc
+  bool _isLoadingApiRuc = false;
+  String? _errorApiRuc;
+  ApiRuc? _apiRucData;
+
+  // Variables para el lector SUNAT
+  bool _isScanning = false;
+  bool _hasScannedData = false;
+  final NuevoGastoLogic _logic = NuevoGastoLogic();
+
   // Image / file picker
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
-  String? _apiEvidencia;
 
   List<CategoriaModel> _categoriasGeneral = [];
   List<DropdownOption> _tiposGasto = [];
@@ -104,26 +118,39 @@ class _EditReporteModalState extends State<EditReporteModal> {
   /// Como `Reporte` no tiene un campo `estado`, comprobamos varios campos
   /// que en el proyecto se usan en distintos contextos para representar el estado.
   bool _isEnInforme() {
-    final candidates = [
-      widget.reporte.categoria,
-      widget.reporte.destino,
-      widget.reporte.tipogasto,
-      widget.reporte.obs,
-      widget.reporte.glosa,
-    ];
-    for (final v in candidates) {
-      if (v != null) {
-        final value = v.trim().toUpperCase();
-        if (value.contains('EN INFORME') ||
-            value == 'EN AUDITORIA' ||
-            value == 'EN REVISION' ||
-            value == 'APROBADO' ||
-            value == 'DESAPROBADO' ) {
-          return true;
-        }
+    final companyValue = CompanyService().currentUserArea;
+    final estadoValue = widget.reporte.estadoActual;
+
+    // 🔹 Verificar primero si el área es CONTABILIDAD
+    if (companyValue != null) {
+      final area = companyValue.trim().toUpperCase();
+
+      // ✅ Nueva condición especial:
+      // Si el área es CONTABILIDAD y el estado está en revisión o aprobado → TRUE
+      if (area == 'CONTABILIDAD' &&
+          (estadoValue?.trim().toUpperCase() == 'EN REVISION' ||
+              estadoValue?.trim().toUpperCase() == 'APROBADO')) {
+        return true;
+      }
+
+      // En cualquier otro caso, si es contabilidad → sigue siendo FALSE
+      if (area == 'CONTABILIDAD') {
+        return false;
       }
     }
-    return false;
+
+    // 🔹 Verificar estados que bloquean (independientemente del área)
+    if (estadoValue != null) {
+      final value = estadoValue.trim().toUpperCase();
+      if (value == 'EN AUDITORIA' ||
+          value == 'CONTABILIDAD' ||
+          value == 'EN REVISION' ||
+          value == 'APROBADO' ||
+          value == 'RECHAZADO' ||
+          value == 'DESAPROBADO') {
+        return true;
+      }
+    }
 
     return false;
   }
@@ -163,7 +190,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     final empresaSeleccionada = CompanyService().currentUserCompany;
 
     if (rucClienteEscaneado.isEmpty) {
-      return '';
+      return '❌ RUC cliente no coincide con $empresaSeleccionada';
     }
 
     if (rucEmpresaSeleccionada.isEmpty) {
@@ -188,8 +215,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         _totalController.text.trim().isNotEmpty &&
         _categoriaController.text.trim().isNotEmpty &&
         _tipoGastoController.text.trim().isNotEmpty &&
-        (_selectedImage != null ||
-            (_apiEvidencia != null && _apiEvidencia!.isNotEmpty)) &&
+        (_selectedImage != null) &&
         _isRucValid();
 
     if (_isFormValid != isValid) {
@@ -200,6 +226,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   }
 
   void _initializeSelectedValues() {
+    _selectedImage = null;
     // Para política se validará después de cargar desde API
     // Para categoría y tipo de gasto, se validarán después de cargar desde API
     // Las variables se inicializan en los métodos correspondientes
@@ -288,6 +315,41 @@ class _EditReporteModalState extends State<EditReporteModal> {
     }
   }
 
+  /// Cargar información del RUC desde la API
+  Future<void> _loadApiRuc(String ruc) async {
+    if (mounted) {
+      setState(() {
+        _isLoadingApiRuc = true;
+        _errorApiRuc = null;
+      });
+    }
+
+    try {
+      // ✅ Aquí la llamada correcta al método de la API
+      final apiRuc = await _apiService.getApiRuc(ruc: ruc);
+
+      if (mounted) {
+        setState(() {
+          _apiRucData = apiRuc;
+          _isLoadingApiRuc = false;
+
+          // 👇 Aquí actualizas el TextEditingController después de obtener los datos
+          _razonSocialController.text = apiRuc.nombreRazonSocial ?? 'S/N';
+        });
+      }
+
+      debugPrint('✅ RUC cargado correctamente: ${apiRuc.ruc}');
+    } catch (e) {
+      debugPrint('❌ Error al cargar RUC: $e');
+      if (mounted) {
+        setState(() {
+          _errorApiRuc = e.toString();
+          _isLoadingApiRuc = false;
+        });
+      }
+    }
+  }
+
   void _initializeControllers() {
     _politicaController = TextEditingController(
       text: widget.reporte.politica ?? '',
@@ -299,7 +361,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       text: widget.reporte.tipogasto ?? '',
     );
     _rucController = TextEditingController(text: widget.reporte.ruc ?? '');
-    _proveedorController = TextEditingController(
+    _razonSocialController = TextEditingController(
       text: widget.reporte.proveedor ?? '',
     );
     _tipoComprobanteController = TextEditingController(
@@ -309,7 +371,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _numeroController = TextEditingController(
       text: widget.reporte.numero ?? '',
     );
-    _fechaController = TextEditingController(text: widget.reporte.fecha ?? '');
+    _fechaEmisionController = TextEditingController(
+      text: formatDate(widget.reporte.fecha),
+    );
     _totalController = TextEditingController(
       text: widget.reporte.total?.toString() ?? '',
     );
@@ -319,8 +383,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _rucClienteController = TextEditingController(
       text: widget.reporte.ruccliente ?? '',
     );
-    _glosaController = TextEditingController(text: widget.reporte.glosa ?? '');
-    _obsController = TextEditingController(text: widget.reporte.obs ?? '');
 
     // Movilidad
     _origenController = TextEditingController(
@@ -335,14 +397,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _tipoMovilidadController = TextEditingController(
       text: widget.reporte.tipomovilidad ?? '',
     );
+    _placaController = TextEditingController(text: widget.reporte.placa ?? '');
 
     // Nuevos controladores
     _igvController = TextEditingController(
       text: widget.reporte.igv?.toString() ?? '',
     );
     // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible
-    final formattedFecha = _formatToIsoDate(widget.reporte.fecha);
-    _fechaEmisionController = TextEditingController(text: formattedFecha);
     _notaController = TextEditingController(text: widget.reporte.obs ?? '');
   }
 
@@ -364,16 +425,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _categoriaController.dispose();
     _tipoGastoController.dispose();
     _rucController.dispose();
-    _proveedorController.dispose();
+    _razonSocialController.dispose();
     _tipoComprobanteController.dispose();
     _serieController.dispose();
     _numeroController.dispose();
-    _fechaController.dispose();
     _totalController.dispose();
     _monedaController.dispose();
     _rucClienteController.dispose();
-    _glosaController.dispose();
-    _obsController.dispose();
     _igvController.dispose();
     _fechaEmisionController.dispose();
     _notaController.dispose();
@@ -381,6 +439,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _destinoController.dispose();
     _motivoViajeController.dispose();
     _tipoMovilidadController.dispose();
+    _placaController.dispose();
 
     _controller.dispose();
     super.dispose();
@@ -609,49 +668,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     }
   }
 
-  /// Intentar convertir varias representaciones de fecha a formato ISO (yyyy-MM-dd)
-  String _formatToIsoDate(String? input) {
-    if (input == null) return '';
-    final trimmed = input.trim();
-    if (trimmed.isEmpty) return '';
-
-    try {
-      // Si ya está en formato ISO aproximado (yyyy-MM-dd o yyyy/MM/dd), normalizar
-      final isoLike = RegExp(r'^(\d{4})[-/](\d{1,2})[-/](\d{1,2})');
-      final match = isoLike.firstMatch(trimmed);
-      if (match != null) {
-        final y = match.group(1)!;
-        final m = match.group(2)!.padLeft(2, '0');
-        final d = match.group(3)!.padLeft(2, '0');
-        return '$y-$m-$d';
-      }
-
-      // Intentar formatos comunes: dd/MM/yyyy, dd-MM-yyyy
-      final dmy = RegExp(r'^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})');
-      final matchDmy = dmy.firstMatch(trimmed);
-      if (matchDmy != null) {
-        final d = matchDmy.group(1)!.padLeft(2, '0');
-        final m = matchDmy.group(2)!.padLeft(2, '0');
-        final y = matchDmy.group(3)!;
-        return '$y-$m-$d';
-      }
-
-      // Intentar parsear con DateTime.parse como último recurso
-      final dt = DateTime.tryParse(trimmed);
-      if (dt != null) {
-        final y = dt.year.toString().padLeft(4, '0');
-        final m = dt.month.toString().padLeft(2, '0');
-        final d = dt.day.toString().padLeft(2, '0');
-        return '$y-$m-$d';
-      }
-    } catch (_) {
-      // ignore
-    }
-
-    // Si no se pudo parsear, devolver el original tal cual (o vacío si no se desea)
-    return trimmed;
-  }
-
   /// Verificar si un archivo es PDF basado en su extensión
   bool _isPdfFile(String filePath) {
     return filePath.toLowerCase().endsWith('.pdf');
@@ -675,7 +691,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   const Icon(Icons.receipt, color: Colors.red),
                   const SizedBox(width: 8),
                   const Text(
-                    'Adjuntar Factura',
+                    'Adjuntar Evidencia',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const Text(
@@ -693,18 +709,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ElevatedButton.icon(
                       onPressed: _isEditMode ? _pickImage : null,
                       icon: Icon(
-                        (_selectedImage == null &&
-                                (_apiEvidencia == null ||
-                                    _apiEvidencia!.isEmpty))
+                        (_selectedImage == null)
                             ? Icons.add_a_photo
                             : Icons.edit,
                       ),
                       label: Text(
-                        (_selectedImage == null &&
-                                (_apiEvidencia == null ||
-                                    _apiEvidencia!.isEmpty))
-                            ? 'Seleccionar'
-                            : 'Cambiar ',
+                        (_selectedImage == null) ? 'Seleccionar' : 'Cambiar ',
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _isEditMode ? Colors.red : Colors.grey,
@@ -713,7 +723,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                 ],
               ),
-              // Mostrar archivo: puede ser imagen o PDF
+
+              /// Mostrar archivo: puede ser imagen o PDF
               if (_selectedImage != null)
                 Container(
                   height: 200,
@@ -753,7 +764,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                   ),
                 )
-              else if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty)
+              else if (_selectedImage != null)
+                // Si la evidencia está en base64
                 Container(
                   height: 200,
                   width: double.infinity,
@@ -765,7 +777,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     borderRadius: BorderRadius.circular(8),
                     child: GestureDetector(
                       onTap: _handleTapEvidencia,
-                      child: _buildEvidenciaImage(_apiEvidencia!),
+                      child: _buildEvidenciaImage(_selectedImage!.path),
                     ),
                   ),
                 )
@@ -776,16 +788,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   decoration: BoxDecoration(
                     color: Colors.grey.shade100,
                     border: Border.all(
-                      color:
-                          (_selectedImage == null &&
-                              (_apiEvidencia == null || _apiEvidencia!.isEmpty))
+                      color: (_selectedImage == null)
                           ? Colors.red.shade300
                           : Colors.grey.shade300,
-                      width:
-                          (_selectedImage == null &&
-                              (_apiEvidencia == null || _apiEvidencia!.isEmpty))
-                          ? 2
-                          : 1,
+                      width: (_selectedImage == null) ? 2 : 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -794,10 +800,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     children: [
                       Icon(
                         Icons.receipt_outlined,
-                        color:
-                            (_selectedImage == null &&
-                                (_apiEvidencia == null ||
-                                    _apiEvidencia!.isEmpty))
+                        color: (_selectedImage == null)
                             ? Colors.red
                             : Colors.grey,
                         size: 40,
@@ -806,16 +809,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       Text(
                         'Agregar evidencia (Obligatorio)',
                         style: TextStyle(
-                          color:
-                              (_selectedImage == null &&
-                                  (_apiEvidencia == null ||
-                                      _apiEvidencia!.isEmpty))
+                          color: (_selectedImage == null)
                               ? Colors.red
                               : Colors.grey,
-                          fontWeight:
-                              (_selectedImage == null &&
-                                  (_apiEvidencia == null ||
-                                      _apiEvidencia!.isEmpty))
+                          fontWeight: (_selectedImage == null)
                               ? FontWeight.bold
                               : FontWeight.normal,
                         ),
@@ -823,11 +820,185 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ],
                   ),
                 ),
+
+              Row(
+                children: [
+                  const Icon(Icons.qr_code_scanner, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Lector de Código QR',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _isScanning ? null : _scanQRCode,
+                    icon: Icon(
+                      _isScanning
+                          ? Icons.hourglass_empty
+                          : Icons.qr_code_scanner,
+                      size: 16,
+                    ),
+                    label: Text(_isScanning ? 'Escaneando...' : 'Escanear QR'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 1),
             ],
           ),
         ),
       ),
     );
+  }
+
+  /// Método para escanear código QR
+  Future<void> _scanQRCode() async {
+    setState(() {
+      _isScanning = true;
+    });
+
+    try {
+      // Navegar a la pantalla de escáner
+      final qrData = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (context) => _QRScannerScreen()),
+      );
+
+      if (qrData != null && qrData.isNotEmpty) {
+        _processQRData(qrData);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al escanear QR: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isScanning = false;
+      });
+    }
+  }
+
+  /// Procesar los datos del QR y llenar los campos
+  void _processQRData(String qrData) {
+    try {
+      setState(() {
+        _hasScannedData = true;
+      });
+
+      // Parsear el QR de SUNAT (formato típico separado por |)
+      final parts = qrData.split('|');
+
+      if (parts.length >= 6) {
+        // Formato típico de QR SUNAT:
+        // RUC|Tipo|Serie|Número|IGV|Total|Fecha|TipoDoc|DocReceptor
+
+        // Envolver las asignaciones en setState y escribir en ambos controladores
+        setState(() {
+          // RUC del emisor
+          if (parts[0].isNotEmpty) {
+            _rucController.text = parts[0];
+            _loadApiRuc(_rucController.text);
+          }
+
+          // Tipo de comprobante (texto) -> actualizar controlador UI y el usado en guardado
+          if (parts[1].isNotEmpty) {
+            String tipoDoc = parts[1];
+            String tipoTexto;
+            switch (tipoDoc) {
+              case '01':
+                tipoTexto = 'FACTURA ELECTRONICA';
+                break;
+              case '03':
+                tipoTexto = 'BOLETA DE VENTA';
+                break;
+              case '07':
+                tipoTexto = 'NOTA DE CREDITO';
+                break;
+              case '08':
+                tipoTexto = 'NOTA DE DEBITO';
+                break;
+              case '09':
+                tipoTexto = 'GUIA DE REMISION';
+                break;
+              default:
+                tipoTexto = 'COMPROBANTE';
+            }
+            _tipoComprobanteController.text = tipoTexto;
+          }
+
+          // Serie
+          if (parts[2].isNotEmpty) {
+            _serieController.text = parts[2];
+          }
+
+          // Número de factura
+          if (parts[3].isNotEmpty) {
+            _numeroController.text = parts[3];
+          }
+
+          // Igv de factura
+          if (parts[4].isNotEmpty) {
+            _igvController.text = parts[4];
+          }
+          /*
+          // Número de documento (combinado para compatibilidad)
+          if (parts[2].isNotEmpty && parts[3].isNotEmpty) {
+            _numeroDocumentoController.text = '${parts[2]}-${parts[3]}';
+          }
+          */
+
+          // Total
+          if (parts[5].isNotEmpty) {
+            _totalController.text = parts[5];
+          }
+
+          // Fecha (si está disponible)
+          if (parts.length > 6 && parts[6].isNotEmpty) {
+            final fechaNormalizada = formatDate(parts[6]);
+            _fechaEmisionController.text = fechaNormalizada;
+          }
+
+          // Ruc
+          if (parts[8].isNotEmpty) {
+            _rucClienteController.text = parts[8];
+          }
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Datos del QR aplicados correctamente'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        throw Exception('Formato de QR no válido');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al procesar QR: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() {
+        _hasScannedData = false;
+      });
+    }
   }
 
   /// Renderizar evidencia cuando llega en base64 o como URL
@@ -1137,9 +1308,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Tipo de Gasto'),
-        const SizedBox(height: 8),
-
         // Si está cargando, mostrar indicador
         if (_isLoadingTiposGasto)
           const Column(
@@ -1242,36 +1410,82 @@ class _EditReporteModalState extends State<EditReporteModal> {
     );
   }
 
-  /// Construir la sección de datos raw
-  /* Widget _buildRawDataSection() {
-    return ExpansionTile(
-      title: const Text('Datos Originales del Reporte'),
-      leading: const Icon(Icons.receipt_long),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: SelectableText(
-            'ID: ${widget.reporte.idrend}\n'
-            'Política: ${widget.reporte.politica}\n'
-            'Categoría: ${widget.reporte.categoria}\n'
-            'RUC: ${widget.reporte.ruc}\n'
-            'Proveedor: ${widget.reporte.proveedor}\n'
-            'Serie: ${widget.reporte.serie}\n'
-            'Número: ${widget.reporte.numero}\n'
-            'Total: ${widget.reporte.total}\n'
-            'Fecha: ${widget.reporte.fecha}\n'
-            'Estado: ${widget.reporte.categoria}',
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 10),
-          ),
-        ),
-      ],
-    );
-  } */
+  Future<void> _cargarImagenServidor() async {
+    debugPrint('🔄 Iniciando carga de evidencia desde servidor...');
 
+    try {
+      if (!mounted) return;
+
+      final baseName =
+          '${widget.reporte.idrend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}';
+
+      // Construir lista de extensiones candidatas
+      final List<String> candidates = [];
+
+      // Añadir extensiones comunes y un intento sin extensión
+      candidates.addAll(['.png', '.jpg', '.jpeg', '.pdf', '.gif', '']);
+
+      Uint8List? bytes;
+      String? triedName;
+
+      // Intentar obtener la imagen desde el servidor con las extensiones candidatas
+      for (final ext in candidates) {
+        final name = ext.isNotEmpty ? '$baseName$ext' : baseName;
+        debugPrint('🔎 Intentando obtener: $name');
+        try {
+          bytes = await _apiService.obtenerImagenBytes(name);
+        } catch (_) {
+          bytes = null;
+        }
+        if (bytes != null) {
+          triedName = name;
+          break;
+        }
+      }
+
+      // Si encontramos la imagen
+      if (bytes != null && mounted) {
+        // Guardar la imagen en el dispositivo
+        final tempDir =
+            await getTemporaryDirectory(); // Obtén el directorio temporal
+        final tempFile = File(
+          '${tempDir.path}/$triedName',
+        ); // Crear un archivo temporal
+
+        // Escribir los bytes en el archivo
+        await tempFile.writeAsBytes(bytes);
+
+        setState(() {
+          _selectedImage =
+              tempFile; // Asignar el archivo a la variable _selectedImage
+        });
+
+        debugPrint('✅ Evidencia cargada desde servidor: $triedName');
+        return;
+      }
+
+      // Si no se encuentra la imagen
+      debugPrint(
+        '⚠️ No se encontró la evidencia en el servidor (probadas: ${candidates.join(', ')})',
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se encontró la evidencia en el servidor'),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('🔥 Error cargando imagen del servidor: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error cargando evidencia: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  /*
   Future<void> _cargarImagenServidor() async {
     try {
       if (!mounted) return;
@@ -1353,54 +1567,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       }
     }
   }
-
-  /// Mostrar un diálogo con los bytes de la imagen
-  Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Evidencia'),
-        content: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.8,
-          height: MediaQuery.of(context).size.height * 0.6,
-          child: InteractiveViewer(
-            panEnabled: true,
-            boundaryMargin: const EdgeInsets.all(20),
-            minScale: 1.0,
-            maxScale: 5.0,
-            child: Image.memory(bytes, fit: BoxFit.contain),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _abrirPdfExterno(Uint8List pdfBytes, String fileName) async {
-    try {
-      // Crea un archivo temporal en el almacenamiento del dispositivo
-      final tempDir = await getTemporaryDirectory();
-      final tempPath = '${tempDir.path}/$fileName';
-
-      final file = File(tempPath);
-      await file.writeAsBytes(pdfBytes, flush: true);
-
-      // Abre el archivo con una app externa instalada en el teléfono
-      final result = await OpenFilex.open(tempPath);
-
-      if (result.type != ResultType.done) {
-        debugPrint('⚠️ No se pudo abrir el PDF: ${result.message}');
-      }
-    } catch (e, st) {
-      debugPrint('🔥 Error al abrir PDF externo: $e\n$st');
-    }
-  }
+*/
 
   /// Mostrar un PDF en un diálogo usando PdfPreview (paquete `printing` está en pubspec)
   Future<void> _showPdfDialogFromBytes(Uint8List bytes, {String? title}) async {
@@ -1469,8 +1636,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
       }
 
       // 2️⃣ Si tenemos evidencia almacenada en `_apiEvidencia`
-      if (_apiEvidencia != null && _apiEvidencia!.isNotEmpty) {
-        final evidencia = _apiEvidencia!;
+      if (_selectedImage != null) {
+        final evidencia = _selectedImage!.path;
 
         // 👉 Si es base64
         if (_controller.isBase64(evidencia)) {
@@ -1569,6 +1736,150 @@ class _EditReporteModalState extends State<EditReporteModal> {
     }
   }
 
+  /*
+  /// Mostrar un diálogo con los bytes de la imagen
+  Future<void> _showEvidenciaDialogFromBytes(Uint8List bytes) async {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black, // Fondo negro para el AlertDialog
+        title: Center(
+          child: const Text(
+            'Evidencia',
+            style: TextStyle(
+              color: Colors.white,
+            ), // Título en blanco para que sea visible en el fondo negro
+          ),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(2),
+            minScale: 1.0,
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                12,
+              ), // Bordes redondeados para la imagen
+              child: Image.memory(
+                bytes,
+                fit: BoxFit
+                    .contain, // Asegurarse de que la imagen no se distorsione
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cerrar',
+              style: TextStyle(
+                color: Colors.white,
+              ), // Texto de cerrar en blanco
+            ),
+          ),
+        ],
+      ),
+    );
+  
+  }
+*/
+  Future<void> _showEvidenciaDialogFromBytes(
+    Uint8List bytes, {
+    String? nombreArchivo,
+  }) async {
+    if (!mounted) return;
+    // Supongamos que tienes estos valores
+    final ruc = widget.reporte.ruc;
+    final serie = widget.reporte.serie;
+    final numero = widget.reporte.numero;
+
+    // Concatenar para formar el nombre del archivo
+    final nombreArchivo = '${ruc}_${serie}_${numero}.png';
+
+    // Si no se pasa un nombre, usar un default
+    final fileName = nombreArchivo;
+    // Guardar temporalmente los bytes en un archivo para compartir
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File('${tempDir.path}/$fileName');
+    await tempFile.writeAsBytes(bytes);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: Colors.black,
+        title: Center(
+          child: const Text('Evidencia', style: TextStyle(color: Colors.white)),
+        ),
+        content: SizedBox(
+          width: MediaQuery.of(context).size.width * 0.9,
+          height: MediaQuery.of(context).size.height * 0.6,
+          child: InteractiveViewer(
+            panEnabled: true,
+            boundaryMargin: const EdgeInsets.all(2),
+            minScale: 1.0,
+            maxScale: 6.0,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.memory(bytes, fit: BoxFit.contain),
+            ),
+          ),
+        ),
+        actions: [
+          // Botón de compartir
+          TextButton.icon(
+            onPressed: () async {
+              try {
+                await Share.shareXFiles([
+                  XFile(tempFile.path, name: fileName),
+                ], text: fileName);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error compartiendo: $e')),
+                );
+              }
+            },
+            icon: const Icon(Icons.share, color: Colors.white),
+            label: const Text(
+              'Compartir',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+
+          // Botón de cerrar
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _abrirPdfExterno(Uint8List pdfBytes, String fileName) async {
+    try {
+      // Crea un archivo temporal en el almacenamiento del dispositivo
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = '${tempDir.path}/$fileName';
+
+      final file = File(tempPath);
+      await file.writeAsBytes(pdfBytes, flush: true);
+
+      // Abre el archivo con una app externa instalada en el teléfono
+      final result = await OpenFilex.open(tempPath);
+
+      if (result.type != ResultType.done) {
+        debugPrint('⚠️ No se pudo abrir el PDF: ${result.message}');
+      }
+    } catch (e, st) {
+      debugPrint('🔥 Error al abrir PDF externo: $e\n$st');
+    }
+  }
+
   /// Guardar factura mediante API
   Future<void> _updateFacturaAPI() async {
     // Validar campos obligatorios antes de continuar
@@ -1591,6 +1902,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         categoria: _categoriaController.text,
         tipoGasto: _tipoGastoController.text,
         ruc: _rucController.text,
+        razonsocial: _razonSocialController.text,
         tipoComprobante: _tipoComprobanteController.text,
         serie: _serieController.text,
         numero: _numeroController.text,
@@ -1606,14 +1918,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
         lugarOrigen: _origenController.text,
         lugarDestino: _destinoController.text,
         tipoMovilidad: _tipoMovilidadController.text,
+        placa: _placaController.text,
         selectedImage: _selectedImage,
-        apiEvidencia: _apiEvidencia,
+        apiEvidencia: null,
       );
 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ FACTURA ACTUALIZADA'),
+            content: Text('✅ GASTO ACTUALIZADA'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -1716,7 +2029,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Editar Reporte',
+                  'Editar Gasto',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -1797,6 +2110,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const Text(
+          'Datos Factura',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
+        const SizedBox(height: 8),
         // Primera fila: RUC y Tipo de Comprobante
         _buildTextField(
           _rucController,
@@ -1807,6 +2129,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
           readOnly: true,
         ),
         const SizedBox(height: 16),
+
+        _buildTextField(
+          _razonSocialController,
+          'Razon social',
+          Icons.house,
+          TextInputType.text,
+        ),
+        const SizedBox(height: 16),
+
         _buildTextField(
           _tipoComprobanteController,
           'Tipo Comprobante ',
@@ -1920,6 +2251,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       'Nota',
       Icons.comment,
       TextInputType.text,
+      readOnly: !_isEditMode,
     );
   }
 
@@ -2025,47 +2357,27 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
+
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _placaController,
+                readOnly: !_isEditMode,
+                decoration: InputDecoration(
+                  labelText: 'Placa',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: const Icon(Icons.directions_transit),
+                  filled: true,
+                  fillColor: _isEditMode
+                      ? Colors.white
+                      : sectionBg.withOpacity(0.12),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
   }
-  /* 
-  /// Construir un campo de texto personalizado
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    IconData icon,
-    TextInputType keyboardType, {
-    bool isRequired = false,
-    bool readOnly = false,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      readOnly: readOnly,
-      decoration: InputDecoration(
-        labelText: isRequired ? '$label *' : label,
-        prefixIcon: Icon(icon),
-        border: const UnderlineInputBorder(),
-        filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
-      ),
-      validator: isRequired
-          ? (value) {
-              if (value == null || value.trim().isEmpty) {
-                return '$label es obligatorio';
-              }
-              if (label == 'Total' && double.tryParse(value) == null) {
-                return 'Ingrese un número válido';
-              }
-              return null;
-            }
-          : null,
-    );
-  }
- */
 
   /// Construir un campo de texto personalizado
   Widget _buildTextField(
@@ -2206,6 +2518,282 @@ class _EditReporteModalState extends State<EditReporteModal> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Pantalla del escáner QR para códigos SUNAT
+class _QRScannerScreen extends StatefulWidget {
+  @override
+  State<_QRScannerScreen> createState() => _QRScannerScreenState();
+}
+
+class _QRScannerScreenState extends State<_QRScannerScreen> {
+  MobileScannerController cameraController = MobileScannerController();
+  bool _isProcessing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: const Text('Escanear Código QR'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flash_on),
+            onPressed: () => cameraController.toggleTorch(),
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          // Cámara escáner
+          MobileScanner(controller: cameraController, onDetect: _onQRDetected),
+
+          // Overlay con marco de escaneo
+          Container(
+            decoration: ShapeDecoration(
+              shape: QrScannerOverlayShape(
+                borderColor: Colors.blue,
+                borderRadius: 10,
+                borderLength: 30,
+                borderWidth: 10,
+                cutOutSize: 250,
+              ),
+            ),
+          ),
+
+          // Instrucciones
+          Positioned(
+            bottom: 100,
+            left: 0,
+            right: 0,
+            child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text(
+                'Enfoque el código QR de la factura SUNAT\npara extraer los datos automáticamente',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+
+          // Indicador de procesamiento
+          if (_isProcessing)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(color: Colors.blue),
+                    SizedBox(height: 16),
+                    Text(
+                      'Procesando código QR...',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _onQRDetected(BarcodeCapture capture) {
+    if (_isProcessing) return;
+
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isNotEmpty) {
+      final String? qrData = barcodes.first.rawValue;
+      if (qrData != null && qrData.isNotEmpty) {
+        setState(() {
+          _isProcessing = true;
+        });
+
+        // Pequeño delay para mostrar el indicador de procesamiento
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.pop(context, qrData);
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
+  }
+}
+
+/// Shape personalizado para el overlay del escáner QR
+class QrScannerOverlayShape extends ShapeBorder {
+  const QrScannerOverlayShape({
+    this.borderColor = Colors.blue,
+    this.borderWidth = 3.0,
+    this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
+    this.borderRadius = 0,
+    this.borderLength = 40,
+    double? cutOutSize,
+  }) : cutOutSize = cutOutSize ?? 250;
+
+  final Color borderColor;
+  final double borderWidth;
+  final Color overlayColor;
+  final double borderRadius;
+  final double borderLength;
+  final double cutOutSize;
+
+  @override
+  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(10);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return Path()
+      ..fillType = PathFillType.evenOdd
+      ..addPath(getOuterPath(rect), Offset.zero);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    Path getLeftTopPath(Rect rect) {
+      return Path()
+        ..moveTo(rect.left, rect.bottom)
+        ..lineTo(rect.left, rect.top + borderRadius)
+        ..quadraticBezierTo(
+          rect.left,
+          rect.top,
+          rect.left + borderRadius,
+          rect.top,
+        )
+        ..lineTo(rect.right, rect.top);
+    }
+
+    return getLeftTopPath(rect)
+      ..lineTo(rect.right, rect.bottom)
+      ..lineTo(rect.left, rect.bottom)
+      ..lineTo(rect.left, rect.top);
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    final width = rect.width;
+    final height = rect.height;
+    final cutOutWidth = cutOutSize < width ? cutOutSize : width - borderWidth;
+    final cutOutHeight = cutOutSize < height
+        ? cutOutSize
+        : height - borderWidth;
+
+    final backgroundPath = Path()
+      ..addRect(rect)
+      ..addOval(
+        Rect.fromCenter(
+          center: rect.center,
+          width: cutOutWidth,
+          height: cutOutHeight,
+        ),
+      )
+      ..fillType = PathFillType.evenOdd;
+
+    final backgroundPaint = Paint()
+      ..color = overlayColor
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(backgroundPath, backgroundPaint);
+
+    // Dibujar las esquinas del marco
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth;
+
+    final path = Path();
+
+    // Esquina superior izquierda
+    path.moveTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2 + borderLength,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2 + borderLength,
+      rect.center.dy - cutOutHeight / 2,
+    );
+
+    // Esquina superior derecha
+    path.moveTo(
+      rect.center.dx + cutOutWidth / 2 - borderLength,
+      rect.center.dy - cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy - cutOutHeight / 2 + borderLength,
+    );
+
+    // Esquina inferior derecha
+    path.moveTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2 - borderLength,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx + cutOutWidth / 2 - borderLength,
+      rect.center.dy + cutOutHeight / 2,
+    );
+
+    // Esquina inferior izquierda
+    path.moveTo(
+      rect.center.dx - cutOutWidth / 2 + borderLength,
+      rect.center.dy + cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2,
+    );
+    path.lineTo(
+      rect.center.dx - cutOutWidth / 2,
+      rect.center.dy + cutOutHeight / 2 - borderLength,
+    );
+
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  ShapeBorder scale(double t) {
+    return QrScannerOverlayShape(
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      overlayColor: overlayColor,
     );
   }
 }
