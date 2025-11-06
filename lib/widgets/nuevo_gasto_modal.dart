@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flu2/controllers/edit_reporte_controller.dart';
 import 'package:flu2/models/apiruc_model.dart';
+import 'package:flu2/models/user_company.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -74,6 +75,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   // Variables para el lector SUNAT
   bool _isScanning = false;
   bool _hasScannedData = false;
+  bool _isFormValid = false;
 
   // Variables para dropdowns
   List<DropdownOption> _categorias = [];
@@ -84,7 +86,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   DropdownOption? _selectedTipoMovilidad;
   String? _selectedComprobante;
 
-  bool _boolMostrar = true; // controla si se muestran los campos
+  //bool _boolMostrar = true; // controla si se muestran los campos
   bool _validar = true; // controla si deben validarse
 
   ///ApiRuc
@@ -114,6 +116,47 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   String get fechaSQL =>
       DateFormat('yyyy-MM-dd').format(DateTime.parse(_fechaController.text));
 
+  /// Validar si el RUC del cliente (escaneado) coincide con la empresa seleccionada
+  bool _isRucValid() {
+    final rucClienteEscaneado = _rucClienteController.text.trim();
+    final rucEmpresaSeleccionada = CompanyService().companyRuc;
+
+    // Si no hay RUC del cliente escaneado o no hay empresa seleccionada, consideramos válido
+    if (rucClienteEscaneado.isEmpty || rucEmpresaSeleccionada.isEmpty) {
+      return true;
+    }
+
+    return rucClienteEscaneado == rucEmpresaSeleccionada;
+  }
+
+  bool get _boolMostrar {
+    // Botón habilitado solo si RUC es válido y hay empresa seleccionada
+    final empresaSeleccionada =
+        CompanyService().companyRuc?.isNotEmpty ?? false;
+    return _isRucValid() && empresaSeleccionada;
+  }
+
+  /// Obtener mensaje de estado del RUC del cliente
+  String _getRucStatusMessage() {
+    final rucClienteEscaneado = _rucClienteController.text.trim();
+    final rucEmpresaSeleccionada = CompanyService().companyRuc;
+    final empresaSeleccionada = CompanyService().currentUserCompany;
+
+    if (rucClienteEscaneado.isEmpty) {
+      return '❌ RUC cliente no coincide con $empresaSeleccionada';
+    }
+
+    if (rucEmpresaSeleccionada.isEmpty) {
+      return '⚠️ No hay empresa seleccionada';
+    }
+
+    if (rucClienteEscaneado == rucEmpresaSeleccionada) {
+      return '✅ RUC cliente coincide con $empresaSeleccionada';
+    } else {
+      return '❌ RUC cliente no coincide con $empresaSeleccionada';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -122,6 +165,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _loadTiposGasto();
     _loadTipoMovilidad();
     //_loadApiRuc(_rucController.toString());
+    _addValidationListeners();
   }
 
   void _initializeControllers() {
@@ -197,6 +241,35 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _placaController.dispose();
 
     super.dispose();
+  }
+
+  void _addValidationListeners() {
+    _tipoComprobanteController.addListener(_validateForm);
+    _fechaController.addListener(_validateForm);
+    _totalController.addListener(_validateForm);
+    _categoriaController.addListener(_validateForm);
+    _tipoGastoController.addListener(_validateForm);
+  }
+
+  /// Validar si todos los campos obligatorios están llenos
+  void _validateForm() {
+    final isValid =
+        _tipoComprobanteController.text.trim().isNotEmpty &&
+        _fechaController.text.trim().isNotEmpty &&
+        _totalController.text.trim().isNotEmpty &&
+        _categoriaController.text.trim().isNotEmpty &&
+        _tipoGastoController.text.trim().isNotEmpty &&
+        _origenController.text.trim().isNotEmpty &&
+        _destinoController.text.trim().isNotEmpty &&
+        _motivoViajeController.text
+            .trim()
+            .isNotEmpty; // ✅ Añadida validación de RUC
+
+    if (_isFormValid != isValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
   }
 
   /// Cargar categorías desde la API filtradas por la política seleccionada
@@ -601,123 +674,164 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     }
   }
 
+  void _guardarValidar() {
+    if (_categoriaController.text.trim() == "") {
+      _showMensaggeDialog("SELECCIONA CATEGORIA");
+    } else if (_categoriaController.text == "PLANILLA DE MOVILIDAD") {
+      if (_totalController.text.trim() == "") {
+        _showMensaggeDialog("INGRESE MONTO");
+      } else if (_origenController.text.trim() == "") {
+        _showMensaggeDialog("FALTA ORIGEN");
+      } else if (_destinoController.text.trim() == "") {
+        _showMensaggeDialog("FALTA DESTINO");
+      } else if (_motivoViajeController.text.trim() == "") {
+        _showMensaggeDialog("FALTA MOTIVO");
+      } else {
+        _guardarGasto();
+      }
+    } else if (_categoriaController.text == "VIAJES CON COMPROBANTE") {
+      if (CompanyService().companyRuc.toString() !=
+          _rucClienteController.text) {
+        _showMensaggeDialog(
+          "Ruc del cliente no coincide con ruc en el comprobante",
+        );
+      } else if (_totalController.text.trim() == "") {
+        _showMensaggeDialog("INGRESE MONTO");
+      } else if (_selectedFile == null) {
+        _showMensaggeDialog("ADJUNTE EVIDENCIA 📷");
+      } else if (_origenController.text.trim() == "") {
+        _showMensaggeDialog("FALTA ORIGEN");
+      } else if (_destinoController.text.trim() == "") {
+        _showMensaggeDialog("FALTA DESTINO");
+      } else if (_motivoViajeController.text.trim() == "") {
+        _showMensaggeDialog("FALTA MOTIVO");
+      } else {
+        _guardarGasto();
+      }
+    } else {
+      if (_selectedFile == null) {
+        _showMensaggeDialog("ADJUNTE EVIDENCIA 📷");
+      } else if (CompanyService().companyRuc.toString() !=
+          _rucClienteController.text) {
+        _showMensaggeDialog(
+          "Ruc del cliente no coincide con ruc del comprobante",
+        );
+      } else if (_totalController.text.trim() == "") {
+        _showMensaggeDialog("INGRESE MONTO");
+      } else {
+        _guardarGasto();
+      }
+    }
+  }
+
   /// Guarda el gasto utilizando la API
   Future<void> _guardarGasto() async {
-    if (widget.politicaSeleccionada.value != "GASTOS DE MOVILIDAD") {
-      if (_selectedFile == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Debe adjuntar una evidencia (imagen o PDF)'),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
+    // Antes
+    // if (_selectedFile == null && _categoriaController.text == "PLANILLA DE MOVILIDAD")
 
-      try {
-        // Mostrar indicador de carga
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return const Dialog(
-              child: Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(width: 20),
-                    Text("Guardando gasto..."),
-                  ],
-                ),
+    try {
+      // Mostrar indicador de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const Dialog(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 20),
+                  Text("Guardando gasto..."),
+                ],
               ),
-            );
-          },
-        );
-
-        // Obtener datos del usuario y empresa
-        final userService = UserService();
-        final companyService = CompanyService();
-
-        final currentUser = userService.currentUser;
-        final currentCompany = companyService.currentCompany;
-
-        if (currentUser == null || currentCompany == null) {
-          throw Exception('Error: Usuario o empresa no seleccionados');
-        }
-
-        // Preparar datos del gasto usando la lógica separada
-        final gastoData = _logic.prepareGastoData(
-          politica: _politicaController.text,
-          categoria: _categoriaController.text,
-          tipoGasto: _tipoGastoController.text,
-          ruc: _rucProveedorController.text,
-          tipoComprobante: _tipoComprobanteController.text,
-          serie: _serieFacturaController.text,
-          numero: _numeroFacturaController.text,
-          igv: '0',
-          fecha: fechaSQL,
-          total: _totalController.text,
-          moneda: _monedaController.text,
-          nota: _notaController.text,
-          motivoviaje: _motivoViajeController.text,
-          origen: _origenController.text,
-          destino: _destinoController.text,
-          movilidad: _movilidadController.text,
-          placa: _placaController.text,
-          razonSocial: _razonSocialController.text,
-        );
-
-        // Enviar a la API y guardar evidencia si existe (la lógica interna maneja la evidencia)
-        final idRend = await _logic.saveGastoWithEvidencia(
-          _apiService,
-          gastoData,
-          _selectedFile,
-        );
-
-        if (idRend == null) {
-          throw Exception(
-            'No se pudo guardar la factura principal o no se obtuvo el ID autogenerado',
+            ),
           );
-        }
+        },
+      );
 
-        // Cerrar diálogo de carga
-        Navigator.of(context).pop();
+      // Obtener datos del usuario y empresa
+      final userService = UserService();
+      final companyService = CompanyService();
 
-        // Mostrar mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Factura guardada exitosamente'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+      final currentUser = userService.currentUser;
+      final currentCompany = companyService.currentCompany;
 
-        // Cerrar el modal y navegar a la pantalla de gastos
-        Navigator.of(context).pop(); // Cerrar modal
-        Navigator.of(context).pop(); // Cerrar pantalla QR si existe
-
-        // Navegar a HomeScreen con índice 0 (pestaña de Gastos)
-        // Nota: Asegúrate de importar HomeScreen si no está importado
-
-        // Navegar a HomeScreen con índice 0 (pestaña de Gastos)
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false, // Remover todas las rutas anteriores
-        );
-      } catch (e) {
-        // Cerrar diálogo de carga si está abierto
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-
-        // Extraer mensaje del servidor para mostrar en alerta
-        final serverMessage = _logic.extractServerMessage(e.toString());
-        _showServerAlert(serverMessage);
-      } finally {
-        debugPrint('🔄 Finalizando proceso...');
+      if (currentUser == null || currentCompany == null) {
+        throw Exception('Error: Usuario o empresa no seleccionados');
       }
+
+      // Preparar datos del gasto usando la lógica separada
+      final gastoData = _logic.prepareGastoData(
+        politica: _politicaController.text,
+        categoria: _categoriaController.text,
+        tipoGasto: _tipoGastoController.text,
+        ruc: _rucProveedorController.text,
+        tipoComprobante: _tipoComprobanteController.text,
+        serie: _serieFacturaController.text,
+        numero: _numeroFacturaController.text,
+        igv: '0',
+        fecha: fechaSQL,
+        total: _totalController.text,
+        moneda: _monedaController.text,
+        nota: _notaController.text,
+        motivoviaje: _motivoViajeController.text,
+        origen: _origenController.text,
+        destino: _destinoController.text,
+        movilidad: _movilidadController.text,
+        placa: _placaController.text,
+        razonSocial: _razonSocialController.text,
+      );
+
+      // Enviar a la API y guardar evidencia si existe (la lógica interna maneja la evidencia)
+      final idRend = await _logic.saveGastoWithEvidencia(
+        _apiService,
+        gastoData,
+        _selectedFile,
+      );
+
+      if (idRend == null) {
+        throw Exception(
+          'No se pudo guardar la factura principal o no se obtuvo el ID autogenerado',
+        );
+      }
+
+      // Cerrar diálogo de carga
+      Navigator.of(context).pop();
+
+      // Mostrar mensaje de éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Factura guardada exitosamente'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Cerrar el modal y navegar a la pantalla de gastos
+      Navigator.of(context).pop(); // Cerrar modal
+      Navigator.of(context).pop(); // Cerrar pantalla QR si existe
+
+      // Navegar a HomeScreen con índice 0 (pestaña de Gastos)
+      // Nota: Asegúrate de importar HomeScreen si no está importado
+
+      // Navegar a HomeScreen con índice 0 (pestaña de Gastos)
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (route) => false, // Remover todas las rutas anteriores
+      );
+    } catch (e) {
+      // Cerrar diálogo de carga si está abierto
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+
+      // Extraer mensaje del servidor para mostrar en alerta
+      final serverMessage = _logic.extractServerMessage(e.toString());
+      _showServerAlert(serverMessage);
+    } finally {
+      debugPrint('🔄 Finalizando proceso...');
     }
   }
 
@@ -728,12 +842,107 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   /// Muestra una alerta con el mensaje del servidor
   void _showServerAlert(String message) {
     final isDuplicate = _logic.isFacturaDuplicada(message);
+    final isDuplicatemonto = _logic.isFacturaDuplicadaMonto(message);
 
     if (isDuplicate) {
       _showFacturaDuplicadaDialog(message);
+    } else if (isDuplicatemonto) {
+      _showFacturaDuplicadaDialogMonto(message);
     } else {
       _showErrorDialog(message);
     }
+  }
+
+  /// Muestra un diálogo específico para facturas duplicadas
+  void _showFacturaDuplicadaDialogMonto(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.receipt_long,
+                  color: Colors.red,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'MONTO MOVILIDAD',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 255, 0, 0),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'SUPERASTE EL LIMITE DE 44 SOLES AL DIA',
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar diálogo de error
+                // Usar un Future.delayed para asegurar que el contexto esté disponible
+                Future.delayed(const Duration(milliseconds: 100), () {
+                  // Cerrar el modal principal
+                  if (mounted && Navigator.of(context).canPop()) {
+                    Navigator.of(context).pop();
+                  }
+                });
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text(
+                'Entendido',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   /// Muestra un diálogo específico para facturas duplicadas
@@ -751,23 +960,23 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
                   Icons.receipt_long,
-                  color: Colors.orange,
+                  color: Colors.red,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'Factura Ya Registrada',
+                  'FACTURA YA EXISTE',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.orange,
+                    color: Colors.red,
                   ),
                 ),
               ),
@@ -780,21 +989,17 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.05),
+                  color: Colors.red.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                  border: Border.all(color: Colors.red.withOpacity(0.2)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.info_outline,
-                      color: Colors.orange,
-                      size: 20,
-                    ),
+                    const Icon(Icons.info_outline, color: Colors.red, size: 20),
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
-                        'Esta factura ya ha sido registrada previamente en el sistema.',
+                        'Esta factura ya ha sido registrada anteriormente en el sistema, revise su documento',
                         style: TextStyle(fontSize: 14, color: Colors.black87),
                       ),
                     ),
@@ -841,6 +1046,95 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     );
   }
 
+  void _showMensaggeDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.receipt_long,
+                  color: Colors.red,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'ADVERTENCIA',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.withOpacity(0.2)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline, color: Colors.red, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        message, // ✅ aquí se usa el mensaje recibido
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black87,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar diálogo de advertencia
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text(
+                'Entendido',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Muestra un diálogo de error general
   void _showErrorDialog(String message) {
     showDialog(
@@ -867,7 +1161,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  'Error del Servidor',
+                  'Mensaje Error',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1464,7 +1758,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   /// Construir la sección de datos personalizados
   Widget _buildDatosFacturaSection() {
     final bool esPlanillaMovilidad =
-        _selectedCategoria?.value == 'Planilla de movilidad';
+        _selectedCategoria == 'PLANILLA DE MOVILIDAD';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1485,6 +1779,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _rucProveedorController,
+              readOnly: true, // 🔒 No editable
               decoration: const InputDecoration(
                 labelText: 'RUC Emisor',
                 border: OutlineInputBorder(),
@@ -1512,6 +1807,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _razonSocialController,
+              readOnly: true, // 🔒 No editable
               decoration: InputDecoration(
                 labelText: 'Razón Social',
                 hintText: 'Ingresa Razón Social',
@@ -1549,6 +1845,59 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 fontWeight: FontWeight.w500,
               ),
             ),
+
+          // 🔍 Mensaje de validación del RUC Cliente
+          if (_rucClienteController.text.trim().isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 12, top: 4, bottom: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    _isRucValid() ? Icons.check_circle : Icons.error,
+                    size: 16,
+                    color: _isRucValid() ? Colors.green : Colors.red,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _getRucStatusMessage(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _isRucValid() ? Colors.red : Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // 🔍 Mensaje de validación del RUC Cliente
+          if (_rucClienteController.text.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 12, top: 4, bottom: 8),
+              child: Row(
+                children: [
+                  Icon(
+                    _isRucValid() ? Icons.check_circle : Icons.error,
+                    size: 16,
+                    color: _isRucValid() ? Colors.green : Colors.red,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _getRucStatusMessage(),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _isRucValid() ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           const SizedBox(height: 8),
 
           // Tipo de Comprobante
@@ -1638,6 +1987,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _serieFacturaController,
+                    readOnly: true, // 🔒 No editable
                     decoration: const InputDecoration(
                       labelText: 'Serie *',
                       border: OutlineInputBorder(),
@@ -1649,6 +1999,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _numeroFacturaController,
+                    readOnly: true, // 🔒 No editable
                     decoration: const InputDecoration(
                       labelText: 'Número *',
                       border: OutlineInputBorder(),
@@ -1674,15 +2025,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   prefixIcon: Icon(Icons.attach_money),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El total es obligatorio';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Ingrese un valor válido';
-                  }
-                  return null;
-                },
               ),
             ),
             const SizedBox(width: 12),
@@ -2077,7 +2419,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           _selectedCategoria = value;
           _categoriaController.text = value?.value ?? '';
           // Cambia visibilidad según categoría
-          _boolMostrar = value?.value != 'PLANILLA DE MOVILIDAD';
         });
       },
       validator: (value) {
@@ -2270,11 +2611,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
-            if (widget.politicaSeleccionada.value == "GASTOS DE MOVILIDAD") {
-              if (value == null || value.isEmpty) {
-                return 'Origen Obligatorio';
-              }
+            if (value == null || value.isEmpty) {
+              return 'Origen Obligatorio';
             }
+
             return null;
           },
         ),
@@ -2290,10 +2630,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
-            if (widget.politicaSeleccionada.value == "GASTOS DE MOVILIDAD") {
-              if (value == null || value.isEmpty) {
-                return 'Destino Obligatorio';
-              }
+            if (value == null || value.isEmpty) {
+              return 'Destino Obligatorio';
             }
             return null;
           },
@@ -2381,7 +2719,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           const SizedBox(width: 18),
           Expanded(
             child: ElevatedButton(
-              onPressed: _guardarGasto,
+              onPressed: _guardarValidar,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
@@ -2558,8 +2896,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           // RUC del emisor
           if (parts[0].isNotEmpty) {
             _rucProveedorController.text = parts[0];
-            _rucClienteController.text = parts[0];
-            _loadApiRuc(_rucClienteController.text);
+            _loadApiRuc(_rucProveedorController.text);
           }
 
           // Tipo de comprobante (texto) -> actualizar controlador UI y el usado en guardado
@@ -2591,18 +2928,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           // Serie
           if (parts[2].isNotEmpty) {
             _serieFacturaController.text = parts[2];
-            _serieFacturaController.text = parts[2];
           }
 
           // Número de factura
           if (parts[3].isNotEmpty) {
             _numeroFacturaController.text = parts[3];
-            _numeroFacturaController.text = parts[3];
-          }
-
-          // Número de documento (combinado para compatibilidad)
-          if (parts[2].isNotEmpty && parts[3].isNotEmpty) {
-            _numeroFacturaController.text = '${parts[2]}-${parts[3]}';
           }
 
           // Total
@@ -2649,12 +2979,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
       // Limpiar los campos que se llenaron automáticamente
       _rucProveedorController.clear();
-      _rucClienteController.clear();
       _razonSocialController.clear();
       _serieFacturaController.clear();
-      _serieFacturaController.clear();
-      _numeroFacturaController.clear();
-      _numeroFacturaController.clear();
       _tipoComprobanteController.clear();
       _numeroFacturaController.clear();
       _totalController.clear();

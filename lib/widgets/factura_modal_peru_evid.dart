@@ -196,50 +196,34 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
   }
 
-  /// Cargar categorías desde la API
+  
+  /// Cargar categorías desde la API para GASTOS DE MOVILIDAD
   Future<void> _loadCategorias() async {
-    if (mounted) {
-      setState(() {
-        _isLoadingCategorias = true;
-        _errorCategorias = null;
-      });
-    }
+    setState(() {
+      _isLoadingCategorias = true;
+      _errorCategorias = null;
+    });
 
     try {
-      // Solicitar categorías según la política seleccionada.
-      final politica = _politicaController.text.trim().toLowerCase();
-      List<CategoriaModel> categorias;
-      if (politica.contains('movilidad')) {
-        categorias = await CategoriaService.getCategoriasMovilidad();
-      } else if (politica.contains('general')) {
-        categorias = await CategoriaService.getCategoriasGeneral();
-      } else {
-        // Por defecto obtener todas y luego filtrar si es necesario
-        categorias = await CategoriaService.getCategorias();
-      }
-      // Debug: mostrar lo que vino desde la API y la política usada
-      debugPrint(
-        '📥 _loadCategorias -> politica: $politica, recibidas: ${categorias.length}',
-      );
-      for (final c in categorias) {
-        debugPrint(
-          '   - categoria: ${c.categoria}, politica: ${c.politica}, estado: ${c.estado}',
-        );
-      }
+      final categorias = await CategoriaService.getCategoriasMovilidad();
 
-      if (mounted) {
-        setState(() {
-          _categoriasGeneral = categorias;
-          _isLoadingCategorias = false;
-        });
-      }
+      // 🔍 Filtrar: excluir las que contengan "PLANILLA DE MOVILIDAD"
+      final categoriasFiltradas = categorias
+          .where(
+            (c) =>
+                !c.toString().toUpperCase().contains('PLANILLA DE MOVILIDAD'),
+          )
+          .toList();
+
+      setState(() {
+        _categoriasGeneral = categoriasFiltradas;
+        _isLoadingCategorias = false;
+      });
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorCategorias = e.toString();
-          _isLoadingCategorias = false;
-        });
-      }
+      setState(() {
+        _errorCategorias = e.toString();
+        _isLoadingCategorias = false;
+      });
     }
   }
 

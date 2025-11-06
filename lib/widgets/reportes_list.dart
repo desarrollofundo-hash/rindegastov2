@@ -201,7 +201,10 @@ class _ReportesListState extends State<ReportesList> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        reporte.proveedor ?? reporte.ruc ?? '',
+                                        reporte.proveedor ??
+                                            reporte.ruc ??
+                                            reporte.ruccliente ??
+                                            '',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 14,

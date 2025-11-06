@@ -144,7 +144,7 @@ class _LoginViewState extends State<LoginView>
         ),
         const SizedBox(height: 20),
         const Text(
-          "ASA RindeGastos",
+          "ASA Rinde Gastos",
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w700,

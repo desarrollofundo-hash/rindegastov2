@@ -277,8 +277,17 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
     try {
       final categorias = await CategoriaService.getCategoriasMovilidad();
+
+      // 🔍 Filtrar: excluir las que contengan "PLANILLA DE MOVILIDAD"
+      final categoriasFiltradas = categorias
+          .where(
+            (c) =>
+                !c.toString().toUpperCase().contains('PLANILLA DE MOVILIDAD'),
+          )
+          .toList();
+
       setState(() {
-        _categoriasMovilidad = categorias;
+        _categoriasMovilidad = categoriasFiltradas;
         _isLoadingCategorias = false;
       });
     } catch (e) {

@@ -246,24 +246,12 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed:
-                        _isCreatingInforme ||
-                            _tituloController.text.trim().isEmpty ||
+                        _tituloController.text.trim().isEmpty ||
                             _selectedPolitica == null
                         ? null
                         : _crearInforme,
-                    icon: _isCreatingInforme
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(Colors.white),
-                            ),
-                          )
-                        : const Icon(Icons.save),
-                    label: Text(
-                      _isCreatingInforme ? 'Creando...' : 'Crear Informe',
-                    ),
+                    icon: Icon(Icons.save),
+                    label: Text('Crear Informe'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.indigo,
                       foregroundColor: Colors.white,
@@ -571,5 +559,4 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
       style: const TextStyle(color: Colors.black87),
     );
   }
-
 }

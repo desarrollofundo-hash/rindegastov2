@@ -251,6 +251,13 @@ class NuevoGastoLogic {
         messageLower.contains('primary key');
   }
 
+  bool isFacturaDuplicadaMonto(String message) {
+    final messageLower = message.toLowerCase();
+    return messageLower.contains('ya excedio') ||
+        messageLower.contains('limite') ||
+        messageLower.contains('44 soeles');
+  }
+
   /// Normaliza fechas (mismo comportamiento que la implementación original)
   String normalizarFecha(String fechaOriginal) {
     try {
