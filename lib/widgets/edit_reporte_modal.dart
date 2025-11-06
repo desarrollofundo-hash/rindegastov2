@@ -1886,7 +1886,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     if (!_isFormValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('❌ Por favor complete todos los campos obligatorios'),
+          content: Text('❌ Por favor complete todos los campos '),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 3),
         ),

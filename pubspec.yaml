@@ -54,3 +54,4 @@ flutter_launcher_icons:
   image_path: "assets/icon/logodani.ico"
   adaptive_icon_background: "#ffffff"  # fondo (Android 8+)
   adaptive_icon_foreground: "assets/icon/logodani.ico"  
+  
