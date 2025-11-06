@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -113,23 +114,13 @@ class NuevoGastoLogic {
           : (tipoGasto.length > 80 ? tipoGasto.substring(0, 80) : tipoGasto),
       "ruc": ruc.isEmpty ? "" : (ruc.length > 80 ? ruc.substring(0, 80) : ruc),
       "proveedor": razonSocial,
-      "tipoCombrobante": tipoComprobante.isEmpty
-          ? ""
-          : (tipoComprobante.length > 180
-                ? tipoComprobante.substring(0, 180)
-                : tipoComprobante),
-      "serie": serie.isEmpty
-          ? ""
-          : (serie.length > 80 ? serie.substring(0, 80) : serie),
-      "numero": numero.isEmpty
-          ? ""
-          : (numero.length > 80 ? numero.substring(0, 80) : numero),
+      "tipoCombrobante": tipoComprobante,
+      "serie":serie,
+      "numero": numero,
       "igv": double.tryParse(igv) ?? 0.0,
       "fecha": fecha,
       "total": double.tryParse(total) ?? 0.0,
-      "moneda": moneda.isEmpty
-          ? "PEN"
-          : (moneda.length > 80 ? moneda.substring(0, 80) : moneda),
+      "moneda": moneda,
       "rucCliente": companyService.currentCompany?.ruc ?? "",
       "desEmp": companyService.currentCompany?.empresa ?? '',
       "desSed": "",
@@ -144,7 +135,7 @@ class NuevoGastoLogic {
       "lugarOrigen": origen,
       "lugarDestino": destino,
       "tipoMovilidad": movilidad,
-      "obs": nota.length > 1000 ? nota.substring(0, 1000) : nota,
+      "obs": nota,
       "estado": "S",
       "fecCre": DateTime.now().toIso8601String(),
       "useReg": UserService().currentUserCode,
@@ -180,17 +171,21 @@ class NuevoGastoLogic {
       );
     }
 
-    final extension = p.extension(
-      selectedFile!.path,
-    ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
+    String? driveId;
+    // 2️⃣ Si hay archivo, lo subimos
+    if (selectedFile != null) {
+      final extension = p.extension(selectedFile.path);
 
-    String nombreArchivo =
-        '${idRend}_${gastoData['ruc']}_${gastoData['serie']}_${gastoData['numero']}$extension';
+      final nombreArchivo =
+          '${idRend}_${gastoData['ruc']}_${gastoData['serie']}_${gastoData['numero']}$extension';
 
-    final driveId = await apiService.subirArchivo(
-      selectedFile.path,
-      nombreArchivo: nombreArchivo,
-    );
+      driveId = await apiService.subirArchivo(
+        selectedFile.path,
+        nombreArchivo: nombreArchivo,
+      );
+    } else {
+      debugPrint("⚠️ No se adjuntó evidencia. Se guardará sin archivo.");
+    }
 
     final facturaDataEvidencia = {
       "idRend": idRend,
@@ -210,6 +205,7 @@ class NuevoGastoLogic {
     );
 
     if (!successEvidencia) {
+      debugPrint("ERROR AL ENVIAR EVIDENCIA");
       // No lanzar excepción por evidencia fallida, solo loguear
       return idRend;
     }

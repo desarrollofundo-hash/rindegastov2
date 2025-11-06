@@ -907,7 +907,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         duration: const Duration(milliseconds: 300),
         child: pages.isNotEmpty
             ? pages[safeIndex]
-            : const Center(child: Text('Sin permisos disponibles')),
+            : const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF1565C0), // color azul moderno
+                  strokeWidth: 5.0,
+                ),
+              ),
       ),
 
       // 🧊 Barra inferior flotante moderna

@@ -54,6 +54,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   late TextEditingController _fechaController;
   late TextEditingController _serieFacturaController;
   late TextEditingController _numeroFacturaController;
+  late TextEditingController _igvController;
   late TextEditingController _totalController;
   late TextEditingController _monedaController;
 
@@ -186,7 +187,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     );
     _serieFacturaController = TextEditingController();
     _numeroFacturaController = TextEditingController();
-
+    _igvController = TextEditingController();
     _totalController = TextEditingController();
     _monedaController = TextEditingController(text: 'PEN'); // PEN
 
@@ -229,6 +230,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _serieFacturaController.dispose();
     _numeroFacturaController.dispose();
 
+    _igvController.dispose();
     _totalController.dispose();
     _monedaController.dispose();
     _notaController.dispose();
@@ -771,7 +773,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         tipoComprobante: _tipoComprobanteController.text,
         serie: _serieFacturaController.text,
         numero: _numeroFacturaController.text,
-        igv: '0',
+        igv: _igvController.text,
         fecha: fechaSQL,
         total: _totalController.text,
         moneda: _monedaController.text,
@@ -785,14 +787,15 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       );
 
       // Enviar a la API y guardar evidencia si existe (la lógica interna maneja la evidencia)
+
       final idRend = await _logic.saveGastoWithEvidencia(
         _apiService,
         gastoData,
-        _selectedFile,
+        _selectedFile ,
       );
 
       if (idRend == null) {
-        throw Exception(
+        debugPrint(
           'No se pudo guardar la factura principal o no se obtuvo el ID autogenerado',
         );
       }
@@ -2010,6 +2013,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               ],
             ),
           const SizedBox(height: 12),
+
+          // Serie y Número de Factura
+          if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _igvController,
+                    readOnly: true, // 🔒 No editable
+                    decoration: const InputDecoration(
+                      labelText: 'Igv *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.receipt_long),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          const SizedBox(height: 12),
         ],
 
         // Total y Moneda (siempre visibles)
@@ -2935,6 +2957,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             _numeroFacturaController.text = parts[3];
           }
 
+          // Igv
+          if (parts[4].isNotEmpty) {
+            _igvController.text = parts[4];
+          }
+
           // Total
           if (parts[5].isNotEmpty) {
             _totalController.text = parts[5];
@@ -2984,6 +3011,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       _tipoComprobanteController.clear();
       _numeroFacturaController.clear();
       _totalController.clear();
+      _igvController.clear();
       _fechaController.text = DateTime.now().toString().split(' ')[0];
     });
 

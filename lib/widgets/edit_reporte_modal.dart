@@ -159,15 +159,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Agregar listeners para validación en tiempo real
   void _addValidationListeners() {
-    _rucController.addListener(_validateForm);
-    _rucClienteController.addListener(_validateForm);
-    _tipoComprobanteController.addListener(_validateForm);
-    _serieController.addListener(_validateForm);
-    _numeroController.addListener(_validateForm);
-    _fechaEmisionController.addListener(_validateForm);
-    _totalController.addListener(_validateForm);
-    _categoriaController.addListener(_validateForm);
-    _tipoGastoController.addListener(_validateForm);
+    if(_categoriaController.text == "PLANILLA DE MOVILIDAD"){
+
+      _fechaEmisionController.addListener(_validateForm);
+      _totalController.addListener(_validateForm);
+      _categoriaController.addListener(_validateForm);
+      _tipoGastoController.addListener(_validateForm);
+    }
+    //else if (_categoriaController.text == "PLANILLA DE MOVILIDAD") {}
+    else {
+      _rucController.addListener(_validateForm);
+      _rucClienteController.addListener(_validateForm);
+      _tipoComprobanteController.addListener(_validateForm);
+      _serieController.addListener(_validateForm);
+      _numeroController.addListener(_validateForm);
+      _fechaEmisionController.addListener(_validateForm);
+      _totalController.addListener(_validateForm);
+      _categoriaController.addListener(_validateForm);
+      _tipoGastoController.addListener(_validateForm);
+    }
   }
 
   /// Validar si el RUC del cliente (escaneado) coincide con la empresa seleccionada
