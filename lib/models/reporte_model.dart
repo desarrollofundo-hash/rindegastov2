@@ -31,6 +31,7 @@ class Reporte {
   final String? feccre;
   final String? obs;
   final String? evidencia;
+  final String? motivorechazo;
 
   Reporte({
     required this.idrend,
@@ -65,6 +66,7 @@ class Reporte {
     this.feccre,
     this.obs,
     this.evidencia,
+    this.motivorechazo,
   });
 
   factory Reporte.fromJson(Map<String, dynamic> json) {
@@ -104,6 +106,7 @@ class Reporte {
         feccre: _parseStringSafe(json['feccre']),
         obs: _parseStringSafe(json['obs']),
         evidencia: _parseStringSafe(json['evidencia']),
+        motivorechazo: _parseStringSafe(json['motivorechazo']),
       );
     } catch (e) {
       throw Exception('Error al crear Reporte desde JSON: $e\nJSON: $json');
@@ -172,6 +175,7 @@ class Reporte {
       'feccre': feccre,
       'obs': obs,
       'evidencia': evidencia,
+      'motivorechazo': motivorechazo,
     };
   }
 
