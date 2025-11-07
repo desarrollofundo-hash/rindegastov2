@@ -134,7 +134,7 @@ class _ReportesListState extends State<ReportesList> {
                     children: [
                       Icon(
                         Icons.auto_graph_rounded,
-                        size: 65,
+                        size: 100,
                         color: Colors.grey,
                       ),
                       SizedBox(height: 10),
@@ -142,7 +142,7 @@ class _ReportesListState extends State<ReportesList> {
                         "No hay facturas registradas",
                         style: TextStyle(
                           color: Colors.black54,
-                          fontSize: 16,
+                          fontSize: 20,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

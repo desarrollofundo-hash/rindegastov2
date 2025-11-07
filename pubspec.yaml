@@ -38,6 +38,8 @@ dependencies:
   google_mlkit_barcode_scanning: ^0.14.1
   open_filex: ^4.0.3
   share_plus: ^10.0.0
+  hugeicons: ^1.1.1
+  uicons_pro: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -53,5 +55,4 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icon/rendcuentas.png"
   adaptive_icon_background: "#ffffff"  # fondo (Android 8+)
-  adaptive_icon_foreground: "assets/icon/rendcuentas.png"  
-  
+  adaptive_icon_foreground: "assets/icon/rendcuentas.png"

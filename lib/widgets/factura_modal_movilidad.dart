@@ -906,6 +906,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   /// Construir la sección de imagen
   Widget _buildImageSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -946,7 +947,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
 
             // Mostrar archivo seleccionado
             if (_selectedFile != null)
@@ -1021,7 +1022,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 height: 100,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Colors.white,
                   border: Border.all(
                     color: (_selectedFile == null)
                         ? Colors.red.shade300
@@ -1450,10 +1451,28 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             TextFormField(
               controller: _politicaController,
               enabled: false,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Política Seleccionada',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.policy),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                prefixIcon: const Icon(Icons.policy),
               ),
             ),
           ],

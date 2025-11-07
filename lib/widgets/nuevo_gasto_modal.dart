@@ -791,7 +791,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       final idRend = await _logic.saveGastoWithEvidencia(
         _apiService,
         gastoData,
-        _selectedFile ,
+        _selectedFile,
       );
 
       if (idRend == null) {
@@ -1357,7 +1357,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                           : 'Cambiar',
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1783,10 +1783,28 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             TextFormField(
               controller: _rucProveedorController,
               readOnly: true, // 🔒 No editable
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'RUC Emisor',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.badge),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.green, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white, width: 1),
+                ),
+                prefixIcon: const Icon(Icons.badge),
               ),
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
@@ -1816,16 +1834,23 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 hintText: 'Ingresa Razón Social',
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 border: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
                 ),
                 enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
                 ),
                 focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
                   borderSide: BorderSide(color: Colors.green, width: 2),
                 ),
-                errorBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Colors.red, width: 2),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white, width: 1),
                 ),
                 prefixIcon: const Icon(Icons.business, color: Colors.grey),
               ),
@@ -1838,7 +1863,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               controller: _rucClienteController,
               decoration: const InputDecoration(
                 labelText: 'RUC Cliente',
-                border: OutlineInputBorder(),
+                border: UnderlineInputBorder(),
                 prefixIcon: Icon(Icons.business),
                 suffixIcon: Icon(Icons.lock, color: Colors.grey),
               ),
@@ -1906,10 +1931,28 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           // Tipo de Comprobante
           DropdownButtonFormField<String>(
             value: _selectedComprobante,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Tipo Comprobante',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.edit_document),
+              border: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.transparent,
+                  width: 0,
+                ),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Colors.green, width: 2),
+              ),
+              disabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.white, width: 1),
+              ),
+              prefixIcon: const Icon(Icons.edit_document),
             ),
             items: tipocomprobante.map((comprobante) {
               return DropdownMenuItem<String>(
@@ -1944,12 +1987,24 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
-              border: const UnderlineInputBorder(),
+              border: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.transparent,
+                  width: 0,
+                ),
+              ),
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.grey.shade400, width: 1.5),
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
               ),
               focusedBorder: const UnderlineInputBorder(
-                borderSide: BorderSide(color: Colors.green, width: 2.5),
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Colors.green, width: 2),
+              ),
+              disabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.white, width: 1),
               ),
               prefixIcon: Container(
                 margin: const EdgeInsets.only(right: 8),
@@ -1962,8 +2017,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               ),
               filled: true,
               fillColor: _fechaController.text.isEmpty
-                  ? Colors.grey.shade50
-                  : Colors.deepPurple.shade50.withOpacity(0.3),
+                  ? Colors.white
+                  : Colors.white,
             ),
             readOnly: true,
             onTap: _selectDate,
@@ -1991,10 +2046,34 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   child: TextFormField(
                     controller: _serieFacturaController,
                     readOnly: true, // 🔒 No editable
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Serie *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.receipt_long),
+                      border: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.green, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.white,
+                          width: 1,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.receipt_long),
                     ),
                   ),
                 ),
@@ -2003,10 +2082,34 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   child: TextFormField(
                     controller: _numeroFacturaController,
                     readOnly: true, // 🔒 No editable
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Número *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.confirmation_number),
+                      border: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.white,
+                          width: 1,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.confirmation_number),
                     ),
                   ),
                 ),
@@ -2022,10 +2125,34 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   child: TextFormField(
                     controller: _igvController,
                     readOnly: true, // 🔒 No editable
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Igv *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.receipt_long),
+                      border: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.white,
+                          width: 1,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.receipt_long),
                     ),
                   ),
                 ),
@@ -2041,10 +2168,28 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               flex: 1,
               child: TextFormField(
                 controller: _totalController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Total',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
               ),
@@ -2053,10 +2198,28 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             Expanded(
               child: DropdownButtonFormField<String>(
                 value: _selectedMoneda,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Moneda',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.monetization_on),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.monetization_on),
                 ),
                 items: _monedas.map((moneda) {
                   return DropdownMenuItem<String>(
@@ -2106,7 +2269,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           controller: _rucProveedorController,
           decoration: const InputDecoration(
             labelText: 'RUC Emisor',
-            border: OutlineInputBorder(),
+            border: UnderlineInputBorder(),
             prefixIcon: Icon(Icons.badge),
           ),
           keyboardType: TextInputType.number,
@@ -2171,7 +2334,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           controller: _rucClienteController,
           decoration: const InputDecoration(
             labelText: 'RUC Cliente',
-            border: OutlineInputBorder(),
+            border: UnderlineInputBorder(),
             prefixIcon: Icon(Icons.business),
             suffixIcon: Icon(Icons.lock, color: Colors.grey),
           ),
@@ -2191,7 +2354,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 value: _selectedComprobante,
                 decoration: const InputDecoration(
                   labelText: 'Tipo Comprobante',
-                  border: OutlineInputBorder(),
+                  border: UnderlineInputBorder(),
                   prefixIcon: Icon(Icons.edit_document),
                 ),
                 items: tipocomprobante.map((comprobante) {
@@ -2279,7 +2442,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 controller: _serieFacturaController,
                 decoration: const InputDecoration(
                   labelText: 'Serie *',
-                  border: OutlineInputBorder(),
+                  border: UnderlineInputBorder(),
                   prefixIcon: Icon(Icons.receipt_long),
                 ),
                 validator: (value) {
@@ -2296,7 +2459,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 controller: _numeroFacturaController,
                 decoration: const InputDecoration(
                   labelText: 'Número *',
-                  border: OutlineInputBorder(),
+                  border: UnderlineInputBorder(),
                   prefixIcon: Icon(Icons.confirmation_number),
                 ),
                 keyboardType: TextInputType.number,
@@ -2321,7 +2484,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 controller: _totalController,
                 decoration: const InputDecoration(
                   labelText: 'Total',
-                  border: OutlineInputBorder(),
+                  border: UnderlineInputBorder(),
                   prefixIcon: Icon(Icons.attach_money),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
@@ -2342,7 +2505,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 value: _selectedMoneda,
                 decoration: const InputDecoration(
                   labelText: 'Moneda',
-                  border: OutlineInputBorder(),
+                  border: UnderlineInputBorder(),
                   prefixIcon: Icon(Icons.monetization_on),
                 ),
                 items: _monedas.map((moneda) {
@@ -2424,10 +2587,26 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
     return DropdownButtonFormField<DropdownOption>(
       value: _selectedCategoria,
-      decoration: const InputDecoration(
+      dropdownColor: Colors.white, // 👈 Cambia aquí el color de fondo del menú
+      decoration: InputDecoration(
         labelText: 'Categoría',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.category),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.green, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+        ),
+        prefixIcon: const Icon(Icons.category),
       ),
       isExpanded: true,
       items: _categorias.map((categoria) {
@@ -2503,10 +2682,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
     return DropdownButtonFormField<DropdownOption>(
       value: _selectedTipoGasto,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Tipo de Gasto',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.account_balance_wallet),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+        ),
+        prefixIcon: const Icon(Icons.account_balance_wallet),
       ),
       isExpanded: true,
       items: _tiposGasto.map((tipoGasto) {
@@ -2581,10 +2775,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
     return DropdownButtonFormField<DropdownOption>(
       value: _selectedTipoMovilidad,
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Tipo de Movilidad',
-        border: OutlineInputBorder(),
-        prefixIcon: Icon(Icons.account_balance_wallet),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.green, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+        ),
+        prefixIcon: const Icon(Icons.account_balance_wallet),
       ),
       isExpanded: true,
       items: _tiposMovilidad.map((tiposMovilidad) {
@@ -2626,10 +2835,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // ORIGEN VIAJE
         TextFormField(
           controller: _origenController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Origen',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.badge),
+            border: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: Colors.green, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white, width: 1),
+            ),
+            prefixIcon: const Icon(Icons.badge),
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
@@ -2645,10 +2869,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // DESTINO VIAJE
         TextFormField(
           controller: _destinoController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Destino',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.badge),
+            border: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: Colors.green, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white, width: 1),
+            ),
+            prefixIcon: const Icon(Icons.badge),
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
@@ -2663,10 +2902,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // MOTIVo VIAJE
         TextFormField(
           controller: _motivoViajeController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Motivo Viaje',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.badge),
+            border: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: Colors.green, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white, width: 1),
+            ),
+            prefixIcon: const Icon(Icons.badge),
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
@@ -2687,10 +2941,25 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // PLACA
         TextFormField(
           controller: _placaController,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Placa',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.badge),
+            border: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: Colors.green, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white, width: 1),
+            ),
+            prefixIcon: const Icon(Icons.badge),
           ),
           keyboardType: TextInputType.text,
         ),
@@ -2768,7 +3037,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           children: [
             Row(
               children: [
-                const Icon(Icons.qr_code_scanner, color: Colors.blue),
+                const Icon(Icons.qr_code_scanner, color: Colors.green),
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
@@ -2784,7 +3053,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   ),
                   label: Text(_isScanning ? 'Escaneando...' : 'Escanear QR'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
