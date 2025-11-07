@@ -55,6 +55,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   late TextEditingController _motivoViajeController;
   late TextEditingController _tipoMovilidadController;
   late TextEditingController _placaController;
+  late TextEditingController _motivorechazoController;
 
   // Campos adicionales usados en el formulario
 
@@ -89,6 +90,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   bool _isLoadingTiposGasto = false;
   String? _errorCategorias;
   String? _errorTiposGasto;
+  String? _numeroGasto;
 
   // Selecciones
 
@@ -159,8 +161,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Agregar listeners para validación en tiempo real
   void _addValidationListeners() {
-    if(_categoriaController.text == "PLANILLA DE MOVILIDAD"){
-
+    if (_categoriaController.text == "PLANILLA DE MOVILIDAD") {
       _fechaEmisionController.addListener(_validateForm);
       _totalController.addListener(_validateForm);
       _categoriaController.addListener(_validateForm);
@@ -415,6 +416,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
     );
     // Mostrar fecha de emisión en formato ISO (yyyy-MM-dd) cuando sea posible
     _notaController = TextEditingController(text: widget.reporte.obs ?? '');
+    _motivorechazoController = TextEditingController(
+      text: widget.reporte.motivorechazo ?? '',
+    );
+    _numeroGasto = widget.reporte.idrend.toString();
   }
 
   @override
@@ -450,6 +455,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _motivoViajeController.dispose();
     _tipoMovilidadController.dispose();
     _placaController.dispose();
+    _motivorechazoController.dispose();
 
     _controller.dispose();
     super.dispose();
@@ -2038,8 +2044,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Editar Gasto',
+                Text(
+                  'Editar Gasto #$_numeroGasto',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -2256,12 +2262,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Sección de notas
   Widget _buildNotesSection() {
-    return _buildTextField(
-      _notaController,
-      'Nota',
-      Icons.comment,
-      TextInputType.text,
-      readOnly: !_isEditMode,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildTextField(
+          _notaController,
+          'Nota',
+          Icons.comment,
+          TextInputType.text,
+          readOnly: !_isEditMode,
+        ),
+        const SizedBox(height: 10),
+        _buildTextField(
+          _motivorechazoController,
+          'Motivo',
+          Icons.comment,
+          TextInputType.text,
+          readOnly: !_isEditMode,
+        ),
+      ],
     );
   }
 

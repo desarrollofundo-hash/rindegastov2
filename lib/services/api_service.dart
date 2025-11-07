@@ -461,7 +461,7 @@ class ApiService {
   Future<List<ReporteAuditoria>> getReportesRendicionAuditoria({
     required String id,
     required String idad,
-    required String user,
+    required String area,
     required String ruc,
   }) async {
     /*     debugPrint('🚀 Iniciando petición a API...');
@@ -488,7 +488,7 @@ class ApiService {
 
       // Construir la URL con los parámetros dinámicos
       final uri = Uri.parse('$baseUrl/reporte/rendicionauditoria').replace(
-        queryParameters: {'id': id, 'idad': idad, 'user': user, 'ruc': ruc},
+        queryParameters: {'id': id, 'idad': idad, 'area': area, 'ruc': ruc},
       );
       debugPrint('📍 Request URL: $uri');
       /* 
@@ -731,7 +731,7 @@ class ApiService {
   Future<List<ReporteRevision>> getReportesRendicionRevision({
     required String id,
     required String idrev,
-    required String user,
+    required String gerencia,
     required String ruc,
   }) async {
     /*     debugPrint('🚀 Iniciando petición a API...');
@@ -758,7 +758,7 @@ class ApiService {
 
       // Construir la URL con los parámetros dinámicos
       final uri = Uri.parse('$baseUrl/reporte/rendicionrevision').replace(
-        queryParameters: {'id': id, 'idrev': idrev, 'user': user, 'ruc': ruc},
+        queryParameters: {'id': id, 'idrev': idrev, 'gerencia': gerencia, 'ruc': ruc},
       );
       debugPrint('📍 Request URL: $uri');
       /* 

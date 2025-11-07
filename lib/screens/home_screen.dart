@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       final auditoria = await _apiService.getReportesRendicionAuditoria(
         id: '1',
         idad: '1',
-        user: UserService().currentUserCode,
+        area: CompanyService().currentUserArea,
         ruc: CompanyService().companyRuc,
       );
       if (!mounted) return;
@@ -347,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       final revision = await _apiService.getReportesRendicionRevision(
         id: '1',
         idrev: '1',
-        user: UserService().currentUserCode,
+        gerencia: CompanyService().currentUserGerencia,
         ruc: CompanyService().companyRuc,
       );
       if (!mounted) return;
