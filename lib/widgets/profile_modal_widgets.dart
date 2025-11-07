@@ -227,9 +227,8 @@ class ProfileModalWidgets {
       duration: Duration(milliseconds: 300 + delay),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[100]!),
       ),
       curve: Curves.easeInOut,
       child: Column(
@@ -244,7 +243,8 @@ class ProfileModalWidgets {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
+                  /*                   color: Colors.grey[700],
+ */
                 ),
               ),
             ],
@@ -276,25 +276,21 @@ class ProfileModalWidgets {
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 4),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               height: 44,
               decoration: BoxDecoration(
-                color: isReadOnly ? Colors.grey[100] : Colors.white,
+                color: isReadOnly ? Colors.white : Colors.white,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: isReadOnly
                       ? Colors.grey[300]!
                       : (controller.focusNodes[index].hasFocus
                             ? Colors.blue[400]!
-                            : Colors.grey[200]!),
+                            : Colors.white!),
                   width: controller.focusNodes[index].hasFocus ? 1.5 : 1.0,
                 ),
                 boxShadow: controller.focusNodes[index].hasFocus && !isReadOnly
@@ -318,10 +314,39 @@ class ProfileModalWidgets {
                       : null,
                   decoration: InputDecoration(
                     hintText: isReadOnly ? null : hint,
-                    hintStyle: TextStyle(color: Colors.grey[100], fontSize: 14),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+
+                    // Solo subrayado inferior
+                    border: const UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.transparent,
+                        width: 1,
+                      ),
+                    ),
+
+                    enabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.transparent,
+                        width: 1,
+                      ),
+                    ),
+
+                    focusedBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(color: Colors.blue, width: 2),
+                    ),
+
+                    disabledBorder: const UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Colors.transparent,
+                        width: 0.5,
+                      ),
+                    ),
                   ),
+
                   style: TextStyle(
                     fontSize: 14,
                     color: isReadOnly ? Colors.grey[700] : Colors.black,

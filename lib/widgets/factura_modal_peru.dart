@@ -766,8 +766,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   : _rucClienteController.text),
         "desEmp": CompanyService().currentCompany?.empresa ?? '',
         "desSed": "",
-        "gerencia":  CompanyService().currentCompany?.gerencia ?? '',
-        "area":  CompanyService().currentCompany?.area ?? '',
+        "gerencia": CompanyService().currentCompany?.gerencia ?? '',
+        "area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
         "consumidor": "",
         "placa": _placaController.text,
@@ -962,6 +962,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   /// Construir la sección de imagen
   Widget _buildImageSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -1009,7 +1010,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(color: Colors.white),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: _selectedFileType == 'image'
@@ -1077,7 +1078,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                 height: 100,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: Colors.white,
                   border: Border.all(
                     color: (_selectedFile == null)
                         ? Colors.red.shade300
@@ -1488,14 +1489,29 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             color: Colors.red,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 6),
         TextFormField(
           controller: _politicaController,
           enabled: false,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Política Seleccionada',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.policy),
+            border: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: Colors.red, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            prefixIcon: const Icon(Icons.policy),
           ),
         ),
       ],
@@ -1618,10 +1634,26 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     }
 
     return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
+      dropdownColor: Colors.white,
+      decoration: InputDecoration(
         labelText: 'Categoría *',
-        prefixIcon: Icon(Icons.category),
-        border: OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.category),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
       ),
       initialValue:
           _categoriaController.text.isNotEmpty &&
@@ -1708,10 +1740,29 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         // Dropdown normal
         else
           DropdownButtonFormField<String>(
-            decoration: const InputDecoration(
+            dropdownColor: Colors.white,
+            decoration: InputDecoration(
               labelText: 'Tipo de Gasto *',
-              prefixIcon: Icon(Icons.payment),
-              border: OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.payment),
+              border: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.transparent,
+                  width: 0,
+                ),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Colors.red, width: 2),
+              ),
+              disabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
             ),
             initialValue:
                 _tipoGastoController.text.isNotEmpty &&
@@ -1864,17 +1915,35 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
               child: TextFormField(
                 controller: _totalController,
                 readOnly: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Total',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'El total es obligatorio';
                   }
-                  if (double.tryParse(value) == null) {
+                  if (double.tryParse(value) == null)  {
                     return 'Ingrese un valor válido';
                   }
                   return null;
@@ -1884,11 +1953,30 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             const SizedBox(width: 6),
             Expanded(
               child: DropdownButtonFormField<String>(
+                dropdownColor: Colors.white,
                 value: _selectedMoneda,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Moneda',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.monetization_on),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.monetization_on),
                 ),
                 items: _monedas.map((moneda) {
                   return DropdownMenuItem<String>(
@@ -2017,7 +2105,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
           children: [
             Row(
               children: [
-                const Icon(Icons.directions_car, color: Colors.blue),
+                const Icon(Icons.directions_car, color: Colors.red),
                 const SizedBox(width: 8),
                 const Text(
                   'Detalles de Movilidad',
@@ -2242,9 +2330,24 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
+        fillColor: readOnly ? Colors.white : Colors.white,
       ),
       validator: isRequired
           ? (value) {

@@ -159,8 +159,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Agregar listeners para validación en tiempo real
   void _addValidationListeners() {
-    if(_categoriaController.text == "PLANILLA DE MOVILIDAD"){
-
+    if (_categoriaController.text == "PLANILLA DE MOVILIDAD") {
       _fechaEmisionController.addListener(_validateForm);
       _totalController.addListener(_validateForm);
       _categoriaController.addListener(_validateForm);
@@ -833,7 +832,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
               Row(
                 children: [
-                  const Icon(Icons.qr_code_scanner, color: Colors.blue),
+                  const Icon(Icons.qr_code_scanner, color: Colors.red),
                   const SizedBox(width: 8),
                   const Expanded(
                     child: Text(
@@ -854,7 +853,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                     label: Text(_isScanning ? 'Escaneando...' : 'Escanear QR'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -2317,7 +2316,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Lugar Origen',
-                  border: const OutlineInputBorder(),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                  ),
                   prefixIcon: const Icon(Icons.place),
                   filled: true,
                   fillColor: _isEditMode
@@ -2331,7 +2348,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Lugar Destino',
-                  border: const OutlineInputBorder(),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                  ),
                   prefixIcon: const Icon(Icons.flag),
                   filled: true,
                   fillColor: _isEditMode
@@ -2345,7 +2380,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Motivo de Viaje',
-                  border: const OutlineInputBorder(),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                  ),
                   prefixIcon: const Icon(Icons.event_note),
                   filled: true,
                   fillColor: _isEditMode
@@ -2359,7 +2412,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Tipo Transporte',
-                  border: const OutlineInputBorder(),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                  ),
                   prefixIcon: const Icon(Icons.directions_transit),
                   filled: true,
                   fillColor: _isEditMode
@@ -2374,7 +2445,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Placa',
-                  border: const OutlineInputBorder(),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.green, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                  ),
                   prefixIcon: const Icon(Icons.directions_transit),
                   filled: true,
                   fillColor: _isEditMode

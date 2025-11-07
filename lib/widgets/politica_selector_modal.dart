@@ -30,17 +30,20 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
   }
 
   Future<void> _loadPoliticas() async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _error = null;
     });
     try {
       final politicas = await _apiService.getRendicionPoliticas();
+      if (!mounted) return;
       setState(() {
         _politicas = politicas.map((e) => e.value.toString()).toList();
         _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = e.toString();
         _isLoading = false;
