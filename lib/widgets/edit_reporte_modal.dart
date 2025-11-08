@@ -7,6 +7,8 @@ import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:printing/printing.dart';
@@ -83,6 +85,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
   // Image / file picker
   final ImagePicker _picker = ImagePicker();
   File? _selectedImage;
+  String? _selectedFileType; // 'image' o 'pdf'
+  String? _selectedFileName;
 
   List<CategoriaModel> _categoriasGeneral = [];
   List<DropdownOption> _tiposGasto = [];
@@ -463,6 +467,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   // Nota: conversión a base64 está en el controller (`_controller.convertImageToBase64`).
 
+/*
   /// Seleccionar imagen desde la cámara
   Future<void> _pickImage() async {
     await showDialog(
@@ -503,6 +508,143 @@ class _EditReporteModalState extends State<EditReporteModal> {
       },
     );
   }
+*/
+
+  /// Seleccionar archivo (imagen o PDF)
+  Future<void> _pickImage() async {
+    try {
+      setState(() => _isLoading = true); // Mostrar indicador de carga
+
+      // Mostrar opciones para seleccionar tipo de archivo
+      final selectedOption = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Seleccionar evidencia'),
+            content: const Text('¿Qué tipo de archivo desea agregar?'),
+            actions: [
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context, 'camera'),
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('Tomar Foto'),
+              ),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context, 'gallery'),
+                icon: const Icon(Icons.photo_library),
+                label: const Text('Galería'),
+              ),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context, 'pdf'),
+                icon: const Icon(Icons.picture_as_pdf),
+                label: const Text('Archivo PDF'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (selectedOption != null) {
+        if (selectedOption == 'camera' || selectedOption == 'gallery') {
+          // Tomar foto con la cámara o galería
+          final XFile? image = await _picker.pickImage(
+            source: selectedOption == 'camera'
+                ? ImageSource.camera
+                : ImageSource.gallery,
+            imageQuality: 85, // Calidad de la imagen
+          );
+
+          if (image != null) {
+            File file = File(image.path);
+
+            // Aquí recortamos la imagen
+            _cropImage(file);
+          }
+        } else if (selectedOption == 'pdf') {
+          // Seleccionar archivo PDF
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['pdf'],
+            allowMultiple: false,
+          );
+
+          if (result != null && result.files.isNotEmpty) {
+            final file = File(result.files.first.path!);
+            setState(() {
+              _selectedImage = file;
+              _selectedFileType = 'pdf';
+              _selectedFileName = result.files.first.name;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar archivo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false); // Ocultar indicador de carga
+      }
+    }
+  }
+
+  /// Recortar imagen seleccionada
+  Future<void> _cropImage(File imageFile) async {
+    try {
+      // Usamos el paquete image_cropper para permitir recortar la imagen
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        aspectRatio: CropAspectRatio(
+          ratioX: 1.0,
+          ratioY: 1.0,
+        ), // Relación de aspecto cuadrada (1:1)
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Recortar Combrobante',
+            toolbarColor: Colors.green,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio:
+                CropAspectRatioPreset.square, // Relación cuadrada inicial
+            lockAspectRatio: false, // No bloquear la relación de aspecto
+          ),
+          IOSUiSettings(
+            minimumAspectRatio: 1.0, // Relación mínima de aspecto
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() {
+          _selectedImage = File(
+            croppedFile.path,
+          ); // Convertimos CroppedFile a File
+          _selectedFileType = 'image'; // Indicamos que es una imagen
+          _selectedFileName = croppedFile.path
+              .split('/')
+              .last; // Nombre del archivo
+        });
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al recortar la imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
 
   Future<void> _pickFromCamera() async {
     try {
@@ -2273,12 +2415,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
           readOnly: !_isEditMode,
         ),
         const SizedBox(height: 10),
-        _buildTextField(
-          _motivorechazoController,
-          'Motivo',
-          Icons.comment,
-          TextInputType.text,
-          readOnly: !_isEditMode,
+        Text(
+          _motivorechazoController.text,
+          style: const TextStyle(fontSize: 16),
         ),
       ],
     );
