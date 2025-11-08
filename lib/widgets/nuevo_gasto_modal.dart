@@ -673,7 +673,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         ), // Relación de aspecto cuadrada (1:1)
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Recortar Imagen',
+            toolbarTitle: 'Recortar Comprobante',
             toolbarColor: Colors.green,
             toolbarWidgetColor: Colors.white,
             initAspectRatio:

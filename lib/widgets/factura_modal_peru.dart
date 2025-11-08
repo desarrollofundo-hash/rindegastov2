@@ -387,7 +387,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     _placaController.dispose();
   }
 
-/*
+  /*
   /// Seleccionar archivo (imagen o PDF)
   Future<void> _pickImage() async {
     try {
@@ -551,7 +551,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   }
 */
 
-
   /// Seleccionar archivo (imagen o PDF)
   Future<void> _pickImage() async {
     try {
@@ -651,7 +650,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         ), // Relación de aspecto cuadrada (1:1)
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Recortar Imagen',
+            toolbarTitle: 'Recortar Comprobante',
             toolbarColor: Colors.green,
             toolbarWidgetColor: Colors.white,
             initAspectRatio:

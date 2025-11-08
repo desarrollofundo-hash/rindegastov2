@@ -609,7 +609,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         ), // Relación de aspecto cuadrada (1:1)
         uiSettings: [
           AndroidUiSettings(
-            toolbarTitle: 'Recortar Imagen',
+            toolbarTitle: 'Recortar Combrobante',
             toolbarColor: Colors.green,
             toolbarWidgetColor: Colors.white,
             initAspectRatio:
