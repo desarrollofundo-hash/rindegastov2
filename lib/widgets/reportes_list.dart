@@ -124,6 +124,7 @@ class _ReportesListState extends State<ReportesList> {
     final data = _controller.filtrarReportes(widget.reportes, filtro);
 
     return RefreshIndicator(
+      backgroundColor: Colors.white,
       onRefresh: widget.onRefresh,
       child: data.isEmpty
           ? ListView(
