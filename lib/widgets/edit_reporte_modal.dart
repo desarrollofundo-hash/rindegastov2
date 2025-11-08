@@ -2273,12 +2273,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
           readOnly: !_isEditMode,
         ),
         const SizedBox(height: 10),
-        _buildTextField(
-          _motivorechazoController,
-          'Motivo',
-          Icons.comment,
-          TextInputType.text,
-          readOnly: !_isEditMode,
+        Text(
+          _motivorechazoController.text,
+          style: const TextStyle(fontSize: 16),
         ),
       ],
     );
