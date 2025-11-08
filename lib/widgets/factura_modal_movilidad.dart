@@ -1458,6 +1458,34 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   color: Colors.transparent,
                   width: 0,
                 ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _politicaController,
+              enabled: false,
+              decoration: InputDecoration(
+                labelText: 'Política Seleccionada',
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                prefixIcon: const Icon(Icons.policy),
               ),
               enabledBorder: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
