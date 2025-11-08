@@ -49,10 +49,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon/money.svg
 
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/rendcuentas.png"
-  adaptive_icon_background: "#ffffff"  # fondo (Android 8+)
+
+  adaptive_icon_background: "#ffffff" # fondo (Android 8+)
   adaptive_icon_foreground: "assets/icon/rendcuentas.png"

@@ -118,43 +118,97 @@ class _LoginViewState extends State<LoginView>
   Widget _buildHeader() {
     return Column(
       children: [
+        // Círculo con efecto de profundidad y gradiente moderno
         Container(
-          height: 90,
-          width: 90,
+          height: 100,
+          width: 100,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF0066FF), Color(0xFF00C2FF)],
+              colors: [Color(0xFF0072FF), Color(0xFF00D4FF)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.blue.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: Colors.blueAccent.withOpacity(0.35),
+                blurRadius: 25,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
-          child: const Icon(
-            Icons.receipt_long_rounded,
-            color: Colors.white,
-            size: 48,
+          child: Container(
+            margin: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withOpacity(0.15),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.2),
+                width: 2,
+              ),
+            ),
+            child: const Icon(
+              Icons.receipt_long_rounded,
+              size: 50,
+            ),
           ),
         ),
-        const SizedBox(height: 20),
-        const Text(
-          "ASA Rinde Gastos",
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF003366),
+
+        const SizedBox(height: 22),
+
+        // Título principal
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Color(0xFF003CFF), Color(0xFF00A7FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(bounds),
+          child: const Text(
+            "ASA Rinde Gastos",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: Colors.white, // se sobreescribe por el shader
+              letterSpacing: -0.3,
+            ),
           ),
         ),
-        const SizedBox(height: 8),
+
+        const SizedBox(height: 10),
+
+        // Subtítulo con estilo elegante
         Text(
-          "Accede con tu cuenta para continuar",
-          style: TextStyle(fontSize: 15, color: Colors.grey.shade600),
+          "Ingresa tus credenciales para continuar",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 15,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.1,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Línea decorativa animada (detalle moderno)
+        Container(
+          margin: const EdgeInsets.only(top: 10),
+          height: 3,
+          width: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0072FF), Color(0xFF00CFFF)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
         ),
       ],
     );

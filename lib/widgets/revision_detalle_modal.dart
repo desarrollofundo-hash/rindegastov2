@@ -311,30 +311,31 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
             .maxFinite, // Usa toda la altura disponible desde el margen superior
         child: Scaffold(
           backgroundColor: Colors.grey[50],
-
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0.1,
-            leading: IconButton(
-              icon: const Icon(Icons.more_horiz, color: Colors.grey),
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
+            leadingWidth: 50,
+            titleSpacing: 12,
+            toolbarHeight: 80,
             title: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 const Text(
-                  'DETALLE REVISION',
+                  'DETALLE REVISIÓN',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
+                  textAlign: TextAlign.center,
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
                       'RENDIDOR: ',
@@ -345,20 +346,24 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Text(
-                      widget.revision.usuario.toString(), // ← valor dinámico
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                    Expanded(
+                      child: Text(
+                        widget.revision.usuario.toString(), // ← valor dinámico
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
                       'AUDITOR: ',
@@ -369,19 +374,22 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    Text(
-                      widget.revision.usuarioAuditor
-                          .toString(), // ← valor dinámico
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                    Expanded(
+                      child: Text(
+                        widget.revision.usuarioAuditor
+                            .toString(), // ← valor dinámico
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black87,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
               ],
             ),
             centerTitle: true,
@@ -402,9 +410,9 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
 
                       children: [
                         // COLUMNA IZQUIERDA

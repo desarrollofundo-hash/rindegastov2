@@ -196,7 +196,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
   }
 
-  
   /// Cargar categorías desde la API para GASTOS DE MOVILIDAD
   Future<void> _loadCategorias() async {
     setState(() {
@@ -993,8 +992,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   /// Construir la sección de imagen
   Widget _buildImageSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1029,7 +1029,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
 
             /// Mostrar archivo seleccionado
             if (selectedFile != null)
@@ -1367,10 +1367,25 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         TextFormField(
           controller: _politicaController,
           enabled: false,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Política Seleccionada',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.policy),
+            border: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.transparent, width: 0),
+            ),
+            enabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            focusedBorder: const UnderlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+              borderSide: BorderSide(color: Colors.blue, width: 2),
+            ),
+            disabledBorder: UnderlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.grey, width: 1),
+            ),
+            prefixIcon: const Icon(Icons.policy),
           ),
         ),
       ],
@@ -1489,10 +1504,25 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
 
     return DropdownButtonFormField<String>(
-      decoration: const InputDecoration(
+      decoration: InputDecoration(
         labelText: 'Categoría *',
-        prefixIcon: Icon(Icons.category),
-        border: OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.category),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
       ),
       initialValue:
           _categoriaController.text.isNotEmpty &&
@@ -1667,10 +1697,29 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           AbsorbPointer(
             absorbing: !_isEditMode,
             child: DropdownButtonFormField<String>(
+              dropdownColor: Colors.white,
               decoration: InputDecoration(
                 labelText: 'Tipo de Gasto *',
                 prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.red, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
                 filled: true,
                 fillColor: _isEditMode ? Colors.white : Colors.grey[100],
               ),
@@ -1764,7 +1813,25 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               decoration: InputDecoration(
                 labelText: 'Tipo de Movilidad *',
                 prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.red, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
                 filled: true,
                 fillColor: _isEditMode ? Colors.white : Colors.grey[100],
               ),
@@ -1946,10 +2013,28 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               child: TextFormField(
                 controller: _totalController,
                 readOnly: true,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Total',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.attach_money),
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
@@ -1966,11 +2051,30 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             const SizedBox(width: 6),
             Expanded(
               child: DropdownButtonFormField<String>(
+                dropdownColor: Colors.white,
                 value: _selectedMoneda,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Moneda',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.monetization_on),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.monetization_on),
                 ),
                 items: _monedas.map((moneda) {
                   return DropdownMenuItem<String>(
@@ -2089,97 +2193,179 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Construir la sección específica de movilidad
   Widget _buildMovilidadSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.directions_car, color: Colors.blue),
-                const SizedBox(width: 8),
-                const Text(
-                  'Detalles de Movilidad',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _origenController,
-                    decoration: const InputDecoration(
-                      labelText: 'Origen *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.my_location),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Origen es obligatorio';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _destinoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Destino *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.location_on),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Destino es obligatorio';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _motivoViajeController,
-              decoration: const InputDecoration(
-                labelText: 'Motivo del Viaje *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
+    return Padding(
+      padding: const EdgeInsets.all(2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.directions_car, color: Colors.red),
+              const SizedBox(width: 8),
+              const Text(
+                'Detalles de Movilidad',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Motivo del Viaje es obligatorio';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-
-            _buildTipoMovilidad(),
-            const SizedBox(height: 12),
-
-            // PLACA
-            TextFormField(
-              controller: _placaController,
-              decoration: const InputDecoration(
-                labelText: 'Placa',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.badge),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _origenController,
+                  decoration: InputDecoration(
+                    labelText: 'Origen *',
+                    border: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.transparent,
+                        width: 0,
+                      ),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    ),
+                    disabledBorder: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                    ),
+                    prefixIcon: const Icon(Icons.my_location),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Origen es obligatorio';
+                    }
+                    return null;
+                  },
+                ),
               ),
-              keyboardType: TextInputType.text,
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _destinoController,
+                  decoration: InputDecoration(
+                    labelText: 'Destino *',
+                    border: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.transparent,
+                        width: 0,
+                      ),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    ),
+                    disabledBorder: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                    ),
+                    prefixIcon: const Icon(Icons.location_on),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Destino es obligatorio';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _motivoViajeController,
+            decoration: InputDecoration(
+              labelText: 'Motivo del Viaje *',
+              border: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.transparent,
+                  width: 0,
+                ),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Colors.red, width: 2),
+              ),
+              disabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              prefixIcon: const Icon(Icons.description),
             ),
-            const SizedBox(height: 12),
-          ],
-        ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Motivo del Viaje es obligatorio';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 12),
+
+          _buildTipoMovilidad(),
+          const SizedBox(height: 12),
+
+          // PLACA
+          TextFormField(
+            controller: _placaController,
+            decoration: InputDecoration(
+              labelText: 'Placa',
+              border: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: Colors.transparent,
+                  width: 0,
+                ),
+              ),
+              enabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(color: Colors.red, width: 2),
+              ),
+              disabledBorder: UnderlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Colors.grey, width: 1),
+              ),
+              prefixIcon: const Icon(Icons.badge),
+            ),
+            keyboardType: TextInputType.text,
+          ),
+          const SizedBox(height: 12),
+        ],
       ),
     );
   }
@@ -2315,9 +2501,24 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
+        fillColor: readOnly ? Colors.white : Colors.white,
       ),
       validator: isRequired
           ? (value) {

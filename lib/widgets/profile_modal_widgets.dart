@@ -219,7 +219,8 @@ class ProfileModalWidgets {
   static Widget buildAnimatedFormSection({
     required ProfileModalController controller,
     required String title,
-    required IconData icon,
+    IconData? icon,
+    String? iconImage,
     required List<Widget> fields,
     required int delay,
   }) {
@@ -236,7 +237,10 @@ class ProfileModalWidgets {
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: Colors.grey[600]),
+              if (iconImage != null)
+                SizedBox(width: 18, height: 18, child: Image.asset(iconImage))
+              else if (icon != null)
+                Icon(icon, size: 18, color: Colors.grey[600]),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -420,7 +424,7 @@ class ProfileModalWidgets {
                 height: 40,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[600],
+                    backgroundColor: Colors.red[600], 
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

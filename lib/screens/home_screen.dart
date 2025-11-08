@@ -453,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -927,7 +927,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
+                      color: Colors.black.withOpacity(0.2),
                       blurRadius: 15,
                       offset: const Offset(0, 4),
                     ),
@@ -938,7 +938,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   child: NavigationBarTheme(
                     data: NavigationBarThemeData(
                       height: 70,
-                      indicatorColor: Colors.white.withOpacity(0.3),
+                      indicatorColor: Colors.white,
                       backgroundColor: Colors.transparent,
                       labelTextStyle:
                           WidgetStateProperty.resolveWith<TextStyle>((states) {
@@ -988,110 +988,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ),
     );
   }
-
-  /*
-  @override
-  Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      _buildPantallaInicio(), // 0 - Gastos
-      _buildPantallaInformes(), // 1 - Informes
-      _buildPantallaAditoria(), // 2 - Auditoría
-      _buildPantallaRevision(), // 3 - Revisión
-    ];
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: pages[_selectedIndex],
-      ),
-
-      // FAB moved to an OverlayEntry so it stays independent from the bottom bar
-
-      // 🧊 Barra inferior flotante moderna
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(left: 7, right: 7, bottom: 1),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: NavigationBarTheme(
-              data: NavigationBarThemeData(
-                height: 70,
-                indicatorColor: Colors.white.withOpacity(0.3),
-                backgroundColor: Colors.transparent,
-                labelTextStyle: WidgetStateProperty.resolveWith<TextStyle>((
-                  states,
-                ) {
-                  return TextStyle(
-                    color: states.contains(WidgetState.selected)
-                        ? const Color(0xFF1565C0)
-                        : Colors.grey.shade700,
-                    fontWeight: states.contains(WidgetState.selected)
-                        ? FontWeight.bold
-                        : FontWeight.w500,
-                  );
-                }),
-              ),
-              child: NavigationBar(
-                elevation: 0,
-                selectedIndex: _selectedIndex,
-                onDestinationSelected: (index) async {
-                  // Limpiar campo de búsqueda al cambiar de pestaña
-                  _searchController.clear();
-                  _searchFocusNode.unfocus();
-
-                  setState(() {
-                    _selectedIndex = index.clamp(0, pages.length - 1);
-                  });
-
-                  // 🔁 Recargar la data correspondiente a la pestaña seleccionada
-                  switch (index) {
-                    case 0:
-                      await _loadReportes();
-                      break;
-                    case 1:
-                      await _loadInformes();
-                      break;
-                    case 2:
-                      await loadAuditoria();
-                      break;
-                    case 3:
-                      await _loadRevision();
-                      break;
-                  }
-
-                  // Actualizar el FAB overlay después del frame
-                  WidgetsBinding.instance.addPostFrameCallback(
-                    (_) => _updateFabOverlay(),
-                  );
-                },
-
-                destinations: [
-                  _animatedIcon(MdiIcons.cashMultiple, "Gastos", 0),
-                  _animatedIcon(Feather.file_text, "Informes", 1),
-                  _animatedIcon(MdiIcons.shieldCheckOutline, "Auditoría", 2),
-                  _animatedIcon(Feather.inbox, "Revisión", 3),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-*/
 
   /// 🎨 Ícono animado tipo Material con efecto de rebote
   NavigationDestination _animatedIcon(IconData icon, String label, int index) {
