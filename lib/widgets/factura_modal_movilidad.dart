@@ -6,6 +6,8 @@ import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/dropdown_option.dart';
 import 'package:flu2/services/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
@@ -393,6 +395,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     _placaController.dispose();
   }
 
+/*
   /// Seleccionar archivo (imagen o PDF)
   Future<void> _pickImage() async {
     try {
@@ -489,6 +492,143 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       }
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+*/
+
+
+  /// Seleccionar archivo (imagen o PDF)
+  Future<void> _pickImage() async {
+    try {
+      setState(() => _isLoading = true); // Mostrar indicador de carga
+
+      // Mostrar opciones para seleccionar tipo de archivo
+      final selectedOption = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Seleccionar evidencia'),
+            content: const Text('¿Qué tipo de archivo desea agregar?'),
+            actions: [
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context, 'camera'),
+                icon: const Icon(Icons.camera_alt),
+                label: const Text('Tomar Foto'),
+              ),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context, 'gallery'),
+                icon: const Icon(Icons.photo_library),
+                label: const Text('Galería'),
+              ),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context, 'pdf'),
+                icon: const Icon(Icons.picture_as_pdf),
+                label: const Text('Archivo PDF'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (selectedOption != null) {
+        if (selectedOption == 'camera' || selectedOption == 'gallery') {
+          // Tomar foto con la cámara o galería
+          final XFile? image = await _picker.pickImage(
+            source: selectedOption == 'camera'
+                ? ImageSource.camera
+                : ImageSource.gallery,
+            imageQuality: 85, // Calidad de la imagen
+          );
+
+          if (image != null) {
+            File file = File(image.path);
+
+            // Aquí recortamos la imagen
+            _cropImage(file);
+          }
+        } else if (selectedOption == 'pdf') {
+          // Seleccionar archivo PDF
+          final result = await FilePicker.platform.pickFiles(
+            type: FileType.custom,
+            allowedExtensions: ['pdf'],
+            allowMultiple: false,
+          );
+
+          if (result != null && result.files.isNotEmpty) {
+            final file = File(result.files.first.path!);
+            setState(() {
+              _selectedFile = file;
+              _selectedFileType = 'pdf';
+              _selectedFileName = result.files.first.name;
+            });
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al seleccionar archivo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false); // Ocultar indicador de carga
+      }
+    }
+  }
+
+  /// Recortar imagen seleccionada
+  Future<void> _cropImage(File imageFile) async {
+    try {
+      // Usamos el paquete image_cropper para permitir recortar la imagen
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        aspectRatio: CropAspectRatio(
+          ratioX: 1.0,
+          ratioY: 1.0,
+        ), // Relación de aspecto cuadrada (1:1)
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Recortar Imagen',
+            toolbarColor: Colors.green,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio:
+                CropAspectRatioPreset.square, // Relación cuadrada inicial
+            lockAspectRatio: false, // No bloquear la relación de aspecto
+          ),
+          IOSUiSettings(
+            minimumAspectRatio: 1.0, // Relación mínima de aspecto
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() {
+          _selectedFile = File(
+            croppedFile.path,
+          ); // Convertimos CroppedFile a File
+          _selectedFileType = 'image'; // Indicamos que es una imagen
+          _selectedFileName = croppedFile.path
+              .split('/')
+              .last; // Nombre del archivo
+        });
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al recortar la imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
