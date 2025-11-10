@@ -410,170 +410,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     return await _logic.convertImageToPdf(imageFile);
   }
 
-  /*
-  /// Seleccionar archivo (imagen o PDF)
-  Future<void> _pickImage() async {
-    try {
-      if (mounted) setState(() => _isLoading = true);
-
-      // Mostrar opciones para seleccionar tipo de archivo
-      final selectedOption = await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Seleccionar evidencia'),
-            content: const Text('¿Qué tipo de archivo desea agregar?'),
-            actions: [
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'camera'),
-                icon: const Icon(Icons.camera_alt),
-                label: const Text('Tomar Foto'),
-              ),
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'gallery'),
-                icon: const Icon(Icons.photo_library),
-                label: const Text('Galería'),
-              ),
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'pdf'),
-                icon: const Icon(Icons.picture_as_pdf),
-                label: const Text('Archivo PDF'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (selectedOption != null) {
-        if (selectedOption == 'camera' || selectedOption == 'gallery') {
-          // Tomar foto con la cámara o galería
-          final XFile? image = await _picker.pickImage(
-            source: selectedOption == 'camera'
-                ? ImageSource.camera
-                : ImageSource.gallery,
-            imageQuality: 85,
-          );
-          if (image != null) {
-            File file = File(image.path);
-            int fileSize = await file.length();
-            const int maxSize = 1024 * 1024; // 1MB en bytes
-            const int compressThreshold = 2 * 1024 * 1024; // 2MB en bytes
-            int quality = 85;
-            // Solo comprimir si la imagen pesa más de 2MB
-            if (fileSize > compressThreshold) {
-              try {
-                // Usar flutter_image_compress para comprimir
-                final targetPath = image.path
-                    .replaceFirst('.jpg', '_compressed.jpg')
-                    .replaceFirst('.jpeg', '_compressed.jpeg');
-                List<int> compressedBytes = await file.readAsBytes();
-                while (fileSize > maxSize && quality > 10) {
-                  final result = await FlutterImageCompress.compressWithFile(
-                    file.absolute.path,
-                    quality: quality,
-                    format: CompressFormat.jpeg,
-                    minWidth: 800,
-                    minHeight: 800,
-                  );
-                  if (result != null) {
-                    compressedBytes = result;
-                    fileSize = compressedBytes.length;
-                  }
-                  quality -= 10;
-                }
-                if (fileSize > maxSize) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'No se pudo comprimir la imagen a menos de 1MB. Por favor, seleccione una imagen más liviana.',
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                  if (mounted) {
-                    setState(() {
-                      _selectedFile = null;
-                      _selectedFileType = null;
-                      _selectedFileName = null;
-                    });
-                  }
-                  return;
-                }
-                // Guardar la imagen comprimida en un archivo temporal
-                final compressedFile = await File(
-                  targetPath,
-                ).writeAsBytes(compressedBytes);
-                file = compressedFile;
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error al comprimir la imagen: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-                setState(() {
-                  _selectedFile = null;
-                  _selectedFileType = null;
-                  _selectedFileName = null;
-                });
-                return;
-              }
-            }
-            if (mounted) {
-              setState(() {
-                _selectedFile = file;
-                _selectedFileType = 'image';
-                _selectedFileName = image.name;
-              });
-            }
-            // _validateForm();
-          }
-        } else if (selectedOption == 'pdf') {
-          // Seleccionar archivo PDF
-          final result = await FilePicker.platform.pickFiles(
-            type: FileType.custom,
-            allowedExtensions: ['pdf'],
-            allowMultiple: false,
-          );
-
-          if (result != null && result.files.isNotEmpty) {
-            final file = File(result.files.first.path!);
-            if (mounted) {
-              setState(() {
-                _selectedFile = file;
-                _selectedFileType = 'pdf';
-                _selectedFileName = result.files.first.name;
-              });
-            }
-            // _validateForm();
-          }
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al seleccionar archivo: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-*/
-
   /// Seleccionar archivo (imagen o PDF)
   Future<void> _pickImage() async {
     try {
@@ -708,8 +544,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       }
     }
   }
-
-
 
   /// Mostrar selector de fecha
   Future<void> _selectDate() async {
@@ -960,7 +794,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                     const SizedBox(width: 8),
                     const Expanded(
                       child: Text(
-                        'SUPERASTE EL LIMITE DE 44 SOLES AL DIA',
+                        'SE REGISTRO CORRECTAMENTE, PERO SUPERASTE EL LIMITE DE 44 SOLES AL DIA',
                         style: TextStyle(fontSize: 14, color: Colors.black87),
                       ),
                     ),
@@ -974,12 +808,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               onPressed: () {
                 Navigator.of(context).pop(); // Cerrar diálogo de error
                 // Usar un Future.delayed para asegurar que el contexto esté disponible
-                Future.delayed(const Duration(milliseconds: 100), () {
-                  // Cerrar el modal principal
-                  if (mounted && Navigator.of(context).canPop()) {
-                    Navigator.of(context).pop();
-                  }
-                });
+                if (mounted && Navigator.of(context).canPop()) {
+                  Navigator.of(context).pop(true);
+                }
               },
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
@@ -1935,7 +1766,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                     size: 16,
                     color: _isRucValid() ? Colors.green : Colors.red,
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       _getRucStatusMessage(),
@@ -1979,51 +1810,52 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           const SizedBox(height: 8),
 
           // Tipo de Comprobante
-          DropdownButtonFormField<String>(
-            value: _selectedComprobante,
-            decoration: InputDecoration(
-              labelText: 'Tipo Comprobante',
-              border: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Colors.transparent,
-                  width: 0,
+          if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+            DropdownButtonFormField<String>(
+              value: _selectedComprobante,
+              decoration: InputDecoration(
+                labelText: 'Tipo Comprobante',
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
                 ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.green, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white, width: 1),
+                ),
+                prefixIcon: const Icon(Icons.edit_document),
               ),
-              enabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
-              ),
-              focusedBorder: const UnderlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.green, width: 2),
-              ),
-              disabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.white, width: 1),
-              ),
-              prefixIcon: const Icon(Icons.edit_document),
+              items: tipocomprobante.map((comprobante) {
+                return DropdownMenuItem<String>(
+                  value: comprobante,
+                  child: Text(comprobante),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedComprobante = value;
+                  _tipoComprobanteController.text = value ?? '';
+                });
+              },
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Seleccione';
+                }
+                return null;
+              },
             ),
-            items: tipocomprobante.map((comprobante) {
-              return DropdownMenuItem<String>(
-                value: comprobante,
-                child: Text(comprobante),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedComprobante = value;
-                _tipoComprobanteController.text = value ?? '';
-              });
-            },
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Seleccione';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
 
           // Fecha
           TextFormField(
@@ -2086,7 +1918,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
 
           // Serie y Número de Factura
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
@@ -2165,7 +1997,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 ),
               ],
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
 
           // Serie y Número de Factura
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
@@ -2208,7 +2040,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 ),
               ],
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 4),
         ],
 
         // Total y Moneda (siempre visibles)
@@ -2297,294 +2129,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       ],
     );
   }
-
-  /*
-  /// Construir la sección de datos personalizados
-  Widget _buildDatosFacturaSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Datos de la Factura',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // RUC Emisor
-        TextFormField(
-          controller: _rucProveedorController,
-          decoration: const InputDecoration(
-            labelText: 'RUC Emisor',
-            border: UnderlineInputBorder(),
-            prefixIcon: Icon(Icons.badge),
-          ),
-          keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.done, // Botón "Done" en el teclado
-          onFieldSubmitted: (value) {
-            if (value.length == 11) {
-              // Llamamos a la función _loadApiRuc con el RUC ingresado
-              _loadApiRuc(value);
-            } else {
-              // Opcional: mensaje si no tiene 11 dígitos
-              showMessageError(
-                context,
-                'El RUC debe tener 11 dígitos',
-              ); // Usando utils
-            }
-          },
-          validator: (value) {
-            if (value != null && value.isNotEmpty && value.length != 11) {
-              return 'El RUC debe tener 11 dígitos';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 12),
-
-        // Razon Social Proveedor
-        TextFormField(
-          controller: _razonSocialController,
-          decoration: InputDecoration(
-            labelText: 'Razon Social',
-            hintText: 'Ingresa Razon Social',
-            floatingLabelBehavior:
-                FloatingLabelBehavior.always, // Label siempre arriba
-            border: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-            ),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 1),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(
-                color: Colors.green,
-                width: 2,
-              ), // Línea verde al focus
-            ),
-            errorBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.red, width: 2),
-            ),
-            prefixIcon: const Icon(Icons.business, color: Colors.grey),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'El proveedor es obligatorio';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 12),
-
-        // RUC Cliente (no editable, siempre el RUC de la empresa)
-        TextFormField(
-          controller: _rucClienteController,
-          decoration: const InputDecoration(
-            labelText: 'RUC Cliente',
-            border: UnderlineInputBorder(),
-            prefixIcon: Icon(Icons.business),
-            suffixIcon: Icon(Icons.lock, color: Colors.grey),
-          ),
-          enabled: false, // Campo no editable
-          style: const TextStyle(
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Tipo de documento (solo lectura, se llena desde QR)
-        Row(
-          children: [
-            Expanded(
-              child: DropdownButtonFormField<String>(
-                value: _selectedComprobante,
-                decoration: const InputDecoration(
-                  labelText: 'Tipo Comprobante',
-                  border: UnderlineInputBorder(),
-                  prefixIcon: Icon(Icons.edit_document),
-                ),
-                items: tipocomprobante.map((comprobante) {
-                  return DropdownMenuItem<String>(
-                    value: comprobante,
-                    child: Text(comprobante),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedComprobante = value;
-                    _tipoComprobanteController.text = value ?? '';
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Seleccione';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 12),
-
-        // Fecha
-        // Fecha - Versión con mejor feedback visual
-        TextFormField(
-          controller: _fechaController,
-          decoration: InputDecoration(
-            labelText: 'Fecha Emision',
-            hintText: 'DD/MM/AAAA',
-            floatingLabelBehavior: FloatingLabelBehavior.always,
-            floatingLabelStyle: const TextStyle(
-              color: Colors.green,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-            border: const UnderlineInputBorder(),
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.grey.shade400, width: 1.5),
-            ),
-            focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.green, width: 2.5),
-            ),
-            prefixIcon: Container(
-              margin: const EdgeInsets.only(right: 8),
-              child: const Icon(Icons.calendar_month, color: Colors.green),
-            ),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.expand_more, color: Colors.green),
-              onPressed: _selectDate,
-              tooltip: 'Seleccionar fecha', // Mejora la accesibilidad
-            ),
-            filled: true,
-            fillColor: _fechaController.text.isEmpty
-                ? Colors.grey.shade50
-                : Colors.deepPurple.shade50.withOpacity(0.3),
-          ),
-          readOnly: true,
-          onTap: _selectDate,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: _fechaController.text.isEmpty
-                ? Colors.grey.shade600
-                : Colors.black87,
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Por favor, selecciona una fecha';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 12),
-
-        // Serie y Número de Factura
-        Row(
-          children: [
-            Expanded(
-              child: TextFormField(
-                controller: _serieFacturaController,
-                decoration: const InputDecoration(
-                  labelText: 'Serie *',
-                  border: UnderlineInputBorder(),
-                  prefixIcon: Icon(Icons.receipt_long),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Serie es obligatorio';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextFormField(
-                controller: _numeroFacturaController,
-                decoration: const InputDecoration(
-                  labelText: 'Número *',
-                  border: UnderlineInputBorder(),
-                  prefixIcon: Icon(Icons.confirmation_number),
-                ),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Número es obligatorio';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // Total y Moneda en la misma fila
-        Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: TextFormField(
-                controller: _totalController,
-                decoration: const InputDecoration(
-                  labelText: 'Total',
-                  border: UnderlineInputBorder(),
-                  prefixIcon: Icon(Icons.attach_money),
-                ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El total es obligatorio';
-                  }
-                  if (double.tryParse(value) == null) {
-                    return 'Ingrese un valor válido';
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: DropdownButtonFormField<String>(
-                value: _selectedMoneda,
-                decoration: const InputDecoration(
-                  labelText: 'Moneda',
-                  border: UnderlineInputBorder(),
-                  prefixIcon: Icon(Icons.monetization_on),
-                ),
-                items: _monedas.map((moneda) {
-                  return DropdownMenuItem<String>(
-                    value: moneda,
-                    child: Text(moneda),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedMoneda = value;
-                    _monedaController.text = value ?? '';
-                  });
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Seleccione una moneda';
-                  }
-                  return null;
-                },
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-      ],
-    );
-  }
-*/
 
   /// Construir la sección de categoría
   Widget _buildCategoriaSection() {
