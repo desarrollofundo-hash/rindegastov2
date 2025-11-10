@@ -211,12 +211,29 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
           detallePayload,
         );
 
-        showMessageError(context, "DOCUMENTO RECHAZADO");
-
         if (!detalleGuardado) {
           throw Exception('Error al guardar el rechazo ${detalless.idRev}');
         }
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: Colors.red, // Fondo verde
+          content: Row(
+            children: const [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 10),
+              Text("DOCUMENTO RECHAZADO", style: TextStyle(color: Colors.white)),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+          behavior:
+              SnackBarBehavior.floating, // Hace que flote sobre el contenido
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+      );
 
       Navigator.of(context).pop(true);
     } catch (e, stack) {
