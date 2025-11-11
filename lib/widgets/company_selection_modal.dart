@@ -37,18 +37,22 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
   /// Cargar empresas del usuario desde la API
   Future<void> _loadUserCompanies() async {
     try {
-      setState(() {
-        isLoading = true;
-        errorMessage = null;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = true;
+          errorMessage = null;
+        });
+      }
 
       final companiesData = await _apiService.getUserCompanies(widget.userId);
 
       if (companiesData.isEmpty) {
-        setState(() {
-          errorMessage = 'No se encontraron empresas asociadas al usuario';
-          isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            errorMessage = 'No se encontraron empresas asociadas al usuario';
+            isLoading = false;
+          });
+        }
         return;
       }
 
@@ -56,18 +60,19 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
           .map((json) => UserCompany.fromJson(json))
           .toList();
 
-      setState(() {
-        userCompanies = companies;
-        isLoading = false;
-      });
-
-      print('✅ Empresas cargadas: ${companies.length}');
+      if (mounted) {
+        setState(() {
+          userCompanies = companies;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      print('💥 Error al cargar empresas: $e');
-      setState(() {
-        errorMessage = 'Error al cargar empresas: $e';
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          errorMessage = 'Error al cargar empresas: $e';
+          isLoading = false;
+        });
+      }
     }
   }
 

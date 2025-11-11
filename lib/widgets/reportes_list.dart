@@ -5,8 +5,6 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import '../controllers/reportes_list_controller.dart';
 import '../models/reporte_model.dart';
 import '../models/estado_reporte.dart';
-import 'package:intl/intl.dart';
-import 'politica_selection_modal_scan.dart';
 
 class ReportesList extends StatefulWidget {
   final List<Reporte> reportes;
@@ -128,18 +126,18 @@ class _ReportesListState extends State<ReportesList> {
       onRefresh: widget.onRefresh,
       child: data.isEmpty
           ? ListView(
-              children: const [
-                SizedBox(height: 120),
+              children: [
+                const SizedBox(height: 120),
                 Center(
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.auto_graph_rounded,
-                        size: 100,
-                        color: Colors.grey,
+                      Image.asset(
+                        'assets/icon/doc.png',
+                        width: 120,
+                        height: 140,
                       ),
-                      SizedBox(height: 10),
-                      Text(
+                      const SizedBox(height: 10),
+                      const Text(
                         "No hay facturas registradas",
                         style: TextStyle(
                           color: Colors.black54,
@@ -157,10 +155,6 @@ class _ReportesListState extends State<ReportesList> {
               itemCount: data.length,
               itemBuilder: (context, index) {
                 final reporte = data[index];
-                final fechaOriginal = DateTime.tryParse(reporte.fecha ?? '');
-                final fechaCorta = fechaOriginal != null
-                    ? DateFormat('dd/MM/yy').format(fechaOriginal)
-                    : 'Fecha inválida';
 
                 return GestureDetector(
                   onTap: widget.onTap != null
