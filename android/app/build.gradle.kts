@@ -39,9 +39,9 @@ android {
         versionName = flutter.versionName
         
         // Limitar arquitecturas para reducir tamaño
-        ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a")
-        }
+        //ndk {
+        //    abiFilters += listOf("armeabi-v7a", "arm64-v8a")
+        //}
     }
 
     buildTypes {
