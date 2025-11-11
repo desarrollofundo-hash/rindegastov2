@@ -282,21 +282,13 @@ class ProfileModalWidgets {
               label,
               style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               height: 44,
               decoration: BoxDecoration(
                 color: isReadOnly ? Colors.white : Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isReadOnly
-                      ? Colors.grey[300]!
-                      : (controller.focusNodes[index].hasFocus
-                            ? Colors.blue[400]!
-                            : Colors.white!),
-                  width: controller.focusNodes[index].hasFocus ? 1.5 : 1.0,
-                ),
                 boxShadow: controller.focusNodes[index].hasFocus && !isReadOnly
                     ? [
                         BoxShadow(
@@ -318,7 +310,7 @@ class ProfileModalWidgets {
                       : null,
                   decoration: InputDecoration(
                     hintText: isReadOnly ? null : hint,
-                    hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                    hintStyle: TextStyle(color: Colors.white, fontSize: 14),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
@@ -332,9 +324,9 @@ class ProfileModalWidgets {
                       ),
                     ),
 
-                    enabledBorder: const UnderlineInputBorder(
+                    enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
-                        color: Colors.transparent,
+                        color: Colors.grey[300]!,
                         width: 1,
                       ),
                     ),
@@ -343,12 +335,7 @@ class ProfileModalWidgets {
                       borderSide: BorderSide(color: Colors.blue, width: 2),
                     ),
 
-                    disabledBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Colors.transparent,
-                        width: 0.5,
-                      ),
-                    ),
+                    disabledBorder: const UnderlineInputBorder(),
                   ),
 
                   style: TextStyle(
@@ -424,7 +411,7 @@ class ProfileModalWidgets {
                 height: 40,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[600], 
+                    backgroundColor: Colors.red[600],
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

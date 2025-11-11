@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
       navigatorObservers: [routeObserver],
       routes: {
         AppRoutes.splash: (context) => const SplashScreen(),
+
         AppRoutes.login: (context) => const LoginScreen(),
         AppRoutes.home: (context) => const HomeScreen(),
       },

@@ -119,42 +119,7 @@ class _LoginViewState extends State<LoginView>
     return Column(
       children: [
         // Círculo con efecto de profundidad y gradiente moderno
-        Container(
-          height: 100,
-          width: 100,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF0072FF), Color(0xFF00D4FF)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.blueAccent.withOpacity(0.35),
-                blurRadius: 25,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Container(
-            margin: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.15),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 2,
-              ),
-            ),
-            child: const Icon(
-              Icons.receipt_long_rounded,
-              size: 50,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 22),
+        
 
         // Título principal
         ShaderMask(

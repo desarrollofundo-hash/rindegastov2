@@ -36,7 +36,6 @@ class InformeReporteListDetalle extends StatelessWidget {
               onButtonPressed: showEmptyStateButton
                   ? onEmptyStateButtonPressed
                   : null,
-              icon: Icons.receipt_long,
             ),
           ),
         ),
