@@ -119,6 +119,7 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
             ),
           if (!_isLoading && _error == null)
             DropdownButtonFormField<String>(
+              dropdownColor: Colors.white,
               decoration: const InputDecoration(
                 labelText: 'Seleccionar Política',
                 border: OutlineInputBorder(),

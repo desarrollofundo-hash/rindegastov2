@@ -102,10 +102,28 @@ class EditReporteController {
       String fechaSQL = "";
       if (fechaEmision.isNotEmpty) {
         try {
-          final fecha = DateTime.parse(fechaEmision);
+          DateTime fecha;
+
+          // Intentar parsear como DD/MM/YYYY (formato del DatePicker)
+          if (fechaEmision.contains('/')) {
+            final parts = fechaEmision.split('/');
+            if (parts.length == 3) {
+              final day = int.parse(parts[0]);
+              final month = int.parse(parts[1]);
+              final year = int.parse(parts[2]);
+              fecha = DateTime(year, month, day);
+            } else {
+              fecha = DateTime.now();
+            }
+          } else {
+            // Intentar parsear como ISO 8601
+            fecha = DateTime.parse(fechaEmision);
+          }
+
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
         } catch (e) {
+          debugPrint('Error parseando fecha: $e');
           final fecha = DateTime.now();
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
@@ -133,7 +151,8 @@ class EditReporteController {
         "total": double.tryParse(total) ?? 0.0,
         "moneda": moneda,
         "rucCliente": rucCliente,
-        "desEmp": reporte.desempr, //CompanyService().currentCompany?.empresa ?? '',
+        "desEmp":
+            reporte.desempr, //CompanyService().currentCompany?.empresa ?? '',
         "desSed": "",
         //"gerencia": CompanyService().currentCompany?.gerencia ?? '',
         //"area": CompanyService().currentCompany?.area ?? '',
