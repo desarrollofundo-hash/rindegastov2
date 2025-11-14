@@ -5,10 +5,7 @@ import 'package:flu2/controllers/edit_reporte_controller.dart';
 import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/dropdown_option.dart';
 import 'package:flu2/services/user_service.dart';
-import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
@@ -210,6 +207,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     _destinoController.addListener(_validateForm);
     _motivoViajeController.addListener(_validateForm);
     _categoriaController.addListener(_validateForm);
+    _notaController.addListener(_validateForm);
   }
 
   /// Validar si el RUC del cliente (escaneado) coincide con la empresa seleccionada
@@ -260,6 +258,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         _motivoViajeController.text.trim().isNotEmpty &&
         _categoriaController.text.trim().isNotEmpty &&
         _rucClienteController.text.trim().isNotEmpty &&
+        _notaController.text.trim().isNotEmpty &&
         (_selectedFile !=
             null) && // ✅ Actualizado para aceptar archivos o imágenes
         _isRucValid(); // ✅ Añadida validación de RUC
@@ -396,7 +395,6 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     _placaController.dispose();
   }
 
-  /*
   /// Seleccionar archivo (imagen o PDF)
   Future<void> _pickImage() async {
     try {
@@ -493,142 +491,6 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       }
     } finally {
       setState(() => _isLoading = false);
-    }
-  }
-*/
-
-  /// Seleccionar archivo (imagen o PDF)
-  Future<void> _pickImage() async {
-    try {
-      setState(() => _isLoading = true); // Mostrar indicador de carga
-
-      // Mostrar opciones para seleccionar tipo de archivo
-      final selectedOption = await showDialog<String>(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Seleccionar evidencia'),
-            content: const Text('¿Qué tipo de archivo desea agregar?'),
-            actions: [
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'camera'),
-                icon: const Icon(Icons.camera_alt),
-                label: const Text('Tomar Foto'),
-              ),
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'gallery'),
-                icon: const Icon(Icons.photo_library),
-                label: const Text('Galería'),
-              ),
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'pdf'),
-                icon: const Icon(Icons.picture_as_pdf),
-                label: const Text('Archivo PDF'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (selectedOption != null) {
-        if (selectedOption == 'camera' || selectedOption == 'gallery') {
-          // Tomar foto con la cámara o galería
-          final XFile? image = await _picker.pickImage(
-            source: selectedOption == 'camera'
-                ? ImageSource.camera
-                : ImageSource.gallery,
-            imageQuality: 85, // Calidad de la imagen
-          );
-
-          if (image != null) {
-            File file = File(image.path);
-
-            // Aquí recortamos la imagen
-            _cropImage(file);
-          }
-        } else if (selectedOption == 'pdf') {
-          // Seleccionar archivo PDF
-          final result = await FilePicker.platform.pickFiles(
-            type: FileType.custom,
-            allowedExtensions: ['pdf'],
-            allowMultiple: false,
-          );
-
-          if (result != null && result.files.isNotEmpty) {
-            final file = File(result.files.first.path!);
-            setState(() {
-              _selectedFile = file;
-              _selectedFileType = 'pdf';
-              _selectedFileName = result.files.first.name;
-            });
-          }
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al seleccionar archivo: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false); // Ocultar indicador de carga
-      }
-    }
-  }
-
-  /// Recortar imagen seleccionada
-  Future<void> _cropImage(File imageFile) async {
-    try {
-      // Usamos el paquete image_cropper para permitir recortar la imagen
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: imageFile.path,
-        aspectRatio: CropAspectRatio(
-          ratioX: 1.0,
-          ratioY: 1.0,
-        ), // Relación de aspecto cuadrada (1:1)
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Recortar Comprobante',
-            toolbarColor: Colors.green,
-            toolbarWidgetColor: Colors.white,
-            initAspectRatio:
-                CropAspectRatioPreset.square, // Relación cuadrada inicial
-            lockAspectRatio: false, // No bloquear la relación de aspecto
-          ),
-          IOSUiSettings(
-            minimumAspectRatio: 1.0, // Relación mínima de aspecto
-          ),
-        ],
-      );
-
-      if (croppedFile != null) {
-        setState(() {
-          _selectedFile = File(
-            croppedFile.path,
-          ); // Convertimos CroppedFile a File
-          _selectedFileType = 'image'; // Indicamos que es una imagen
-          _selectedFileName = croppedFile.path
-              .split('/')
-              .last; // Nombre del archivo
-        });
-      }
-    } on PlatformException catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al recortar la imagen: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
     }
   }
 
@@ -782,25 +644,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       String fechaSQL = "";
       if (_fechaEmisionController.text.isNotEmpty) {
         try {
-          DateTime fecha;
-          final fechaText = _fechaEmisionController.text;
-
-          // Intentar parsear como DD/MM/YYYY (formato del DatePicker)
-          if (fechaText.contains('/')) {
-            final parts = fechaText.split('/');
-            if (parts.length == 3) {
-              final day = int.parse(parts[0]);
-              final month = int.parse(parts[1]);
-              final year = int.parse(parts[2]);
-              fecha = DateTime(year, month, day);
-            } else {
-              fecha = DateTime.now();
-            }
-          } else {
-            // Intentar parsear como ISO 8601
-            fecha = DateTime.parse(fechaText);
-          }
-
+          // Intentar parsear la fecha del QR
+          final fecha = DateTime.parse(_fechaEmisionController.text);
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
         } catch (e) {
@@ -892,7 +737,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
         "useReg": UserService().currentUserCode, // Campo obligatorio
-        "hostname": DeviceUtils.getMacAddress(), // Campo obligatorio, máximo 50 caracteres
+        "hostname": "FLUTTER", // Campo obligatorio, máximo 50 caracteres
         "fecEdit": DateTime.now().toIso8601String(),
         "useEdit": 0,
         "useElim": 0,
@@ -926,7 +771,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
         "useReg": UserService().currentUserCode, // Campo obligatorio
-        "hostname": DeviceUtils.getMacAddress(), // Campo obligatorio, máximo 50 caracteres
+        "hostname": "FLUTTER", // Campo obligatorio, máximo 50 caracteres
         "fecEdit": DateTime.now().toIso8601String(),
         "useEdit": 0,
         "useElim": 0,
@@ -1071,7 +916,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           children: [
             Row(
               children: [
-                const Icon(Icons.attach_file, color: Colors.blue),
+                const Icon(Icons.attach_file, color: Colors.red),
                 const SizedBox(width: 8),
                 const Text(
                   'Adjuntar Evidencia',
@@ -1079,7 +924,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 ),
                 const Text(
                   ' *',
-                  style: TextStyle(color: Colors.blue, fontSize: 16),
+                  style: TextStyle(color: Colors.red, fontSize: 16),
                 ),
                 const Spacer(),
                 if (_isLoading)
@@ -1098,7 +943,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       (_selectedFile == null) ? 'Agregar' : 'Cambiar',
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                     ),
                   ),
@@ -1182,7 +1027,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   color: Colors.white,
                   border: Border.all(
                     color: (_selectedFile == null)
-                        ? Colors.blue.shade300
+                        ? Colors.red.shade300
                         : Colors.grey.shade300,
                     width: (_selectedFile == null) ? 2 : 1,
                   ),
@@ -1201,13 +1046,13 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       'Agregar evidencia (Obligatorio)',
                       style: TextStyle(
                         color: (_selectedFile == null)
-                            ? Colors.blue
+                            ? Colors.red
                             : Colors.grey,
                         fontWeight: (_selectedFile == null)
                             ? FontWeight.bold
                             : FontWeight.normal,
                       ),
-                      ),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Imagen o PDF',
@@ -1224,6 +1069,172 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       ),
     );
   }
+
+  /*
+  /// Construir la sección de imagen
+  Widget _buildImageSection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.attach_file, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Adjuntar Evidencia',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  ' *',
+                  style: TextStyle(color: Colors.red, fontSize: 16),
+                ),
+                const Spacer(),
+                if (_isLoading)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  ElevatedButton.icon(
+                    onPressed: _pickImage,
+                    icon: Icon(
+                      (_selectedImage == null && _selectedFile == null)
+                          ? Icons.add
+                          : Icons.edit,
+                    ),
+                    label: Text(
+                      (_selectedImage == null && _selectedFile == null)
+                          ? 'Agregar'
+                          : 'Cambiar',
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Mostrar archivo seleccionado
+            if (_selectedFile != null)
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: _selectedFileType == 'image'
+                    ? Container(
+                        height: 200,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(_selectedFile!, fit: BoxFit.cover),
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.picture_as_pdf,
+                              color: Colors.blue,
+                              size: 40,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Archivo PDF seleccionado',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _selectedFileName ?? 'archivo.pdf',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 12,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 24,
+                            ),
+                          ],
+                        ),
+                      ),
+              )
+            else
+              Container(
+                height: 100,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  border: Border.all(
+                    color: (_selectedImage == null && _selectedFile == null)
+                        ? Colors.red.shade300
+                        : Colors.grey.shade300,
+                    width: (_selectedImage == null && _selectedFile == null)
+                        ? 2
+                        : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.attach_file,
+                      color: (_selectedImage == null && _selectedFile == null)
+                          ? Colors.red
+                          : Colors.grey,
+                      size: 40,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Agregar evidencia (Obligatorio)',
+                      style: TextStyle(
+                        color: (_selectedImage == null && _selectedFile == null)
+                            ? Colors.red
+                            : Colors.grey,
+                        fontWeight:
+                            (_selectedImage == null && _selectedFile == null)
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Imagen o PDF',
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+*/
 
   Future<void> _handleTapEvidencia() async {
     try {
@@ -1421,153 +1432,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   }
 
   /// Construir la sección de política
-  /// /// Construir la sección de política
   Widget _buildPolicySection() {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.policy, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
-                'Política',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _politicaController,
-            enabled: false,
-            decoration: InputDecoration(
-              labelText: 'Política Seleccionada',
-              border: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Colors.transparent,
-                  width: 0,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.policy, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Política',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-              ),
+              ],
             ),
-          ),
-
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _politicaController,
-            enabled: false,
-            decoration: InputDecoration(
-              labelText: 'Política Seleccionada',
-              border: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Colors.transparent,
-                  width: 0,
-                ),
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
-              ),
-              focusedBorder: const UnderlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.blue, width: 2),
-              ),
-              disabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
-              ),
-              prefixIcon: const Icon(Icons.policy),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Construir la sección de categoría para movilidad
-  Widget _buildCategorySection() {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.category, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
-                'Categoría',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_isLoadingCategorias)
-            const Center(
-              child: Column(
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 8),
-                  Text(
-                    'Cargando categorías...',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            )
-          else if (_errorCategorias != null)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.red.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Error al cargar categorías: $_errorCategorias',
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _loadCategorias,
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            )
-          else if (_categoriasMovilidad.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.warning, color: Colors.orange),
-                  SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'No hay categorías disponibles para esta política',
-                      style: TextStyle(color: Colors.orange),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          else
-            DropdownButtonFormField<String>(
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _politicaController,
+              enabled: false,
               decoration: InputDecoration(
-                labelText: 'Seleccionar Categoría *',
+                labelText: 'Política Seleccionada',
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
@@ -1587,39 +1474,132 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: Colors.grey, width: 1),
                 ),
-                prefixIcon: const Icon(Icons.category),
+                prefixIcon: const Icon(Icons.policy),
               ),
-              initialValue:
-                  _categoriaController.text.isNotEmpty &&
-                      _categoriasMovilidad.any(
-                        (cat) => cat.categoria == _categoriaController.text,
-                      )
-                  ? _categoriaController.text
-                  : null,
-              items: _categoriasMovilidad
-                  .map(
-                    (categoria) => DropdownMenuItem<String>(
-                      value: categoria.categoria,
-                      child: Text(_formatCategoriaName(categoria.categoria)),
-                    ),
-                  )
-                  .toList(),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Categoría es obligatoria';
-                }
-                return null;
-              },
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _categoriaController.text = value;
-                  });
-                  _validateForm(); // Validar cuando cambie la categoría
-                }
-              },
             ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Construir la sección de categoría para movilidad
+  Widget _buildCategorySection() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.category, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Categoría',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_isLoadingCategorias)
+              const Center(
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 8),
+                    Text(
+                      'Cargando categorías...',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+              )
+            else if (_errorCategorias != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error, color: Colors.red.shade600),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Error al cargar categorías: $_errorCategorias',
+                        style: TextStyle(color: Colors.red.shade700),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: _loadCategorias,
+                      child: const Text('Reintentar'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_categoriasMovilidad.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'No hay categorías disponibles para esta política',
+                        style: TextStyle(color: Colors.orange),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Seleccionar Categoría *',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.category),
+                ),
+                initialValue:
+                    _categoriaController.text.isNotEmpty &&
+                        _categoriasMovilidad.any(
+                          (cat) => cat.categoria == _categoriaController.text,
+                        )
+                    ? _categoriaController.text
+                    : null,
+                items: _categoriasMovilidad
+                    .map(
+                      (categoria) => DropdownMenuItem<String>(
+                        value: categoria.categoria,
+                        child: Text(_formatCategoriaName(categoria.categoria)),
+                      ),
+                    )
+                    .toList(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Categoría es obligatoria';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _categoriaController.text = value;
+                    });
+                    _validateForm(); // Validar cuando cambie la categoría
+                  }
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1638,380 +1618,316 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   }
 
   Widget _buildFacturaDataSection() {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.receipt_long, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
-                'Datos de la Factura',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-
-          // Sección de tipo de gasto debajo de categoría
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              const Icon(Icons.local_offer, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
-                'Tipo de Gasto',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (_isLoadingTiposGasto)
-            const Center(
-              child: Column(
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 8),
-                  Text(
-                    'Cargando tipos de gasto...',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
-            )
-          else if (_errorTiposGasto != null)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error, color: Colors.red.shade600),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Error al cargar tipos de gasto: $_errorTiposGasto',
-                      style: TextStyle(color: Colors.red.shade700),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _loadTiposGasto,
-                    child: const Text('Reintentar'),
-                  ),
-                ],
-              ),
-            )
-          else
-            DropdownButtonFormField<String>(
-              dropdownColor: Colors.white,
-              decoration: InputDecoration(
-                labelText: 'Seleccionar Tipo de Gasto *',
-                border: UnderlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Colors.transparent,
-                    width: 0,
-                  ),
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.receipt_long, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Datos de la Factura',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                enabledBorder: UnderlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
-                ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                disabledBorder: UnderlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
-                ),
-                prefixIcon: const Icon(Icons.local_offer),
-              ),
-              value:
-                  _tipoGastoController.text.isNotEmpty &&
-                      _tiposGasto.contains(_tipoGastoController.text)
-                  ? _tipoGastoController.text
-                  : null,
-              items: _tiposGasto
-                  .map(
-                    (tipo) => DropdownMenuItem<String>(
-                      value: tipo,
-                      child: Text(tipo),
-                    ),
-                  )
-                  .toList(),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Tipo de gasto es obligatorio';
-                }
-                return null;
-              },
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _tipoGastoController.text = value;
-                  });
-                  _validateForm();
-                }
-              },
-            ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  _rucController,
-                  'RUC Emisor',
-                  Icons.business_center,
-                  TextInputType.number,
-                  isRequired: true,
-                  readOnly: true,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  _razonSocialController,
-                  'Razon Social...',
-                  Icons.business,
-                  TextInputType.text,
-                  isRequired: true,
-                  readOnly: true,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  _tipoComprobanteController,
-                  'Tipo Comprobante',
-                  Icons.description,
-                  TextInputType.text,
-                  isRequired: true,
-                  readOnly: true,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  _rucClienteController,
-                  'RUC Cliente',
-                  Icons.person_outline_rounded,
-                  TextInputType.number,
-                  readOnly: true,
-                ),
-              ),
-            ],
-          ),
-
-          // 🔍 Mensaje de validación del RUC Cliente
-          if (_rucClienteController.text.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(left: 12, top: 4, bottom: 8),
-              child: Row(
-                children: [
-                  Icon(
-                    _isRucValid() ? Icons.check_circle : Icons.error,
-                    size: 16,
-                    color: _isRucValid() ? Colors.green : Colors.red,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      _getRucStatusMessage(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: _isRucValid() ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
 
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  _fechaEmisionController,
-                  'Fecha Emisión',
-                  Icons.calendar_today,
-                  TextInputType.datetime,
-                  isRequired: true,
-                  readOnly: true,
+            // Sección de tipo de gasto debajo de categoría
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.local_offer, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Tipo de Gasto',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  _serieController,
-                  'Serie',
-                  Icons.tag,
-                  TextInputType.text,
-                  isRequired: true,
-                  readOnly: true,
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (_isLoadingTiposGasto)
+              const Center(
+                child: Column(
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 8),
+                    Text(
+                      'Cargando tipos de gasto...',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTextField(
-                  _numeroController,
-                  'Número',
-                  Icons.numbers,
-                  TextInputType.number,
-                  isRequired: true,
-                  readOnly: true,
+              )
+            else if (_errorTiposGasto != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade200),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Total y Moneda en la misma fila
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: TextFormField(
-                  controller: _totalController,
-                  readOnly: true,
-                  decoration: InputDecoration(
-                    labelText: 'Total',
-                    border: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.transparent,
-                        width: 0,
+                child: Row(
+                  children: [
+                    Icon(Icons.error, color: Colors.red.shade600),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Error al cargar tipos de gasto: $_errorTiposGasto',
+                        style: TextStyle(color: Colors.red.shade700),
                       ),
                     ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
+                    TextButton(
+                      onPressed: _loadTiposGasto,
+                      child: const Text('Reintentar'),
                     ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
-                    ),
-                    disabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
-                    ),
-                    prefixIcon: const Icon(Icons.attach_money),
-                  ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'El total es obligatorio';
-                    }
-                    if (double.tryParse(value) == null) {
-                      return 'Ingrese un valor válido';
-                    }
-                    return null;
-                  },
+                  ],
                 ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  dropdownColor: Colors.white,
-                  value: _selectedMoneda,
-                  decoration: InputDecoration(
-                    labelText: 'Moneda',
-                    border: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.transparent,
-                        width: 0,
+              )
+            else
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(
+                  labelText: 'Seleccionar Tipo de Gasto *',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.local_offer),
+                ),
+                value:
+                    _tipoGastoController.text.isNotEmpty &&
+                        _tiposGasto.contains(_tipoGastoController.text)
+                    ? _tipoGastoController.text
+                    : null,
+                items: _tiposGasto
+                    .map(
+                      (tipo) => DropdownMenuItem<String>(
+                        value: tipo,
+                        child: Text(tipo),
                       ),
-                    ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
-                    ),
-                    disabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
-                    ),
-                    prefixIcon: const Icon(Icons.monetization_on),
-                  ),
-                  items: _monedas.map((moneda) {
-                    return DropdownMenuItem<String>(
-                      value: moneda,
-                      child: Text(moneda),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
+                    )
+                    .toList(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Tipo de gasto es obligatorio';
+                  }
+                  return null;
+                },
+                onChanged: (value) {
+                  if (value != null) {
                     setState(() {
-                      _selectedMoneda = value;
-                      _monedaController.text = value ?? '';
+                      _tipoGastoController.text = value;
                     });
-                  },
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Seleccione una moneda';
-                    }
-                    return null;
-                  },
-                ),
+                    _validateForm();
+                  }
+                },
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _rucController,
+                    'RUC Emisor',
+                    Icons.business_center,
+                    TextInputType.number,
+                    isRequired: true,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
 
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextField(
-                  _igvController,
-                  'IGV',
-                  Icons.attach_money,
-                  TextInputType.text,
-                  readOnly: true,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _razonSocialController,
+                    'Razon Social...',
+                    Icons.business,
+                    TextInputType.text,
+                    isRequired: true,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _tipoComprobanteController,
+                    'Tipo Comprobante',
+                    Icons.description,
+                    TextInputType.text,
+                    isRequired: true,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _rucClienteController,
+                    'RUC Cliente',
+                    Icons.person_outline_rounded,
+                    TextInputType.number,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
+
+            // 🔍 Mensaje de validación del RUC Cliente
+            if (_rucClienteController.text.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(left: 12, top: 4, bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(
+                      _isRucValid() ? Icons.check_circle : Icons.error,
+                      size: 16,
+                      color: _isRucValid() ? Colors.green : Colors.red,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _getRucStatusMessage(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _isRucValid() ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ],
+
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _fechaEmisionController,
+                    'Fecha Emisión',
+                    Icons.calendar_today,
+                    TextInputType.datetime,
+                    isRequired: true,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _serieController,
+                    'Serie',
+                    Icons.tag,
+                    TextInputType.text,
+                    isRequired: true,
+                    readOnly: true,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextField(
+                    _numeroController,
+                    'Número',
+                    Icons.numbers,
+                    TextInputType.number,
+                    isRequired: true,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // Total y Moneda en la misma fila
+            Row(
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: TextFormField(
+                    controller: _totalController,
+                    readOnly: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Total',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.attach_money),
+                    ),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'El total es obligatorio';
+                      }
+                      if (double.tryParse(value) == null) {
+                        return 'Ingrese un valor válido';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedMoneda,
+                    decoration: const InputDecoration(
+                      labelText: 'Moneda',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.monetization_on),
+                    ),
+                    items: _monedas.map((moneda) {
+                      return DropdownMenuItem<String>(
+                        value: moneda,
+                        child: Text(moneda),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedMoneda = value;
+                        _monedaController.text = value ?? '';
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Seleccione una moneda';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextField(
+                    _igvController,
+                    'IGV',
+                    Icons.attach_money,
+                    TextInputType.text,
+                    readOnly: true,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2068,29 +1984,10 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           AbsorbPointer(
             absorbing: !_isEditMode,
             child: DropdownButtonFormField<String>(
-              dropdownColor: Colors.white,
               decoration: InputDecoration(
                 labelText: 'Tipo de Movilidad *',
                 prefixIcon: Icon(Icons.attach_money),
-                border: UnderlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                    color: Colors.transparent,
-                    width: 0,
-                  ),
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
-                ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                disabledBorder: UnderlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
-                ),
+                border: OutlineInputBorder(),
                 filled: true,
                 fillColor: _isEditMode ? Colors.white : Colors.grey[100],
               ),
@@ -2131,180 +2028,98 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir la sección específica de movilidad
   Widget _buildMovilidadSection() {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.directions_car, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
-                'Detalles de Movilidad',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _origenController,
-                  decoration: InputDecoration(
-                    labelText: 'Origen *',
-                    border: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.transparent,
-                        width: 0,
-                      ),
-                    ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
-                    ),
-                    disabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
-                    ),
-                    prefixIcon: const Icon(Icons.my_location),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Origen es obligatorio';
-                    }
-                    return null;
-                  },
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.directions_car, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Detalles de Movilidad',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _destinoController,
-                  decoration: InputDecoration(
-                    labelText: 'Destino *',
-                    border: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.transparent,
-                        width: 0,
-                      ),
-                    ),
-                    enabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
-                    ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
-                    ),
-                    disabledBorder: UnderlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
-                        width: 1,
-                      ),
-                    ),
-                    prefixIcon: const Icon(Icons.location_on),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Destino es obligatorio';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _motivoViajeController,
-            decoration: InputDecoration(
-              labelText: 'Motivo del Viaje *',
-              border: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Colors.transparent,
-                  width: 0,
-                ),
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
-              ),
-              focusedBorder: const UnderlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.blue, width: 2),
-              ),
-              disabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
-              ),
-              prefixIcon: const Icon(Icons.description),
+              ],
             ),
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Motivo del Viaje es obligatorio';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: 12),
-
-          _buildTipoMovilidad(),
-
-          const SizedBox(height: 12),
-
-          // PLACA
-          TextFormField(
-            controller: _placaController,
-            decoration: InputDecoration(
-              labelText: 'Placa',
-              border: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: Colors.transparent,
-                  width: 0,
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _origenController,
+                    decoration: const InputDecoration(
+                      labelText: 'Origen *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.my_location),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Origen es obligatorio';
+                      }
+                      return null;
+                    },
+                  ),
                 ),
-              ),
-              enabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
-              ),
-              focusedBorder: const UnderlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.blue, width: 2),
-              ),
-              disabledBorder: UnderlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
-              ),
-              prefixIcon: const Icon(Icons.badge),
+              ],
             ),
-            keyboardType: TextInputType.text,
-          ),
-          const SizedBox(height: 12),
-        ],
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _destinoController,
+                    decoration: const InputDecoration(
+                      labelText: 'Destino *',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.location_on),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Destino es obligatorio';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _motivoViajeController,
+              decoration: const InputDecoration(
+                labelText: 'Motivo del Viaje *',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.description),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'Motivo del Viaje es obligatorio';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+
+            _buildTipoMovilidad(),
+
+            const SizedBox(height: 12),
+
+            // PLACA
+            TextFormField(
+              controller: _placaController,
+              decoration: const InputDecoration(
+                labelText: 'Placa',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.badge),
+              ),
+              keyboardType: TextInputType.text,
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }
@@ -2313,32 +2128,41 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir la sección de notas
   Widget _buildNotesSection() {
-    return Padding(
-      padding: const EdgeInsets.all(2),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.note_add, color: Colors.blue),
-              const SizedBox(width: 8),
-              const Text(
-                'Notas Adicionales',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _notaController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: 'Observaciones:',
-              border: OutlineInputBorder(),
-              alignLabelWithHint: true,
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.note_add, color: Colors.blue),
+                const SizedBox(width: 8),
+                const Text(
+                  'Notas Adicionales',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _notaController,
+              decoration: const InputDecoration(
+                labelText: 'Nota o Glosa:',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.note),
+              ),
+              maxLines: 2,
+              maxLength: 500,
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return 'La nota es obligatoria';
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -2446,24 +2270,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
-        border: UnderlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.transparent, width: 0),
-        ),
-        enabledBorder: UnderlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
-        ),
-        focusedBorder: const UnderlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.blue, width: 2),
-        ),
-        disabledBorder: UnderlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
-        ),
+        border: const OutlineInputBorder(),
         filled: true,
-        fillColor: readOnly ? Colors.white : Colors.white,
+        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
       ),
       validator: isRequired
           ? (value) {
