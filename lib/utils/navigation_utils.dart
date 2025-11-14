@@ -1,5 +1,81 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:network_info_plus/network_info_plus.dart';
+
+class DeviceUtils {
+  static final DeviceInfoPlugin _deviceInfoPlugin = DeviceInfoPlugin();
+  static final NetworkInfo _networkInfo = NetworkInfo();
+
+  static String? _cachedMac;
+  static String? _cachedIp;
+  static String? _cachedName;
+  static String? _cachedSerial;
+
+  static Future<void> init() async {
+    try {
+      _cachedIp = await _networkInfo.getWifiIP();
+      _cachedMac = await _getRealMacAddress();
+
+      if (Platform.isAndroid) {
+        final info = await _deviceInfoPlugin.androidInfo;
+        _cachedName = info.model;
+        _cachedSerial = info.serialNumber ?? 'No disponible';
+      } else if (Platform.isIOS) {
+        final info = await _deviceInfoPlugin.iosInfo;
+        _cachedName = info.name;
+        _cachedSerial = 'No disponible';
+      } else if (Platform.isWindows) {
+        final info = await _deviceInfoPlugin.windowsInfo;
+        _cachedName = info.computerName;
+        _cachedSerial = info.deviceId ?? 'No disponible';
+      } else if (Platform.isMacOS) {
+        final info = await _deviceInfoPlugin.macOsInfo;
+        _cachedName = info.computerName;
+        _cachedSerial = info.systemGUID ?? 'No disponible';
+      }
+    } catch (e) {
+      _cachedIp = 'Error IP: $e';
+      _cachedMac = 'Error MAC: $e';
+      _cachedName = 'Error nombre: $e';
+      _cachedSerial = 'Error serie: $e';
+    }
+  }
+
+  static Future<String?> _getRealMacAddress() async {
+    try {
+      String? mac = await _networkInfo.getWifiBSSID();
+
+      // En Android 10+ puede devolver "02:00:00:00:00:00"
+      if (mac == null || mac == "02:00:00:00:00:00") {
+        mac = await _networkInfo.getWifiName(); // fallback
+      }
+      return mac ?? 'No disponible';
+    } catch (e) {
+      return 'Error al obtener MAC: $e';
+    }
+  }
+
+  static String getLocalIpAddress() => _cachedIp ?? 'Desconocido';
+  static String getMacAddress() => _cachedMac ?? 'Desconocido';
+  static String getDeviceName() => _cachedName ?? 'Desconocido';
+  static String getSerialNumber() => _cachedSerial ?? 'Desconocido';
+
+  static Map<String, String> toJson() {
+    return {
+      "hostname": getMacAddress(),
+      "ip": getLocalIpAddress(),
+      "nombre": getDeviceName(),
+      "serie": getSerialNumber(),
+    };
+  }
+}
 
 /// Cierra el foco y el teclado, y si es posible hace pop en el Navigator.
 void safePop(BuildContext context, [dynamic result]) {
@@ -123,4 +199,3 @@ void showMessageError(
     context,
   ).showSnackBar(SnackBar(content: Text(message), duration: duration));
 }
-
