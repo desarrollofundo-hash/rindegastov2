@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   http: ^1.1.0
   intl: ^0.20.2
   flutter_speed_dial: ^7.0.0
@@ -54,11 +56,13 @@ flutter:
   assets:
     - assets/icon/f.png
     - assets/riv/moneda.riv
-    - assets/riv/cargando.riv
-    - assets/riv/cargando1.riv
+    - assets/riv/load.riv
     - assets/icon/doc.png
-    - assets/icon/informe.png
-
+    - assets/riv/cargando2.riv
+    - assets/riv/doc.riv
+    - assets/icon/doc1.png
+    - assets/icon/auditoria.png
+    - assets/icon/informe1.png
 flutter_launcher_icons:
   android: true
   ios: true

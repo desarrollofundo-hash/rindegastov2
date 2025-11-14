@@ -24,8 +24,13 @@ class ReportesList extends StatefulWidget {
   State<ReportesList> createState() => _ReportesListState();
 }
 
-class _ReportesListState extends State<ReportesList> {
+class _ReportesListState extends State<ReportesList>
+    with SingleTickerProviderStateMixin {
   final ReportesListController _controller = ReportesListController();
+
+  AnimationController? _animationController;
+  Animation<double>? _animation;
+
   // Función para abrir el escáner QR
   void _abrirEscaneadorQR() =>
       _controller.abrirEscaneadorQR(context, () => mounted);
@@ -34,6 +39,26 @@ class _ReportesListState extends State<ReportesList> {
 
   void _escanerIA() => _controller.escanerIA(context, () => mounted);
 
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    final curved = CurvedAnimation(
+      parent: _animationController!,
+      curve: Curves.bounceInOut,
+    );
+    _animation = Tween<double>(begin: -20, end: 20).animate(curved);
+  }
+
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
+  }
+
   // Función para escanear documentos con IA (el botón está inactivo)
 
   // Nota: la lógica adicional (procesamiento IA, navegación de políticas, etc.)
@@ -41,6 +66,18 @@ class _ReportesListState extends State<ReportesList> {
 
   @override
   Widget build(BuildContext context) {
+    if (_animationController == null) {
+      _animationController = AnimationController(
+        duration: const Duration(seconds: 2),
+        vsync: this,
+      )..repeat(reverse: true);
+      final curved = CurvedAnimation(
+        parent: _animationController!,
+        curve: Curves.bounceInOut,
+      );
+      _animation = Tween<double>(begin: -20, end: 20).animate(curved);
+    }
+
     if (widget.isLoading) {
       return const Center(
         child: Column(
@@ -121,6 +158,18 @@ class _ReportesListState extends State<ReportesList> {
   Widget _buildList(EstadoReporte filtro) {
     final data = _controller.filtrarReportes(widget.reportes, filtro);
 
+    // Obtener el mensaje según el filtro
+    String _getEmptyMessage(EstadoReporte filtro) {
+      switch (filtro) {
+        case EstadoReporte.todos:
+          return "No hay ninguna factura registrada";
+        case EstadoReporte.borrador:
+          return "No hay ninguna factura en borrador";
+        case EstadoReporte.enviado:
+          return "No hay ninguna factura enviada";
+      }
+    }
+
     return RefreshIndicator(
       backgroundColor: Colors.white,
       onRefresh: widget.onRefresh,
@@ -131,15 +180,24 @@ class _ReportesListState extends State<ReportesList> {
                 Center(
                   child: Column(
                     children: [
-                      Image.asset(
-                        'assets/icon/doc.png',
-                        width: 120,
-                        height: 140,
+                      AnimatedBuilder(
+                        animation: _animation!,
+                        builder: (context, child) {
+                          return Transform.translate(
+                            offset: Offset(0, _animation!.value),
+                            child: child,
+                          );
+                        },
+                        child: Image.asset(
+                          'assets/icon/doc1.png',
+                          width: 120,
+                          height: 140,
+                        ),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
-                        "No hay facturas registradas",
-                        style: TextStyle(
+                      Text(
+                        _getEmptyMessage(filtro),
+                        style: const TextStyle(
                           color: Colors.black54,
                           fontSize: 20,
                           fontWeight: FontWeight.w500,

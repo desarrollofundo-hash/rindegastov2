@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flu2/widgets/empty_state.dart';
 // Nota: se eliminó import innecesario
 
-class InformesAuditoriaList extends StatelessWidget {
+class InformesAuditoriaList extends StatefulWidget {
   final List<ReporteAuditoria> auditorias; // Cambié el tipo de la lista aquí
   final Function(ReporteAuditoria)
   onAuditoriaUpdated; // Cambié el tipo de la función aquí
@@ -14,6 +14,7 @@ class InformesAuditoriaList extends StatelessWidget {
   final bool showEmptyStateButton;
   final VoidCallback? onEmptyStateButtonPressed;
   final Future<void> Function()? onRefresh;
+  final String emptyMessage;
 
   const InformesAuditoriaList({
     super.key,
@@ -23,19 +24,49 @@ class InformesAuditoriaList extends StatelessWidget {
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
+    this.emptyMessage = "No hay auditorías disponibles",
     List<ReporteAuditoria>? auditori,
   });
 
   @override
+  State<InformesAuditoriaList> createState() => _InformesAuditoriaListState();
+}
+
+class _InformesAuditoriaListState extends State<InformesAuditoriaList>
+    with SingleTickerProviderStateMixin {
+  AnimationController? _animationController;
+  Animation<double>? _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    final curved = CurvedAnimation(
+      parent: _animationController!,
+      curve: Curves.bounceInOut,
+    );
+    _animation = Tween<double>(begin: -20, end: 20).animate(curved);
+  }
+
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (auditorias.isEmpty) {
+    if (widget.auditorias.isEmpty) {
       return RefreshIndicator(
         // Personalizar indicador para que coincida con la apariencia de Auditoría
         color: Colors.green,
         backgroundColor: Colors.white,
         strokeWidth: 2.5,
         displacement: 40,
-        onRefresh: onRefresh ?? () async {},
+        onRefresh: widget.onRefresh ?? () async {},
         child: SingleChildScrollView(
           // AlwaysScrollable + Bouncing ayuda a detectar el gesto incluso
           // cuando hay pocos elementos o estamos dentro de un TabBarView.
@@ -48,12 +79,27 @@ class InformesAuditoriaList extends StatelessWidget {
               minHeight: MediaQuery.of(context).size.height * 0.7,
             ),
             child: EmptyState(
-              message: "No hay auditorías disponibles",
-              buttonText: showEmptyStateButton ? "Agregar Auditoría" : null,
-              onButtonPressed: showEmptyStateButton
-                  ? onEmptyStateButtonPressed
+              message: widget.emptyMessage,
+              buttonText: widget.showEmptyStateButton
+                  ? "Agregar Auditoría"
                   : null,
-              icon: Icons.description,
+              onButtonPressed: widget.showEmptyStateButton
+                  ? widget.onEmptyStateButtonPressed
+                  : null,
+              image: AnimatedBuilder(
+                animation: _animation!,
+                builder: (context, child) {
+                  return Transform.translate(
+                    offset: Offset(0, _animation!.value),
+                    child: child,
+                  );
+                },
+                child: Image.asset(
+                  'assets/icon/auditoria.png',
+                  width: 64,
+                  height: 64,
+                ),
+              ),
             ),
           ),
         ),
@@ -66,7 +112,7 @@ class InformesAuditoriaList extends StatelessWidget {
       backgroundColor: Colors.white,
       strokeWidth: 2.5,
       displacement: 40,
-      onRefresh: onRefresh ?? () async {},
+      onRefresh: widget.onRefresh ?? () async {},
       child: ListView.builder(
         key: const PageStorageKey('auditoria_list'),
         padding: const EdgeInsets.all(8),
@@ -74,10 +120,10 @@ class InformesAuditoriaList extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        itemCount: auditorias.length,
+        itemCount: widget.auditorias.length,
         itemBuilder: (context, index) {
           try {
-            final auditoria = auditorias[index];
+            final auditoria = widget.auditorias[index];
             return AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
@@ -286,8 +332,8 @@ class InformesAuditoriaList extends StatelessWidget {
           );
 
           // Si el modal devuelve true, refresca la lista
-          if (result == true && onRefresh != null) {
-            await onRefresh!();
+          if (result == true && widget.onRefresh != null) {
+            await widget.onRefresh!();
           }
         } catch (e, st) {
           debugPrint('Error opening AuditoriaDetalleModal: $e\n$st');
@@ -308,7 +354,7 @@ class InformesAuditoriaList extends StatelessWidget {
         break;
 
       case 'editar':
-        onAuditoriaUpdated(auditoria);
+        widget.onAuditoriaUpdated(auditoria);
         break;
 
       case 'eliminar':
@@ -337,7 +383,7 @@ class InformesAuditoriaList extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                onAuditoriaDeleted(auditoria);
+                widget.onAuditoriaDeleted(auditoria);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Eliminar'),

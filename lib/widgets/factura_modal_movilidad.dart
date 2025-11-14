@@ -782,8 +782,25 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       String fechaSQL = "";
       if (_fechaEmisionController.text.isNotEmpty) {
         try {
-          // Intentar parsear la fecha del QR
-          final fecha = DateTime.parse(_fechaEmisionController.text);
+          DateTime fecha;
+          final fechaText = _fechaEmisionController.text;
+
+          // Intentar parsear como DD/MM/YYYY (formato del DatePicker)
+          if (fechaText.contains('/')) {
+            final parts = fechaText.split('/');
+            if (parts.length == 3) {
+              final day = int.parse(parts[0]);
+              final month = int.parse(parts[1]);
+              final year = int.parse(parts[2]);
+              fecha = DateTime(year, month, day);
+            } else {
+              fecha = DateTime.now();
+            }
+          } else {
+            // Intentar parsear como ISO 8601
+            fecha = DateTime.parse(fechaText);
+          }
+
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
         } catch (e) {
@@ -1190,7 +1207,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                             ? FontWeight.bold
                             : FontWeight.normal,
                       ),
-                    ),
+                      ),
                     const SizedBox(height: 4),
                     Text(
                       'Imagen o PDF',
@@ -1207,172 +1224,6 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       ),
     );
   }
-
-  /*
-  /// Construir la sección de imagen
-  Widget _buildImageSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.attach_file, color: Colors.blue),
-                const SizedBox(width: 8),
-                const Text(
-                  'Adjuntar Evidencia',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                const Text(
-                  ' *',
-                  style: TextStyle(color: Colors.red, fontSize: 16),
-                ),
-                const Spacer(),
-                if (_isLoading)
-                  const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                else
-                  ElevatedButton.icon(
-                    onPressed: _pickImage,
-                    icon: Icon(
-                      (_selectedImage == null && _selectedFile == null)
-                          ? Icons.add
-                          : Icons.edit,
-                    ),
-                    label: Text(
-                      (_selectedImage == null && _selectedFile == null)
-                          ? 'Agregar'
-                          : 'Cambiar',
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Mostrar archivo seleccionado
-            if (_selectedFile != null)
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: _selectedFileType == 'image'
-                    ? Container(
-                        height: 200,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(_selectedFile!, fit: BoxFit.cover),
-                        ),
-                      )
-                    : Container(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.picture_as_pdf,
-                              color: Colors.blue,
-                              size: 40,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'Archivo PDF seleccionado',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _selectedFileName ?? 'archivo.pdf',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 24,
-                            ),
-                          ],
-                        ),
-                      ),
-              )
-            else
-              Container(
-                height: 100,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  border: Border.all(
-                    color: (_selectedImage == null && _selectedFile == null)
-                        ? Colors.red.shade300
-                        : Colors.grey.shade300,
-                    width: (_selectedImage == null && _selectedFile == null)
-                        ? 2
-                        : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.attach_file,
-                      color: (_selectedImage == null && _selectedFile == null)
-                          ? Colors.red
-                          : Colors.grey,
-                      size: 40,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Agregar evidencia (Obligatorio)',
-                      style: TextStyle(
-                        color: (_selectedImage == null && _selectedFile == null)
-                            ? Colors.red
-                            : Colors.grey,
-                        fontWeight:
-                            (_selectedImage == null && _selectedFile == null)
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Imagen o PDF',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-*/
 
   Future<void> _handleTapEvidencia() async {
     try {

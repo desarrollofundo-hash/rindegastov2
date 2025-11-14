@@ -11,6 +11,7 @@ class InformesReporteList extends StatelessWidget {
   final bool showEmptyStateButton;
   final VoidCallback? onEmptyStateButtonPressed;
   final Future<void> Function()? onRefresh;
+  final String emptyMessage;
 
   const InformesReporteList({
     super.key,
@@ -20,6 +21,7 @@ class InformesReporteList extends StatelessWidget {
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
+    this.emptyMessage = "No hay informes disponibles",
     required List<ReporteInforme> informe,
   });
 
@@ -33,7 +35,7 @@ class InformesReporteList extends StatelessWidget {
           child: Container(
             height: MediaQuery.of(context).size.height * 0.7,
             child: EmptyState(
-              message: "No hay informes disponibles",
+              message: emptyMessage,
               buttonText: showEmptyStateButton ? "Agregar Informe" : null,
               onButtonPressed: showEmptyStateButton
                   ? onEmptyStateButtonPressed

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import '../screens/home_screen.dart';
 import '../screens/login_screen.dart';
 import '../screens/splash_screen.dart';
@@ -23,6 +24,13 @@ class MyApp extends StatelessWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       initialRoute: AppRoutes.splash,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('es', 'ES'), Locale('en', 'US')],
+      locale: const Locale('es', 'ES'),
       // Registramos el RouteObserver global para que las pantallas
       // puedan reaccionar cuando se abran/pinten rutas modales.
       navigatorObservers: [routeObserver],

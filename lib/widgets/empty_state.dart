@@ -5,6 +5,7 @@ class EmptyState extends StatelessWidget {
   final String? buttonText;
   final VoidCallback? onButtonPressed;
   final IconData? icon;
+  final Widget? image;
 
   const EmptyState({
     super.key,
@@ -12,6 +13,7 @@ class EmptyState extends StatelessWidget {
     this.buttonText,
     this.onButtonPressed,
     this.icon,
+    this.image,
   });
 
   @override
@@ -24,7 +26,10 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
+            if (image != null) ...[
+              image!,
+              const SizedBox(height: 16),
+            ] else if (icon != null) ...[
               Icon(icon, size: 64, color: Colors.grey),
               const SizedBox(height: 16),
             ],

@@ -1196,6 +1196,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   /// Construir la sección de imagen
   Widget _buildImageSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(1),
         child: Column(
