@@ -2,8 +2,6 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flu2/models/apiruc_model.dart';
-import 'package:flu2/models/user_company.dart';
-import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +18,6 @@ import '../services/api_service.dart';
 import '../services/company_service.dart';
 import '../controllers/edit_reporte_controller.dart';
 import '../screens/home_screen.dart';
-import 'package:path/path.dart' as p;
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -96,6 +93,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
   String? _errorTiposGasto;
   String? _numeroGasto;
 
+  // Opciones para moneda
+  String? _selectedMoneda;
+  final List<String> _monedas = ['PEN', 'USD', 'EUR'];
+
+  // Almacenar la categoría original del reporte para detectar si fue guardada anteriormente
+  String? _originalCategoria;
+
   // Selecciones
 
   // _selectedCategoria and _selectedTipoGasto were previously declared but
@@ -162,6 +166,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
   }
 
   // (El helper de error de imagen fue removido; la UI muestra placeholders simples)
+  /// Detectar si la categoría seleccionada es "PLANILLA DE MOVILIDAD"
+  bool _isPlanillaDeMovilidad() {
+    final categoria = _categoriaController.text.trim().toUpperCase();
+    return categoria.contains('PLANILLA') && categoria.contains('MOVILIDAD');
+  }
 
   /// Agregar listeners para validación en tiempo real
   void _addValidationListeners() {
@@ -221,17 +230,26 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Validar si todos los campos obligatorios están llenos
   void _validateForm() {
-    final isValid =
-        _rucController.text.trim().isNotEmpty &&
-        _tipoComprobanteController.text.trim().isNotEmpty &&
-        _serieController.text.trim().isNotEmpty &&
-        _numeroController.text.trim().isNotEmpty &&
-        _fechaEmisionController.text.trim().isNotEmpty &&
-        _totalController.text.trim().isNotEmpty &&
-        _categoriaController.text.trim().isNotEmpty &&
-        _tipoGastoController.text.trim().isNotEmpty &&
-        (_selectedImage != null) &&
-        _isRucValid();
+    final isMovilidad = _isPlanillaDeMovilidad();
+
+    final isValid = isMovilidad
+        ? // Validación para PLANILLA DE MOVILIDAD
+          _fechaEmisionController.text.trim().isNotEmpty &&
+              _totalController.text.trim().isNotEmpty &&
+              (_selectedMoneda != null && _selectedMoneda!.isNotEmpty) &&
+              _categoriaController.text.trim().isNotEmpty &&
+              (_selectedImage != null)
+        : // Validación para formulario completo
+          _rucController.text.trim().isNotEmpty &&
+              _tipoComprobanteController.text.trim().isNotEmpty &&
+              _serieController.text.trim().isNotEmpty &&
+              _numeroController.text.trim().isNotEmpty &&
+              _fechaEmisionController.text.trim().isNotEmpty &&
+              _totalController.text.trim().isNotEmpty &&
+              _categoriaController.text.trim().isNotEmpty &&
+              _tipoGastoController.text.trim().isNotEmpty &&
+              (_selectedImage != null) &&
+              _isRucValid();
 
     if (_isFormValid != isValid) {
       setState(() {
@@ -242,6 +260,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   void _initializeSelectedValues() {
     _selectedImage = null;
+    _selectedMoneda = widget.reporte.moneda ?? 'PEN';
     // Para política se validará después de cargar desde API
     // Para categoría y tipo de gasto, se validarán después de cargar desde API
     // Las variables se inicializan en los métodos correspondientes
@@ -372,6 +391,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _categoriaController = TextEditingController(
       text: widget.reporte.categoria ?? '',
     );
+    // Guardar la categoría original para detectar si fue creada antes
+    _originalCategoria = widget.reporte.categoria ?? '';
     _tipoGastoController = TextEditingController(
       text: widget.reporte.tipogasto ?? '',
     );
@@ -467,7 +488,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   // Nota: conversión a base64 está en el controller (`_controller.convertImageToBase64`).
 
-/*
+  /*
   /// Seleccionar imagen desde la cámara
   Future<void> _pickImage() async {
     await showDialog(
@@ -644,7 +665,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
       }
     }
   }
-
 
   Future<void> _pickFromCamera() async {
     try {
@@ -979,7 +999,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                 ),
 
-              Row(
+              /*  Row(
                 children: [
                   const Icon(Icons.qr_code_scanner, color: Colors.red),
                   const SizedBox(width: 8),
@@ -1012,7 +1032,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                   ),
                 ],
-              ),
+              ), */
               const SizedBox(height: 1),
             ],
           ),
@@ -1403,8 +1423,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
       items = const [];
     }
 
+    // Verificar si la categoría ORIGINAL (guardada) es "Planilla de Movilidad"
+    // Solo bloquear si ya fue guardada así anteriormente
+    final isMovilidadCategoriaOriginal =
+        _originalCategoria != null &&
+        (_originalCategoria!.toLowerCase().contains('planilla de movilidad') ||
+            _originalCategoria!.toLowerCase().contains('movilidad'));
+
     return AbsorbPointer(
-      absorbing: !_isEditMode,
+      absorbing: !_isEditMode || isMovilidadCategoriaOriginal,
       child: DropdownButtonFormField<String>(
         decoration: InputDecoration(
           labelText: 'Categoría *',
@@ -1419,14 +1446,16 @@ class _EditReporteModalState extends State<EditReporteModal> {
           ),
           focusedBorder: const UnderlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(12)),
-            borderSide: BorderSide(color: Colors.blue, width: 2),
+            borderSide: BorderSide(color: Colors.red, width: 2),
           ),
           disabledBorder: UnderlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Colors.white, width: 1),
           ),
           filled: true,
-          fillColor: _isEditMode ? Colors.white : Colors.white,
+          fillColor: isMovilidadCategoriaOriginal
+              ? Colors.grey.shade200
+              : (_isEditMode ? Colors.white : Colors.white),
         ),
         value: selectedValue,
         items: items,
@@ -1437,7 +1466,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
           return null;
         },
         onChanged: (value) {
-          if (value != null) {
+          if (value != null && !isMovilidadCategoriaOriginal) {
             setState(() {
               _categoriaController.text = value;
             });
@@ -1524,7 +1553,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 ),
                 focusedBorder: const UnderlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                  borderSide: BorderSide(color: Colors.red, width: 2),
                 ),
                 disabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -2117,6 +2146,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isMovilidad = _isPlanillaDeMovilidad();
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
@@ -2136,25 +2166,70 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 padding: const EdgeInsets.all(15),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildImageSection(),
-                    const SizedBox(height: 10),
-                    _buildPolicySection(),
-                    const SizedBox(height: 10),
-                    _buildCategorySection(),
-                    const SizedBox(height: 10),
-                    _buildTipoGastoSection(),
-                    const SizedBox(height: 10),
-                    _buildInvoiceDataSection(),
-                    const SizedBox(height: 10),
-                    _buildNotesSection(),
-                    const SizedBox(height: 10),
-                    // Sección Movilidad (solo visible para políticas de movilidad)
-                    _buildMovilidadSection(),
-                    const SizedBox(height: 10),
-                    /*                     _buildRawDataSection(),
- */
-                  ],
+                  children: isMovilidad
+                      ? [
+                          // Campos simplificados para PLANILLA DE MOVILIDAD
+                          _buildImageSection(),
+                          const SizedBox(height: 10),
+                          //POLITICA
+                          _buildPolicySection(),
+                          const SizedBox(height: 10),
+                          _buildCategorySection(),
+                          const SizedBox(height: 10),
+
+                          // Fecha Emisión
+                          _buildDateField(
+                            _fechaEmisionController,
+                            'Fecha Emisión ',
+                            Icons.calendar_month_sharp,
+                            isRequired: true,
+                            readOnly: !_isEditMode,
+                          ),
+                          const SizedBox(height: 10),
+                          // Total
+                          _buildTextField(
+                            _totalController,
+                            'Total ',
+                            Icons.price_change,
+                            TextInputType.numberWithOptions(decimal: true),
+                            isRequired: true,
+                            readOnly: !_isEditMode,
+                          ),
+                          const SizedBox(height: 10),
+                          // Moneda
+                          _buildMonedaDropdown(),
+                          const SizedBox(height: 10),
+                          // Sección Movilidad completa
+                          _buildMovilidadSection(),
+                          const SizedBox(height: 10),
+                          // Nota
+                          _buildTextField(
+                            _notaController,
+                            'Nota',
+                            Icons.comment,
+                            TextInputType.text,
+                            readOnly: !_isEditMode,
+                          ),
+                          const SizedBox(height: 10),
+                        ]
+                      : [
+                          // Campos normales (formulario completo)
+                          _buildImageSection(),
+                          const SizedBox(height: 10),
+                          _buildPolicySection(),
+                          const SizedBox(height: 10),
+                          _buildCategorySection(),
+                          const SizedBox(height: 10),
+                          _buildTipoGastoSection(),
+                          const SizedBox(height: 10),
+                          _buildInvoiceDataSection(),
+                          const SizedBox(height: 10),
+                          _buildNotesSection(),
+                          const SizedBox(height: 10),
+                          // Sección Movilidad (solo visible para políticas de movilidad)
+                          _buildMovilidadSection(),
+                          const SizedBox(height: 10),
+                        ],
                 ),
               ),
             ),
@@ -2250,7 +2325,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
             ),
             focusedBorder: const UnderlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
-              borderSide: BorderSide(color: Colors.blue, width: 2),
+              borderSide: BorderSide(color: Colors.red, width: 2),
             ),
             disabledBorder: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -2435,7 +2510,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(1),
         child: AbsorbPointer(
           absorbing: !_isEditMode,
           child: Column(
@@ -2488,7 +2563,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.green, width: 2),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2520,7 +2595,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.green, width: 2),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2552,7 +2627,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.green, width: 2),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2584,7 +2659,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.green, width: 2),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2617,7 +2692,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.green, width: 2),
+                    borderSide: BorderSide(color: Colors.red, width: 2),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2654,7 +2729,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: readOnly ? Colors.white : Colors.white,
+        fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
 
         // 👇 aquí cambiamos a underline y personalizamos bordes
         border: const UnderlineInputBorder(),
@@ -2663,15 +2738,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
           borderRadius: BorderRadius.circular(16),
         ),
         focusedBorder: const UnderlineInputBorder(
-          /* borderSide: BorderSide(
-            color: Colors.orange,
-            width: 2,
-          ), */
+          borderSide: BorderSide(color: Colors.red, width: 1),
           // color al enfocar
         ),
         disabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(
-            color: Colors.white,
+            color: Colors.grey.shade300,
           ), // color cuando es readOnly
         ),
       ),
@@ -2686,6 +2758,129 @@ class _EditReporteModalState extends State<EditReporteModal> {
               return null;
             }
           : null,
+    );
+  }
+
+  /// Construir un campo de fecha con DatePicker
+  Widget _buildDateField(
+    TextEditingController controller,
+    String label,
+    IconData icon, {
+    bool isRequired = false,
+    bool readOnly = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      onTap: _isEditMode && !readOnly
+          ? () async {
+              final pickedDate = await showDatePicker(
+                context: context,
+                initialDate: _parseDate(controller.text) ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2050),
+              );
+
+              if (pickedDate != null) {
+                setState(() {
+                  controller.text =
+                      '${pickedDate.day.toString().padLeft(2, '0')}/${pickedDate.month.toString().padLeft(2, '0')}/${pickedDate.year}';
+                  _validateForm();
+                });
+              }
+            }
+          : null,
+      decoration: InputDecoration(
+        labelText: isRequired ? '$label *' : label,
+        prefixIcon: Icon(icon),
+        filled: true,
+        fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+        border: const UnderlineInputBorder(),
+        enabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade400),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.red, width: 1),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+      ),
+      validator: isRequired
+          ? (value) {
+              if (value == null || value.trim().isEmpty) {
+                return '$label es obligatorio';
+              }
+              return null;
+            }
+          : null,
+    );
+  }
+
+  /// Parsear fecha desde string en formato DD/MM/YYYY
+  DateTime? _parseDate(String dateString) {
+    try {
+      final parts = dateString.split('/');
+      if (parts.length == 3) {
+        final day = int.parse(parts[0]);
+        final month = int.parse(parts[1]);
+        final year = int.parse(parts[2]);
+        return DateTime(year, month, day);
+      }
+    } catch (e) {
+      debugPrint('Error parseando fecha: $e');
+    }
+    return null;
+  }
+
+  /// Construir dropdown para moneda
+  Widget _buildMonedaDropdown() {
+    return AbsorbPointer(
+      absorbing: !_isEditMode,
+      child: DropdownButtonFormField<String>(
+        value: _selectedMoneda,
+        decoration: InputDecoration(
+          labelText: 'Moneda *',
+          border: UnderlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.transparent, width: 0),
+          ),
+          enabledBorder: UnderlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.grey, width: 1),
+          ),
+          focusedBorder: const UnderlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(12)),
+            borderSide: BorderSide(color: Colors.red, width: 2),
+          ),
+          disabledBorder: UnderlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.white, width: 1),
+          ),
+          prefixIcon: const Icon(Icons.monetization_on),
+          filled: true,
+          fillColor: _isEditMode ? Colors.white : Colors.white,
+        ),
+        items: _monedas.map((moneda) {
+          return DropdownMenuItem<String>(value: moneda, child: Text(moneda));
+        }).toList(),
+        onChanged: _isEditMode
+            ? (value) {
+                setState(() {
+                  _selectedMoneda = value;
+                  _monedaController.text = value ?? '';
+                  _validateForm();
+                });
+              }
+            : null,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Moneda es obligatoria';
+          }
+          return null;
+        },
+      ),
     );
   }
 
@@ -2756,10 +2951,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       : const Icon(Icons.save_rounded),
                   label: Text(
                     _isLoading
-                        ? 'Guardando...'
+                        ? 'Actualizando...'
                         : _isFormValid
-                        ? 'Guardar Reporte'
-                        : 'Completar ',
+                        ? 'Actualizar Gasto'
+                        : 'Editar Gasto',
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isFormValid
@@ -2818,7 +3013,7 @@ class _QRScannerScreenState extends State<_QRScannerScreen> {
           Container(
             decoration: ShapeDecoration(
               shape: QrScannerOverlayShape(
-                borderColor: Colors.blue,
+                borderColor: Colors.red,
                 borderRadius: 10,
                 borderLength: 30,
                 borderWidth: 10,

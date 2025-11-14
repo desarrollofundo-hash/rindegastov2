@@ -458,7 +458,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) => EditReporteModal(reporte: reporte),
-    );
+    ).then((_) {
+      // Desactivar el focus del buscador cuando se cierra el modal
+      _searchFocusNode.unfocus();
+    });
   }
 
   // ========== PANTALLAS REFACTORIZADAS ==========
@@ -515,6 +518,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               showEmptyStateButton: true,
               onEmptyStateButtonPressed: _agregarInforme,
               onRefresh: _loadInformes,
+              emptyMessage: "No hay informes disponibles",
             ),
             InformesReporteList(
               informes: _informes
@@ -529,6 +533,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onInformeDeleted: _eliminarInforme,
               showEmptyStateButton: false,
               onRefresh: _loadInformes,
+              emptyMessage: "No hay ningún reporte aprobado por el momento",
             ),
             InformesReporteList(
               informes: _informes
@@ -543,6 +548,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onInformeDeleted: _eliminarInforme,
               showEmptyStateButton: false,
               onRefresh: _loadInformes,
+              emptyMessage: "No hay ningún informe rechazado",
             ),
           ],
         ),
@@ -579,6 +585,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
               onRefresh: loadAuditoria,
+              emptyMessage: "No hay ninguna auditoría disponible",
             ),
 
             //  TAB 2: Pendiente
@@ -594,6 +601,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
               onRefresh: loadAuditoria,
+              emptyMessage: "No hay ninguna auditoría pendiente",
             ),
 
             // 🔴 TAB 3: Rechazado
@@ -608,6 +616,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onAuditoriaDeleted: _eliminarAuditoria,
               showEmptyStateButton: false,
               onRefresh: loadAuditoria,
+              emptyMessage: "No hay ninguna auditoría rechazado",
             ),
           ],
         ),
@@ -641,6 +650,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onRevisionDeleted: _eliminarRevision,
               showEmptyStateButton: false,
               onRefresh: _loadRevision,
+              emptyMessage: "No hay ninguna revisión disponible",
             ),
 
             //TAB 2
@@ -656,6 +666,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onRevisionDeleted: _eliminarRevision,
               showEmptyStateButton: false,
               onRefresh: _loadRevision,
+              emptyMessage: "No hay ninguna revisión pendiente",
             ),
 
             //TAB 3
@@ -671,6 +682,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               onRevisionDeleted: _eliminarRevision,
               showEmptyStateButton: false,
               onRefresh: _loadRevision,
+              emptyMessage: "No hay ninguna revisión aprobado",
             ),
           ],
         ),

@@ -1,4 +1,3 @@
-
 import 'package:flu2/models/reporte_revision_model.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/revision_detalle_modal.dart';
@@ -15,6 +14,7 @@ class InformesRevisionList extends StatelessWidget {
   final bool showEmptyStateButton;
   final VoidCallback? onEmptyStateButtonPressed;
   final Future<void> Function()? onRefresh;
+  final String emptyMessage;
 
   const InformesRevisionList({
     super.key,
@@ -24,6 +24,7 @@ class InformesRevisionList extends StatelessWidget {
     this.showEmptyStateButton = true,
     this.onEmptyStateButtonPressed,
     this.onRefresh,
+    this.emptyMessage = "No hay revisión disponibles",
     List<ReporteRevision>? revisio,
   });
 
@@ -49,12 +50,12 @@ class InformesRevisionList extends StatelessWidget {
               minHeight: MediaQuery.of(context).size.height * 0.7,
             ),
             child: EmptyState(
-              message: "No hay revision disponibles",
+              message: emptyMessage,
               buttonText: showEmptyStateButton ? "Agregar Revision" : null,
               onButtonPressed: showEmptyStateButton
                   ? onEmptyStateButtonPressed
                   : null,
-              icon: Icons.description,
+              icon: Icons.local_activity,
             ),
           ),
         ),
