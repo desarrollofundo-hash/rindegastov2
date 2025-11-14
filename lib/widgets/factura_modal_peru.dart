@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flu2/controllers/edit_reporte_controller.dart';
 import 'package:flu2/models/apiruc_model.dart';
+import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -920,7 +921,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
         "useReg": UserService().currentUserCode, // Campo obligatorio
-        "hostname": "FLUTTER", // Campo obligatorio, máximo 50 caracteres
+        "hostname":
+            DeviceUtils.getMacAddress(), // Campo obligatorio, máximo 50 caracteres
         "fecEdit": DateTime.now().toIso8601String(),
         "useEdit": 0,
         "useElim": 0,
@@ -961,7 +963,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         "estado": "S", // Solo 1 carácter como requiere la BD
         "fecCre": DateTime.now().toIso8601String(),
         "useReg": UserService().currentUserCode, // Campo obligatorio
-        "hostname": "FLUTTER", // Campo obligatorio, máximo 50 caracteres
+        "hostname": DeviceUtils.getMacAddress(), // Campo mac
         "fecEdit": DateTime.now().toIso8601String(),
         "useEdit": 0,
         "useElim": 0,
