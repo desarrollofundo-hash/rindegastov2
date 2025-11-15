@@ -2011,7 +2011,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                       ),
                       focusedBorder: const UnderlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                        borderSide: BorderSide(color: Colors.green, width: 2),
                       ),
                       disabledBorder: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2054,7 +2054,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                       ),
                       focusedBorder: const UnderlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                        borderSide: BorderSide(color: Colors.green, width: 2),
                       ),
                       disabledBorder: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -2079,6 +2079,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               flex: 1,
               child: TextFormField(
                 controller: _totalController,
+                readOnly:
+                    _categoriaController.text != "PLANILLA DE MOVILIDAD" &&
+                    _categoriaController.text != "VIAJES CON COMPROBANTE",
+
                 decoration: InputDecoration(
                   labelText: 'Total',
                   border: UnderlineInputBorder(
@@ -2304,6 +2308,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     }
 
     return DropdownButtonFormField<DropdownOption>(
+      dropdownColor: Colors.white,
       value: _selectedTipoGasto,
       decoration: InputDecoration(
         labelText: 'Tipo de Gasto',
