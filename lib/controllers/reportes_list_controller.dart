@@ -2,10 +2,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'dart:ui' as ui;
-
-import 'package:flu2/widgets/qr_reader_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:qr_code_tools/qr_code_tools.dart';
@@ -15,10 +12,6 @@ import '../models/reporte_model.dart';
 import '../models/dropdown_option.dart';
 import '../models/estado_reporte.dart';
 import '../screens/qr_scanner_screen.dart';
-import '../widgets/qr_reader_page.dart';
-import '../services/factura_ia.dart';
-import '../services/ocr_service.dart';
-import '../models/factura_data_ocr.dart';
 import '../widgets/politica_selector_modal.dart';
 import '../widgets/factura_modal_peru_ocr.dart';
 import '../widgets/nuevo_gasto_modal.dart';
@@ -983,7 +976,7 @@ class ReportesListController {
   }
 */
 
-/*
+  /*
   Future<void> procesarFacturaConIA(
     BuildContext context,
     File imagenFactura,

@@ -278,10 +278,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Cargar categorías desde la API filtradas por la política seleccionada
   Future<void> _loadCategorias() async {
-    setState(() {
-      _isLoadingCategorias = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingCategorias = true;
+        _error = null;
+      });
+    }
 
     try {
       final categorias = await _logic.fetchCategorias(
@@ -289,79 +291,95 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         widget.politicaSeleccionada.value,
       );
 
-      setState(() {
-        _categorias = categorias;
-        _isLoadingCategorias = false;
-      });
+      if (mounted) {
+        setState(() {
+          _categorias = categorias;
+          _isLoadingCategorias = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoadingCategorias = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingCategorias = false;
+        });
+      }
     }
   }
 
   /// Cargar tipos de gasto desde la API
   Future<void> _loadTiposGasto() async {
-    setState(() {
-      _isLoadingTiposGasto = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingTiposGasto = true;
+        _error = null;
+      });
+    }
 
     try {
       final tiposGasto = await _logic.fetchTiposGasto(_apiService);
 
-      setState(() {
-        _tiposGasto = tiposGasto;
-        _isLoadingTiposGasto = false;
+      if (mounted) {
+        setState(() {
+          _tiposGasto = tiposGasto;
+          _isLoadingTiposGasto = false;
 
-        // 🔹 Buscar y asignar 'TAXI' como valor por defecto
-        _selectedTipoGasto = _tiposGasto.firstWhere(
-          (tipo) =>
-              tipo.value.toUpperCase() ==
-              CompanyService().companyTipogasto.toUpperCase(),
-          orElse: () => _tiposGasto.first,
-        );
+          // 🔹 Buscar y asignar 'TAXI' como valor por defecto
+          _selectedTipoGasto = _tiposGasto.firstWhere(
+            (tipo) =>
+                tipo.value.toUpperCase() ==
+                CompanyService().companyTipogasto.toUpperCase(),
+            orElse: () => _tiposGasto.first,
+          );
 
-        // 🔹 Actualizar el TextEditingController
-        _tipoGastoController.text = _selectedTipoGasto?.value ?? '';
-      });
+          // 🔹 Actualizar el TextEditingController
+          _tipoGastoController.text = _selectedTipoGasto?.value ?? '';
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoadingTiposGasto = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingTiposGasto = false;
+        });
+      }
     }
   }
 
   /// Cargar tipos de movilidad desde la API
   Future<void> _loadTipoMovilidad() async {
-    setState(() {
-      _isLoadingTipoMovilidad = true;
-      _error = null;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoadingTipoMovilidad = true;
+        _error = null;
+      });
+    }
 
     try {
       final tiposMovilidad = await _logic.fetchTipoMovilidad(_apiService);
 
-      setState(() {
-        _tiposMovilidad = tiposMovilidad;
-        _isLoadingTipoMovilidad = false;
+      if (mounted) {
+        setState(() {
+          _tiposMovilidad = tiposMovilidad;
+          _isLoadingTipoMovilidad = false;
 
-        // 🔹 Buscar y asignar 'TAXI' como valor por defecto
-        _selectedTipoMovilidad = _tiposMovilidad.firstWhere(
-          (tipo) => tipo.value.toUpperCase() == 'TAXI',
-          orElse: () => _tiposMovilidad.first,
-        );
+          // 🔹 Buscar y asignar 'TAXI' como valor por defecto
+          _selectedTipoMovilidad = _tiposMovilidad.firstWhere(
+            (tipo) => tipo.value.toUpperCase() == 'TAXI',
+            orElse: () => _tiposMovilidad.first,
+          );
 
-        // 🔹 Actualizar el TextEditingController
-        _movilidadController.text = _selectedTipoMovilidad?.value ?? '';
-      });
+          // 🔹 Actualizar el TextEditingController
+          _movilidadController.text = _selectedTipoMovilidad?.value ?? '';
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _isLoadingTipoMovilidad = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingTipoMovilidad = false;
+        });
+      }
     }
   }
 
@@ -473,11 +491,13 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
           if (result != null && result.files.isNotEmpty) {
             final file = File(result.files.first.path!);
-            setState(() {
-              _selectedFile = file;
-              _selectedFileType = 'pdf';
-              _selectedFileName = result.files.first.name;
-            });
+            if (mounted) {
+              setState(() {
+                _selectedFile = file;
+                _selectedFileType = 'pdf';
+                _selectedFileName = result.files.first.name;
+              });
+            }
           }
         }
       }
@@ -523,15 +543,17 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       );
 
       if (croppedFile != null) {
-        setState(() {
-          _selectedFile = File(
-            croppedFile.path,
-          ); // Convertimos CroppedFile a File
-          _selectedFileType = 'image'; // Indicamos que es una imagen
-          _selectedFileName = croppedFile.path
-              .split('/')
-              .last; // Nombre del archivo
-        });
+        if (mounted) {
+          setState(() {
+            _selectedFile = File(
+              croppedFile.path,
+            ); // Convertimos CroppedFile a File
+            _selectedFileType = 'image'; // Indicamos que es una imagen
+            _selectedFileName = croppedFile.path
+                .split('/')
+                .last; // Nombre del archivo
+          });
+        }
       }
     } on PlatformException catch (e) {
       if (mounted) {
@@ -561,6 +583,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   }
 
   void _guardarValidar() {
+    // Validar que la nota no esté vacía
+    if (_notaController.text.trim().isEmpty) {
+      _showMensaggeDialog("FALTA COMPLETAR NOTA O GLOSA");
+      return;
+    }
+
     if (_categoriaController.text.trim() == "") {
       _showMensaggeDialog("SELECCIONA CATEGORIA");
     } else if (_categoriaController.text == "PLANILLA DE MOVILIDAD") {
@@ -2571,12 +2599,18 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         TextFormField(
           controller: _notaController,
           decoration: const InputDecoration(
-            labelText: 'Nota',
+            labelText: 'Nota o Glosa:',
             border: OutlineInputBorder(),
             prefixIcon: Icon(Icons.note),
           ),
           maxLines: 2,
           maxLength: 500,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'La nota es obligatoria';
+            }
+            return null;
+          },
         ),
       ],
     );
@@ -2735,9 +2769,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Método para escanear código QR
   Future<void> _scanQRCode() async {
-    setState(() {
-      _isScanning = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isScanning = true;
+      });
+    }
 
     try {
       // Navegar a la pantalla de escáner
@@ -2750,25 +2786,31 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         _processQRData(qrData);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al escanear QR: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al escanear QR: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isScanning = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isScanning = false;
+        });
+      }
     }
   }
 
   /// Procesar los datos del QR y llenar los campos
   void _processQRData(String qrData) {
     try {
-      setState(() {
-        _hasScannedData = true;
-      });
+      if (mounted) {
+        setState(() {
+          _hasScannedData = true;
+        });
+      }
 
       // Parsear el QR de SUNAT (formato típico separado por |)
       final parts = qrData.split('|');
@@ -2778,85 +2820,91 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // RUC|Tipo|Serie|Número|IGV|Total|Fecha|TipoDoc|DocReceptor
 
         // Envolver las asignaciones en setState y escribir en ambos controladores
-        setState(() {
-          // RUC del emisor
-          if (parts[0].isNotEmpty) {
-            _rucProveedorController.text = parts[0];
-            _loadApiRuc(_rucProveedorController.text);
-          }
-
-          // Tipo de comprobante (texto) -> actualizar controlador UI y el usado en guardado
-          if (parts[1].isNotEmpty) {
-            String tipoDoc = parts[1];
-            String tipoTexto;
-            switch (tipoDoc) {
-              case '01':
-                tipoTexto = 'FACTURA ELECTRONICA';
-                break;
-              case '03':
-                tipoTexto = 'BOLETA DE VENTA';
-                break;
-              case '07':
-                tipoTexto = 'NOTA DE CREDITO';
-                break;
-              case '08':
-                tipoTexto = 'NOTA DE DEBITO';
-                break;
-              case '09':
-                tipoTexto = 'GUIA DE REMISION';
-                break;
-              default:
-                tipoTexto = 'COMPROBANTE';
+        if (mounted) {
+          setState(() {
+            // RUC del emisor
+            if (parts[0].isNotEmpty) {
+              _rucProveedorController.text = parts[0];
+              _loadApiRuc(_rucProveedorController.text);
             }
-            _tipoComprobanteController.text = tipoTexto;
-          }
 
-          // Serie
-          if (parts[2].isNotEmpty) {
-            _serieFacturaController.text = parts[2];
-          }
+            // Tipo de comprobante (texto) -> actualizar controlador UI y el usado en guardado
+            if (parts[1].isNotEmpty) {
+              String tipoDoc = parts[1];
+              String tipoTexto;
+              switch (tipoDoc) {
+                case '01':
+                  tipoTexto = 'FACTURA ELECTRONICA';
+                  break;
+                case '03':
+                  tipoTexto = 'BOLETA DE VENTA';
+                  break;
+                case '07':
+                  tipoTexto = 'NOTA DE CREDITO';
+                  break;
+                case '08':
+                  tipoTexto = 'NOTA DE DEBITO';
+                  break;
+                case '09':
+                  tipoTexto = 'GUIA DE REMISION';
+                  break;
+                default:
+                  tipoTexto = 'COMPROBANTE';
+              }
+              _tipoComprobanteController.text = tipoTexto;
+            }
 
-          // Número de factura
-          if (parts[3].isNotEmpty) {
-            _numeroFacturaController.text = parts[3];
-          }
+            // Serie
+            if (parts[2].isNotEmpty) {
+              _serieFacturaController.text = parts[2];
+            }
 
-          // Igv
-          if (parts[4].isNotEmpty) {
-            _igvController.text = parts[4];
-          }
+            // Número de factura
+            if (parts[3].isNotEmpty) {
+              _numeroFacturaController.text = parts[3];
+            }
 
-          // Total
-          if (parts[5].isNotEmpty) {
-            _totalController.text = parts[5];
-          }
+            // Igv
+            if (parts[4].isNotEmpty) {
+              _igvController.text = parts[4];
+            }
 
-          // Fecha (si está disponible)
-          if (parts.length > 6 && parts[6].isNotEmpty) {
-            final fechaNormalizada = _logic.normalizarFecha(parts[6]);
-            _fechaController.text = fechaNormalizada;
-          }
-        });
+            // Total
+            if (parts[5].isNotEmpty) {
+              _totalController.text = parts[5];
+            }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Datos del QR aplicados correctamente'),
-            backgroundColor: Colors.green,
-          ),
-        );
+            // Fecha (si está disponible)
+            if (parts.length > 6 && parts[6].isNotEmpty) {
+              final fechaNormalizada = _logic.normalizarFecha(parts[6]);
+              _fechaController.text = fechaNormalizada;
+            }
+          });
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Datos del QR aplicados correctamente'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       } else {
         throw Exception('Formato de QR no válido');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al procesar QR: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      setState(() {
-        _hasScannedData = false;
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al procesar QR: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _hasScannedData = false;
+        });
+      }
     }
   }
 
@@ -2865,26 +2913,28 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Limpiar los datos escaneados
   void _clearScannedData() {
-    setState(() {
-      _hasScannedData = false;
+    if (mounted) {
+      setState(() {
+        _hasScannedData = false;
 
-      // Limpiar los campos que se llenaron automáticamente
-      _rucProveedorController.clear();
-      _razonSocialController.clear();
-      _serieFacturaController.clear();
-      _tipoComprobanteController.clear();
-      _numeroFacturaController.clear();
-      _totalController.clear();
-      _igvController.clear();
-      _fechaController.text = DateTime.now().toString().split(' ')[0];
-    });
+        // Limpiar los campos que se llenaron automáticamente
+        _rucProveedorController.clear();
+        _razonSocialController.clear();
+        _serieFacturaController.clear();
+        _tipoComprobanteController.clear();
+        _numeroFacturaController.clear();
+        _totalController.clear();
+        _igvController.clear();
+        _fechaController.text = DateTime.now().toString().split(' ')[0];
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Datos del QR limpiados'),
-        backgroundColor: Colors.orange,
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Datos del QR limpiados'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 }
 
