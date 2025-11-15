@@ -1434,6 +1434,12 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   /// Construir la sección de política
   Widget _buildPolicySection() {
     return Card(
+      elevation: 0,
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+        side: BorderSide.none,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -1486,8 +1492,14 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   /// Construir la sección de categoría para movilidad
   Widget _buildCategorySection() {
     return Card(
+      elevation: 0,
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+        side: BorderSide.none,
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1563,10 +1575,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               )
             else
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
+                dropdownColor: Colors.white,
+                decoration: InputDecoration(
                   labelText: 'Seleccionar Categoría *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.category),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.category),
                 ),
                 initialValue:
                     _categoriaController.text.isNotEmpty &&
@@ -1619,8 +1650,14 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   Widget _buildFacturaDataSection() {
     return Card(
+      elevation: 0,
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+        side: BorderSide.none,
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1688,10 +1725,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               )
             else
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
+                dropdownColor: Colors.white,
+                decoration: InputDecoration(
                   labelText: 'Seleccionar Tipo de Gasto *',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.local_offer),
+                  border: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Colors.transparent,
+                      width: 0,
+                    ),
+                  ),
+                  enabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  ),
+                  disabledBorder: UnderlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  ),
+                  prefixIcon: const Icon(Icons.local_offer),
                 ),
                 value:
                     _tipoGastoController.text.isNotEmpty &&
@@ -1859,11 +1915,34 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   flex: 1,
                   child: TextFormField(
                     controller: _totalController,
-                    readOnly: true,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Total',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.attach_money),
+                      border: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.attach_money),
                     ),
                     keyboardType: TextInputType.numberWithOptions(
                       decimal: true,
@@ -1882,11 +1961,36 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 const SizedBox(width: 6),
                 Expanded(
                   child: DropdownButtonFormField<String>(
+                    dropdownColor: Colors.white,
                     value: _selectedMoneda,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Moneda',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.monetization_on),
+                      border: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.monetization_on),
                     ),
                     items: _monedas.map((moneda) {
                       return DropdownMenuItem<String>(
@@ -1987,7 +2091,25 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               decoration: InputDecoration(
                 labelText: 'Tipo de Movilidad *',
                 prefixIcon: Icon(Icons.attach_money),
-                border: OutlineInputBorder(),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
                 filled: true,
                 fillColor: _isEditMode ? Colors.white : Colors.grey[100],
               ),
@@ -2029,8 +2151,14 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   /// Construir la sección específica de movilidad
   Widget _buildMovilidadSection() {
     return Card(
+      elevation: 0,
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+        side: BorderSide.none,
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2050,10 +2178,34 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 Expanded(
                   child: TextFormField(
                     controller: _origenController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Origen *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.my_location),
+                      border: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.my_location),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -2071,10 +2223,34 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 Expanded(
                   child: TextFormField(
                     controller: _destinoController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText: 'Destino *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.location_on),
+                      border: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
+                          width: 0,
+                        ),
+                      ),
+                      enabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      disabledBorder: UnderlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      prefixIcon: const Icon(Icons.location_on),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -2089,10 +2265,28 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _motivoViajeController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Motivo del Viaje *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                prefixIcon: const Icon(Icons.description),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -2110,10 +2304,28 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             // PLACA
             TextFormField(
               controller: _placaController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Placa',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.badge),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                prefixIcon: const Icon(Icons.badge),
               ),
               keyboardType: TextInputType.text,
             ),
@@ -2129,6 +2341,12 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   /// Construir la sección de notas
   Widget _buildNotesSection() {
     return Card(
+      elevation: 0,
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+        side: BorderSide.none,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -2270,7 +2488,22 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
-        border: const OutlineInputBorder(),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.grey, width: 1),
+        ),
         filled: true,
         fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
       ),
