@@ -157,7 +157,7 @@ class EditReporteController {
         //"gerencia": CompanyService().currentCompany?.gerencia ?? '',
         //"area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
-        "consumidor": "",
+        "consumidor": CompanyService().currentCompany?.consumidor ?? '',
         "placa": placa,
         "estadoActual": "",
         "glosa": "",

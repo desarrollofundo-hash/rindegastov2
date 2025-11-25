@@ -74,35 +74,193 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     }
   }
 
+  /* 
   Future<void> _mostrarConfirmacionEnvio() async {
     final confirmar = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (BuildContext context) {
         return AlertDialog(
+          icon: const Icon(
+            Icons.check_circle_outline,
+            size: 32,
+            color: Colors.blue,
+          ),
           title: const Text(
-            'Confirmar envío',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            'Confirmar Aprobación',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            textAlign: TextAlign.center,
           ),
-          content: const Text('Desea aprobar el informe?'),
+
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '¿Desea aprobar el informe?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Una vez aprobado, no podrás realizar modificaciones.',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
+          elevation: 8, // Sombra más pronunciada
+          actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // ❌ No
+            // Botón Cancelar - Secundario
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey,
+                side: const BorderSide(color: Colors.grey),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
               child: const Text('Cancelar'),
             ),
+
+            // Botón Confirmar - Primario
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: () => Navigator.of(context).pop(true), // ✅ Sí
-              child: const Text('Sí, Aprobar'),
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // Color más profesional
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check, size: 18),
+                  SizedBox(width: 6),
+                  Text('Aprobar '),
+                ],
+              ),
             ),
           ],
         );
       },
     );
 
+    // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _aprobarDocumento();
+    }
+  }
+ */
+  Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 1800),
+            curve: Curves.easeOutBack,
+            builder: (context, scale, child) {
+              return Transform.scale(
+                scale: scale,
+                child: const Icon(
+                  Icons.check_circle_outline,
+                  size: 36,
+                  color: Colors.blue,
+                ),
+              );
+            },
+          ),
+
+          title: const Text(
+            'Confirmar Aprobación',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '¿Desea aprobar el informe?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Una vez aprobado, no podrás realizar modificaciones.',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8,
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey,
+                side: const BorderSide(color: Colors.grey),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Cancelar'),
+            ),
+
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.check, size: 18),
+                  SizedBox(width: 6),
+                  Text('Aprobar'),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
     // Si confirma, llama a _actualizarAuditoria()
     if (confirmar == true) {
       await _aprobarDocumento();
@@ -153,7 +311,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         print("✅ Detalle ${detalless.idRev} guardado correctamente");
       }
 
-      showMessageError(context, "DOCUMENTO APROBADO");
+      showMessageError(context, "INFORME APROBADO");
       Navigator.of(context).pop(true);
     } catch (e, stack) {
       print("❌ Error al aprobar revision: $e");
@@ -223,7 +381,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
             children: const [
               Icon(Icons.check_circle, color: Colors.white),
               SizedBox(width: 10),
-              Text("DOCUMENTO RECHAZADO", style: TextStyle(color: Colors.white)),
+              Text("INFORME RECHAZADO ", style: TextStyle(color: Colors.white)),
             ],
           ),
           duration: Duration(seconds: 2),
@@ -259,6 +417,182 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
+              title: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: Colors.red.shade700,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'MOTIVO DE RECHAZO',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  Text(
+                    'Explica brevemente el motivo del rechazo',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _notaController,
+                    onChanged: (value) {
+                      setState(() {
+                        comentario = value;
+                        error = '';
+                      });
+                    },
+                    maxLines: 5,
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    decoration: InputDecoration(
+                      hintText:
+                          'Ejemplo: La factura 1728 es rechazada porque...',
+                      hintStyle: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade400,
+                      ),
+                      filled: true,
+                      fillColor: Colors.grey.shade50,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(
+                          color: Colors.red,
+                          width: 2,
+                        ),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                    ),
+                  ),
+                  if (error.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.red.shade200,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_rounded,
+                            color: Colors.red.shade700,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              error,
+                              style: TextStyle(
+                                color: Colors.red.shade700,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.grey.shade600,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                  ),
+                  child: const Text(
+                    'CANCELAR',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (comentario.trim().length < 5) {
+                      setState(() {
+                        error = 'Debe escribir al menos 5 caracteres';
+                      });
+                    } else {
+                      _rechazarDocumento();
+                      Navigator.pop(context);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: const Text(
+                    'RECHAZAR',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  ),
+                ),
+              ],
+              actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              elevation: 8,
+            );
+            /* return AlertDialog(
               title: const Text('MOTIVO DE RECHAZO'),
               backgroundColor: Colors.white,
               content: Column(
@@ -304,7 +638,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                   child: const Text('ACEPTAR'),
                 ),
               ],
-            );
+            ); */
           },
         );
       },
@@ -683,6 +1017,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                           }
 
                           return RefreshIndicator(
+                            backgroundColor: Colors.white,
                             onRefresh: _loadDetalles,
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
@@ -876,16 +1211,17 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
           children: [
             // Imagen placeholder
             Container(
-              width: 20,
-              height: 20,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue[200]!, width: 1.5),
               ),
               child: Icon(
                 Icons.receipt_long,
-                color: Colors.grey[600],
-                size: 24,
+                color: Colors.blue[600],
+                size: 20,
               ),
             ),
             const SizedBox(width: 16),
@@ -922,7 +1258,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                       SizedBox(width: 8), // Espacio entre los textos
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 0,
+                          horizontal: 2,
                           vertical: 0,
                         ), // Espaciado interno
                         decoration: BoxDecoration(
@@ -935,7 +1271,9 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                           '${diferenciaEnDias(detalle.fecha.toString(), detalle.fecCre.toString())} DIAS',
                           style: TextStyle(
                             fontSize: 12,
+                            fontWeight: FontWeight.w600,
                             color: Colors.white, // Color del texto
+                            fontFamily: 'Poppins',
                           ),
                         ),
                       ),

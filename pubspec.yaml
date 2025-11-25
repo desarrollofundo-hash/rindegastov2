@@ -44,6 +44,7 @@ dependencies:
   uicons_pro: ^1.1.0
   device_info_plus: ^10.1.0
   network_info_plus: ^5.0.3
+  flutter_keyboard_visibility: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +64,33 @@ flutter:
     - assets/icon/doc1.png
     - assets/icon/auditoria.png
     - assets/icon/informe1.png
+    - assets/gifs/Individual.gif
+    - assets/gifs/lock.gif
+    - assets/img/interandina.jpg
+    - assets/img/santaazul.jpg
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Black.ttf
+          weight: 900
+        - asset: assets/fonts/Poppins-Regular.ttf
+          weight: 400
+    - family: Rubik
+      fonts:
+        - asset: assets/fonts/Rubik-Black.ttf
+          weight: 900
+
+    - family: FiraSans
+      fonts:
+        - asset: assets/fonts/FiraSans-Black.ttf
+          weight: 700
+        - asset: assets/fonts/FiraSans-Italic.ttf
+          weight: 400
+    - family: CascadiaCode
+      fonts:
+        - asset: assets/fonts/CascadiaCode-VariableFont_wght.ttf
+          weight: 600
+
 flutter_launcher_icons:
   android: true
   ios: true

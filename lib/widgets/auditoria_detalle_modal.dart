@@ -185,23 +185,61 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
-            'Habilitar',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: const Text('¿Estás seguro que desea habilitar el informe?'),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+          contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+
+          title: Row(
+            children: const [
+              Icon(Icons.info_outline, color: Colors.blue, size: 26),
+              SizedBox(width: 10),
+              Text(
+                'Habilitar informe',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              ),
+            ],
+          ),
+
+          content: const Text(
+            '¿Estás seguro de que deseas habilitar el informe?',
+            style: TextStyle(fontSize: 15, height: 1.4),
+          ),
+
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // ❌ No
-              child: const Text('Cancelar'),
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              onPressed: () => Navigator.of(context).pop(true), // ✅ Sí
-              child: const Text('Sí, habilitar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                elevation: 2,
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text(
+                'Sí, habilitar',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         );
@@ -213,11 +251,11 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       await _habilitarAuditoria();
     }
   }
-
+  /* 
   Future<void> _mostrarConfirmacionEnvio() async {
     final confirmar = await showDialog<bool>(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true, // Permitir cerrar tocando fuera
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
@@ -246,6 +284,193 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     );
 
     // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _enviarAuditoriaRevision();
+    }
+  }
+ */
+
+  /* Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true, // Permitir cerrar tocando fuera
+      barrierColor: Colors.black54, // Fondo semitransparente
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: const Icon(
+            Icons.rate_review_rounded,
+            size: 32,
+            color: Colors.blue,
+          ),
+          title: const Text(
+            'Enviar a revisión',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '¿Estás seguro que deseas enviar este informe a revisión?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Una vez enviado, no podrás realizar modificaciones.',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8, // Sombra más pronunciada
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            // Botón Cancelar - Secundario
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey,
+                side: const BorderSide(color: Colors.grey),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Cancelar'),
+            ),
+
+            // Botón Confirmar - Primario
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // Color más profesional
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.send, size: 18),
+                  SizedBox(width: 6),
+                  Text('Enviar'),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmar == true) {
+      await _enviarAuditoriaRevision();
+    }
+  } */
+
+  Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 1800),
+            curve: Curves.easeOutBack,
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: value,
+                child: const Icon(
+                  Icons.rate_review_rounded,
+                  size: 32,
+                  color: Colors.blue,
+                ),
+              );
+            },
+          ),
+          title: const Text(
+            'Enviar a revisión',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '¿Estás seguro que deseas enviar este informe a revisión?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Una vez enviado, no podrás realizar modificaciones.',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8,
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey,
+                side: const BorderSide(color: Colors.grey),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.send, size: 18),
+                  SizedBox(width: 6),
+                  Text('Enviar'),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
     if (confirmar == true) {
       await _enviarAuditoriaRevision();
     }
@@ -449,7 +674,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             children: const [
               Icon(Icons.check_circle, color: Colors.white),
               SizedBox(width: 10),
-              Text("ENVIADO A REVISION", style: TextStyle(color: Colors.white)),
+              Text("ENVIADO A REVISIÓN", style: TextStyle(color: Colors.white)),
             ],
           ),
           duration: Duration(seconds: 2),
@@ -501,10 +726,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0.1,
-            leading: IconButton(
+            /* leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
               onPressed: () => Navigator.of(context).pop(true),
-            ),
+            ), */
             title: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -815,6 +1040,8 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                           }
 
                           return RefreshIndicator(
+                            backgroundColor: Colors.white,
+                            color: Colors.blue,
                             onRefresh: _loadDetalles,
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
@@ -1122,20 +1349,22 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                       SizedBox(width: 8), // Espacio entre los textos
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 0,
+                          horizontal: 2,
                           vertical: 0,
                         ), // Espaciado interno
                         decoration: BoxDecoration(
                           color: Colors.red, // Fondo del texto
                           borderRadius: BorderRadius.circular(
-                            6,
+                            4,
                           ), // Bordes redondeados
                         ),
                         child: Text(
                           '${diferenciaEnDias(detalle.fecha.toString(), detalle.fecCre.toString())} DIAS',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.white, // Color del texto
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
                           ),
                         ),
                       ),
@@ -1153,7 +1382,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                   '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w400,
                     color: Colors.blue,
                   ),
                 ),

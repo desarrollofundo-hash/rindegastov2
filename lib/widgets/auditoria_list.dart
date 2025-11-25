@@ -15,6 +15,7 @@ class AuditoriaList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
+      backgroundColor: Colors.white,
       onRefresh: onRefresh,
       child: auditorias.isEmpty
           ? ListView(
@@ -35,7 +36,7 @@ class AuditoriaList extends StatelessWidget {
               itemBuilder: (context, index) {
                 final auditoria = auditorias[index];
                 return AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
+                  duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
                   child: Card(
                     elevation: 4,

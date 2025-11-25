@@ -274,12 +274,12 @@ class _EditarInformeModalState extends State<EditarInformeModal> {
                   ),
                 ),
                 const Spacer(),
-                IconButton(
+                /* IconButton(
                   icon: const Icon(Icons.tune, color: Colors.grey),
                   onPressed: () {
                     // Lógica para abrir filtros
                   },
-                ),
+                ), */
               ],
             ),
           ),

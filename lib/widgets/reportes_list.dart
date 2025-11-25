@@ -39,6 +39,30 @@ class _ReportesListState extends State<ReportesList>
 
   void _escanerIA() => _controller.escanerIA(context, () => mounted);
 
+  // 🔹 Widget para puntos de carga animados
+  Widget _buildLoadingDot(int index) {
+    final delay = index * 0.15;
+    return AnimatedBuilder(
+      animation: _animationController!,
+      builder: (context, child) {
+        final progress = (_animationController!.value + delay) % 1.0;
+        final opacity = (1 - (progress - 0.5).abs() * 2).clamp(0.0, 1.0);
+        return Transform.scale(
+          scale: 0.6 + (opacity * 0.4),
+          child: Container(
+            width: 10,
+            height: 10,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF2563EB).withOpacity(opacity),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -68,7 +92,7 @@ class _ReportesListState extends State<ReportesList>
   Widget build(BuildContext context) {
     if (_animationController == null) {
       _animationController = AnimationController(
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 1),
         vsync: this,
       )..repeat(reverse: true);
       final curved = CurvedAnimation(
@@ -79,13 +103,67 @@ class _ReportesListState extends State<ReportesList>
     }
 
     if (widget.isLoading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Cargando reportes...'),
+            // 🎯 Indicador de carga mejorado
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                // Fondo circular
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF2563EB).withOpacity(0.1),
+                  ),
+                ),
+                // Indicador de progreso
+                const CircularProgressIndicator(
+                  strokeWidth: 3,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                  backgroundColor: Colors.transparent,
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+
+            // 📝 Texto principal
+            Text(
+              'Cargando reportes...',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1E293B),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // 💬 Texto secundario
+            Text(
+              'Esto puede tomar unos segundos',
+              style: TextStyle(
+                fontFamily: 'FiraSans',
+                fontSize: 13,
+                color: Colors.grey[500],
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ⏳ Puntos animados
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildLoadingDot(0),
+                _buildLoadingDot(1),
+                _buildLoadingDot(2),
+              ],
+            ),
           ],
         ),
       );
@@ -194,7 +272,7 @@ class _ReportesListState extends State<ReportesList>
                           height: 140,
                         ),
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 6),
                       Text(
                         _getEmptyMessage(filtro),
                         style: const TextStyle(
@@ -209,7 +287,7 @@ class _ReportesListState extends State<ReportesList>
               ],
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(6),
               itemCount: data.length,
               itemBuilder: (context, index) {
                 final reporte = data[index];
@@ -218,15 +296,18 @@ class _ReportesListState extends State<ReportesList>
                   onTap: widget.onTap != null
                       ? () => widget.onTap!(reporte)
                       : null,
+
+                  ///aqui comienza el card para editar
                   child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    margin: const EdgeInsets.symmetric(vertical: 2),
+
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: Colors.grey.shade200, width: 1),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black12.withOpacity(0.05),
+                          color: Colors.black12.withOpacity(0.1),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
@@ -234,8 +315,8 @@ class _ReportesListState extends State<ReportesList>
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
+                        horizontal: 10,
+                        vertical: 8,
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -245,7 +326,7 @@ class _ReportesListState extends State<ReportesList>
                             child: Row(
                               children: [
                                 // 🔸 Ícono decorativo fuera de lo común
-                                const SizedBox(width: 5),
+                                const SizedBox(width: 3),
 
                                 // 🔸 Datos principales
                                 Expanded(
@@ -278,6 +359,7 @@ class _ReportesListState extends State<ReportesList>
                                             child: Text(
                                               reporte.categoria ?? '',
                                               style: const TextStyle(
+                                                fontWeight: FontWeight.w400,
                                                 fontSize: 12,
                                                 color: Colors.black54,
                                               ),
@@ -310,7 +392,7 @@ class _ReportesListState extends State<ReportesList>
                                                       TextOverflow.ellipsis,
                                                 ),
                                                 const SizedBox(
-                                                  width: 4,
+                                                  width: 8,
                                                 ), // pequeño espacio visual
                                                 Container(
                                                   padding:
@@ -323,12 +405,13 @@ class _ReportesListState extends State<ReportesList>
                                                         .red, // Fondo de la etiqueta
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                          6,
+                                                          4,
                                                         ),
                                                   ),
                                                   child: Text(
                                                     '${diferenciaEnDias(reporte.fecha.toString(), reporte.feccre.toString())} DÍAS',
                                                     style: const TextStyle(
+                                                      fontFamily: 'FiraSans',
                                                       fontSize: 11,
                                                       color: Colors.white,
                                                       fontWeight:
@@ -354,23 +437,35 @@ class _ReportesListState extends State<ReportesList>
                             children: [
                               Row(
                                 children: [
-                                  const Icon(
+                                  /* const Icon(
                                     Icons.payments_rounded,
                                     color: Color(0xFF2563EB),
                                     size: 17,
-                                  ),
+                                  ), */
+                                  /* Image.asset(
+                                    'assets/icon/sol.png',
+                                    width: 20,
+                                    height: 20,
+                                    color: const Color.fromARGB(
+                                      255,
+                                      7,
+                                      79,
+                                      234,
+                                    ),
+                                    colorBlendMode: BlendMode.srcIn,
+                                  ), */
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${reporte.total} PEN',
+                                    '${reporte.total} ${reporte.moneda} ',
                                     style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                      fontWeight: FontWeight.w900,
                                       fontSize: 14,
                                       color: Color(0xFF2563EB),
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 6,
@@ -388,10 +483,11 @@ class _ReportesListState extends State<ReportesList>
                                       size: 12,
                                       color: Colors.white,
                                     ),
-                                    const SizedBox(width: 3),
+                                    const SizedBox(width: 5),
                                     Text(
                                       reporte.estadoActual ?? '',
                                       style: const TextStyle(
+                                        fontFamily: 'Poppins',
                                         fontSize: 11,
                                         color: Colors.white,
                                         fontWeight: FontWeight.w500,

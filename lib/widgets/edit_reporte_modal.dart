@@ -93,6 +93,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
   String? _errorTiposGasto;
   String? _numeroGasto;
 
+  // Cerca de donde declaran las otras variables de estado
+  List<DropdownOption> _tiposMovilidad = [];
+  DropdownOption? _selectedTipoMovilidad;
+  bool _isLoadingTipoMovilidad = false;
   // Opciones para moneda
   String? _selectedMoneda;
   final List<String> _monedas = ['PEN', 'USD', 'EUR'];
@@ -117,11 +121,50 @@ class _EditReporteModalState extends State<EditReporteModal> {
     // asegurarnos de que la categoría guardada esté disponible.
     _loadCategorias(politicaFiltro: widget.reporte.politica);
     _loadTiposGasto();
+    _loadTiposMovilidad();
     // Añadir listeners para validar formulario en tiempo real
     _addValidationListeners();
     // Intentar cargar la evidencia que ya exista en el servidor para este reporte
     // de modo que el campo de 'Agregar evidencia' muestre la imagen/PDF si existe.
     _cargarImagenServidor();
+  }
+
+  /// Cargar tipos de movilidad desde la API
+  Future<void> _loadTiposMovilidad() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingTipoMovilidad = true;
+    });
+
+    try {
+      final tiposMovilidad = await _apiService.getTiposMovilidad();
+      if (!mounted) return;
+      setState(() {
+        _tiposMovilidad = tiposMovilidad;
+        _isLoadingTipoMovilidad = false;
+
+        // Seleccionar el tipo guardado si existe
+        if (_tipoMovilidadController.text.isNotEmpty) {
+          try {
+            _selectedTipoMovilidad = tiposMovilidad.firstWhere(
+              (tipo) =>
+                  tipo.value.toLowerCase() ==
+                  _tipoMovilidadController.text.toLowerCase(),
+            );
+          } catch (_) {
+            _selectedTipoMovilidad = tiposMovilidad.isNotEmpty
+                ? tiposMovilidad.first
+                : null;
+          }
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingTipoMovilidad = false;
+      });
+      debugPrint('❌ Error cargando tipos de movilidad: $e');
+    }
   }
 
   /// Determina si el reporte está en estado 'EN INFORME'.
@@ -179,6 +222,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
       _totalController.addListener(_validateForm);
       _categoriaController.addListener(_validateForm);
       _tipoGastoController.addListener(_validateForm);
+      // ✅ Agregar listeners para campos de movilidad
+      _origenController.addListener(_validateForm);
+      _destinoController.addListener(_validateForm);
+      _motivoViajeController.addListener(_validateForm);
+      _tipoMovilidadController.addListener(_validateForm);
+      _placaController.addListener(_validateForm);
     }
     //else if (_categoriaController.text == "PLANILLA DE MOVILIDAD") {}
     else {
@@ -230,6 +279,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Validar si todos los campos obligatorios están llenos
   void _validateForm() {
+    // ✅ Solo validar si está en modo edición
+    if (!_isEditMode) {
+      setState(() {
+        _isFormValid = false;
+      });
+      return;
+    }
     final isMovilidad = _isPlanillaDeMovilidad();
 
     final isValid = isMovilidad
@@ -238,6 +294,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
               _totalController.text.trim().isNotEmpty &&
               (_selectedMoneda != null && _selectedMoneda!.isNotEmpty) &&
               _categoriaController.text.trim().isNotEmpty &&
+              _tipoGastoController.text.trim().isNotEmpty &&
+              _origenController.text.trim().isNotEmpty &&
+              _destinoController.text.trim().isNotEmpty &&
+              _motivoViajeController.text.trim().isNotEmpty &&
+              _tipoMovilidadController.text.trim().isNotEmpty &&
+              _placaController.text.trim().isNotEmpty &&
               (_selectedImage != null)
         : // Validación para formulario completo
           _rucController.text.trim().isNotEmpty &&
@@ -540,7 +602,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       final selectedOption = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
+          /* return AlertDialog(
             title: const Text('Seleccionar evidencia'),
             content: const Text('¿Qué tipo de archivo desea agregar?'),
             actions: [
@@ -562,6 +624,105 @@ class _EditReporteModalState extends State<EditReporteModal> {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Cancelar'),
+              ),
+            ],
+          );
+        }, */
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
+
+            title: Row(
+              children: const [
+                Icon(Icons.attach_file, color: Colors.blue, size: 26),
+                SizedBox(width: 10),
+                Text(
+                  'Seleccionar evidencia',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ],
+            ),
+
+            content: const Text(
+              '¿Qué tipo de archivo deseas agregar?',
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: Colors.black87,
+              ),
+            ),
+
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+
+            actions: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Tomar foto
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'camera'),
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    label: const Text(
+                      'Tomar Foto',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // Galería
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'gallery'),
+                    icon: const Icon(Icons.photo_library_rounded),
+                    label: const Text(
+                      'Galería',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // PDF
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'pdf'),
+                    icon: const Icon(Icons.picture_as_pdf_rounded),
+                    label: const Text(
+                      'Archivo PDF',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Cancelar
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -653,6 +814,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
               .split('/')
               .last; // Nombre del archivo
         });
+        _validateForm();
       }
     } on PlatformException catch (e) {
       if (mounted) {
@@ -807,7 +969,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Text(
                   message,
                   style: const TextStyle(color: Colors.white, fontSize: 14),
@@ -1076,6 +1238,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     try {
       setState(() {
         _hasScannedData = true;
+        _isEditMode = false; // Permitir edición después de escanear
       });
 
       // Parsear el QR de SUNAT (formato típico separado por |)
@@ -1287,6 +1450,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
     final savedCategoriaGlobal = _categoriaController.text.trim();
     String normalizeGlobal(String s) => s.trim().toLowerCase();
 
+    // ✅ Detectar si la categoría es "PLANILLA DE MOVILIDAD"
+    final isPlanillaMovilidad =
+        savedCategoriaGlobal.toLowerCase().contains('planilla') &&
+        savedCategoriaGlobal.toLowerCase().contains('movilidad');
+
     if (_politicaController.text.toLowerCase().contains('movilidad') ||
         _politicaController.text.toLowerCase().contains('general')) {
       // Para políticas 'movilidad' y 'general', usar datos de la API
@@ -1424,7 +1592,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
     }
 
     // Verificar si la categoría ORIGINAL (guardada) es "Planilla de Movilidad"
-    // Solo bloquear si ya fue guardada así anteriormente
+    // ✅ Bloquear edición si es "PLANILLA DE MOVILIDAD"
+    // También bloquear si la categoría ORIGINAL (guardada) es "Planilla de Movilidad"
     final isMovilidadCategoriaOriginal =
         _originalCategoria != null &&
         (_originalCategoria!.toLowerCase().contains('planilla de movilidad') ||
@@ -1453,10 +1622,17 @@ class _EditReporteModalState extends State<EditReporteModal> {
             borderSide: const BorderSide(color: Colors.white, width: 1),
           ),
           filled: true,
-          fillColor: isMovilidadCategoriaOriginal
-              ? Colors.grey.shade200
+          fillColor: isPlanillaMovilidad
+              ? Colors
+                    .grey
+                    .shade200 // ✅ Color diferente para indicar que no es editable
               : (_isEditMode ? Colors.white : Colors.white),
+          // ✅ Agregar sufijo para indicar que está bloqueada
+          suffixIcon: isPlanillaMovilidad
+              ? Icon(Icons.lock, color: Colors.grey.shade600, size: 20)
+              : null,
         ),
+
         value: selectedValue,
         items: items,
         validator: (value) {
@@ -1466,11 +1642,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
           return null;
         },
         onChanged: (value) {
-          if (value != null && !isMovilidadCategoriaOriginal) {
+          // ✅ Solo permitir cambios si NO es planilla de movilidad
+          if (value != null && !isPlanillaMovilidad) {
             setState(() {
               _categoriaController.text = value;
             });
-            _validateForm(); // Validar cuando cambie la categoría
+            // ✅ Llamar directamente después del setState
+            Future.microtask(() => _validateForm());
           }
         },
       ),
@@ -1588,7 +1766,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   setState(() {
                     _tipoGastoController.text = value;
                   });
-                  _validateForm(); // Validar cuando cambie el tipo de gasto
+                  // ✅ Llamar directamente después del setState
+                  Future.microtask(() => _validateForm());
                 }
               },
             ),
@@ -1652,9 +1831,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
       }
 
       // Si no se encuentra la imagen
-      debugPrint(
+      /*     debugPrint(
         '⚠️ No se encontró la evidencia en el servidor (probadas: ${candidates.join(', ')})',
-      );
+      ); */
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1995,7 +2174,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     final tempFile = File('${tempDir.path}/$fileName');
     await tempFile.writeAsBytes(bytes);
 
-    showDialog(
+    /* showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: Colors.black,
@@ -2043,6 +2222,100 @@ class _EditReporteModalState extends State<EditReporteModal> {
             child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
           ),
         ],
+      ),
+    );
+     */
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.7),
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xff121212),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.4),
+                blurRadius: 20,
+                spreadRadius: 0,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '📎 Evidencia',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              SizedBox(
+                width: MediaQuery.of(context).size.width * .85,
+                height: MediaQuery.of(context).size.height * .55,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: InteractiveViewer(
+                    minScale: 1,
+                    maxScale: 6,
+                    child: Image.memory(bytes, fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // compartir
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () async {
+                      try {
+                        await Share.shareXFiles([
+                          XFile(tempFile.path, name: fileName),
+                        ], text: fileName);
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error compartiendo: $e')),
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.share, color: Colors.white),
+                    label: const Text(
+                      "Compartir",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                  // cerrar
+                  TextButton(
+                    style: TextButton.styleFrom(overlayColor: Colors.white12),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      "Cerrar",
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -2109,13 +2382,41 @@ class _EditReporteModalState extends State<EditReporteModal> {
         selectedImage: _selectedImage,
         apiEvidencia: null,
       );
-
+      /* 
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ GASTO ACTUALIZADA'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
+          ),
+        ); */
+
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 22),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Gasto actualizado correctamente',
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green.shade600,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            elevation: 6,
+            showCloseIcon: true,
+            closeIconColor: Colors.white,
           ),
         );
 
@@ -2148,7 +2449,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   Widget build(BuildContext context) {
     final isMovilidad = _isPlanillaDeMovilidad();
     return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
+      height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
@@ -2170,12 +2471,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       ? [
                           // Campos simplificados para PLANILLA DE MOVILIDAD
                           _buildImageSection(),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
                           //POLITICA
                           _buildPolicySection(),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
                           _buildCategorySection(),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
 
                           // Fecha Emisión
                           _buildDateField(
@@ -2185,7 +2486,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                             isRequired: true,
                             readOnly: !_isEditMode,
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
                           // Total
                           _buildTextField(
                             _totalController,
@@ -2195,17 +2496,17 @@ class _EditReporteModalState extends State<EditReporteModal> {
                             isRequired: true,
                             readOnly: !_isEditMode,
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
                           // Moneda
                           _buildMonedaDropdown(),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
                           // Sección Movilidad completa
                           _buildMovilidadSection(),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
                           // Nota
                           _buildTextField(
                             _notaController,
-                            'Nota',
+                            'Nota o Glosa:',
                             Icons.comment,
                             TextInputType.text,
                             readOnly: !_isEditMode,
@@ -2255,14 +2556,16 @@ class _EditReporteModalState extends State<EditReporteModal> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.receipt_long, color: Colors.white, size: 28),
+          Icon(Icons.fact_check_rounded, color: Colors.white, size: 28),
+          /*           const Icon(Icons.receipt_long, color: Colors.white, size: 28),
+ */
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Editar Gasto #$_numeroGasto',
+                  'Editar Gasto # $_numeroGasto',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -2276,8 +2579,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
               ],
             ),
           ),
-          // Botón editar (solo icono) - ocultar si el reporte está en 'EN INFORME'
-          if (!_isEditMode && !_isEnInforme())
+          // Botón editar (solo icono)
+          if (!_isEditMode)
             IconButton(
               onPressed: () {
                 setState(() {
@@ -2331,7 +2634,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.grey, width: 1),
             ),
-            prefixIcon: const Icon(Icons.policy),
+            prefixIcon: const Icon(Icons.security_outlined),
           ),
         ),
       ],
@@ -2368,6 +2671,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
           'Razon social',
           Icons.house,
           TextInputType.text,
+          readOnly: true,
         ),
         const SizedBox(height: 16),
 
@@ -2544,7 +2848,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _origenController,
                 readOnly: !_isEditMode,
@@ -2576,7 +2880,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _destinoController,
                 readOnly: !_isEditMode,
@@ -2608,7 +2912,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _motivoViajeController,
                 readOnly: !_isEditMode,
@@ -2640,8 +2944,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
-              const SizedBox(height: 12),
-              TextFormField(
+              const SizedBox(height: 8),
+
+              /*  TextFormField(
                 controller: _tipoMovilidadController,
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
@@ -2672,8 +2977,66 @@ class _EditReporteModalState extends State<EditReporteModal> {
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
-
-              const SizedBox(height: 12),
+ */
+              AbsorbPointer(
+                absorbing: !_isEditMode,
+                child: DropdownButtonFormField<DropdownOption>(
+                  value: _selectedTipoMovilidad,
+                  decoration: InputDecoration(
+                    labelText: 'Tipo Transporte',
+                    border: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.transparent,
+                        width: 0,
+                      ),
+                    ),
+                    enabledBorder: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.grey,
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: const UnderlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    ),
+                    disabledBorder: UnderlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: Colors.white,
+                        width: 1,
+                      ),
+                    ),
+                    prefixIcon: const Icon(Icons.directions_transit),
+                    filled: true,
+                    fillColor: _isEditMode ? Colors.white : Colors.grey.shade50,
+                  ),
+                  isExpanded: true,
+                  items: _tiposMovilidad.map((tipo) {
+                    return DropdownMenuItem<DropdownOption>(
+                      value: tipo,
+                      child: Text(tipo.value),
+                    );
+                  }).toList(),
+                  onChanged: _isEditMode
+                      ? (value) {
+                          setState(() {
+                            _selectedTipoMovilidad = value;
+                            _tipoMovilidadController.text = value?.value ?? '';
+                          });
+                        }
+                      : null,
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Seleccione tipo transporte';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _placaController,
                 readOnly: !_isEditMode,
@@ -2724,6 +3087,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+
       readOnly: readOnly,
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
@@ -2895,7 +3259,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       child: Column(
         children: [
           // Mensaje de campos obligatorios
-          if (!_isFormValid)
+          if (_isEditMode && !_isFormValid)
             Container(
               padding: const EdgeInsets.all(6),
               margin: const EdgeInsets.only(bottom: 8),
@@ -2934,7 +3298,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                 ),
               ),
-              const SizedBox(width: 4),
+              /*               const SizedBox(width: 4),
+ */
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isLoading || !_isFormValid
@@ -2988,6 +3353,7 @@ class _QRScannerScreenState extends State<_QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,

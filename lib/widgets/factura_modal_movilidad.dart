@@ -15,7 +15,6 @@ import '../services/categoria_service.dart';
 import '../services/company_service.dart';
 import '../services/api_service.dart';
 import '../screens/home_screen.dart';
-import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// Widget modal personalizado para gastos de movilidad
@@ -404,9 +403,10 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       final selectedOption = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
+          /*   return AlertDialog(
             title: const Text('Seleccionar evidencia'),
             content: const Text('¿Qué tipo de archivo desea agregar?'),
+            backgroundColor: Colors.white,
             actions: [
               TextButton.icon(
                 onPressed: () => Navigator.pop(context, 'camera'),
@@ -426,6 +426,104 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Cancelar'),
+              ),
+            ],
+          ); */
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
+
+            title: Row(
+              children: const [
+                Icon(Icons.attach_file, color: Colors.blue, size: 26),
+                SizedBox(width: 10),
+                Text(
+                  'Seleccionar evidencia',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ],
+            ),
+
+            content: const Text(
+              '¿Qué tipo de archivo deseas agregar?',
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: Colors.black87,
+              ),
+            ),
+
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+
+            actions: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Tomar foto
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'camera'),
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    label: const Text(
+                      'Tomar Foto',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // Galería
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'gallery'),
+                    icon: const Icon(Icons.photo_library_rounded),
+                    label: const Text(
+                      'Galería',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // PDF
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'pdf'),
+                    icon: const Icon(Icons.picture_as_pdf_rounded),
+                    label: const Text(
+                      'Archivo PDF',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Cancelar
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -715,7 +813,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         "gerencia": CompanyService().currentCompany?.gerencia ?? '',
         "area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
-        "consumidor": "",
+        "consumidor": CompanyService().currentCompany?.consumidor ?? '',
         "placa": _placaController.text,
         "estadoActual": "BORRADOR",
         "glosa": "ESCANER IA",
@@ -783,10 +881,68 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
       if (successEvidencia && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Factura guardada exitosamente'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F9D58),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 48),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '¡Éxito!',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              'Factura guardada correctamente',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white.withOpacity(0.8),
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  bottom: -10,
+                  left: 15,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(10),
+                    ),
+                    child: Icon(
+                      Icons.check_circle,
+                      size: 40,
+                      color: Colors.green[900],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
           ),
         );
 
@@ -838,16 +994,15 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildImageSection(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     _buildPolicySection(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _buildCategorySection(),
-                    const SizedBox(height: 12),
-
+                    const SizedBox(height: 10),
                     _buildFacturaDataSection(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     _buildMovilidadSection(),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 10),
                     _buildNotesSection(),
                   ],
                 ),
@@ -910,7 +1065,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     return Card(
       color: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -943,13 +1098,13 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       (_selectedFile == null) ? 'Agregar' : 'Cambiar',
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
                     ),
                   ),
               ],
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
 
             // Mostrar archivo seleccionado
             if (_selectedFile != null)
@@ -1441,7 +1596,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         side: BorderSide.none,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1947,6 +2102,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                     keyboardType: TextInputType.numberWithOptions(
                       decimal: true,
                     ),
+                    readOnly: true,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'El total es obligatorio';
@@ -2158,7 +2314,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         side: BorderSide.none,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -2217,6 +2373,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 ),
               ],
             ),
+
             const SizedBox(height: 12),
             Row(
               children: [
@@ -2348,7 +2505,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         side: BorderSide.none,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(2),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

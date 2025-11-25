@@ -384,6 +384,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   // ========== MÉTODOS REUTILIZABLES ==========
 
   void _mostrarEditarPerfil(BuildContext context) {
+    _removeFabOverlay();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -391,7 +392,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) => const ProfileModal(),
-    );
+    ).then((_) {
+      // Restaurar el FAB después de cerrar el modal
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _updateFabOverlay(),
+        );
+      }
+    });
   }
 
   void _decrementarNotificaciones() {
@@ -450,6 +458,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _mostrarEditarReporte(Reporte reporte) {
+    _removeFabOverlay();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -461,6 +470,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     ).then((_) {
       // Desactivar el focus del buscador cuando se cierra el modal
       _searchFocusNode.unfocus();
+      // Restaurar el FAB después de cerrar el modal
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _updateFabOverlay(),
+        );
+      }
     });
   }
 
@@ -471,6 +486,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
+        backgroundColor: Colors.white,
         appBar: CustomAppBar(
           hintText: "Buscar Reportes...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
@@ -752,6 +768,64 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void _handleSearchAuditoria(String query) {
     if (query.trim().isEmpty) {
       setState(() {
+        _auditoria = List.from(_allAuditoria);
+      });
+      return;
+    }
+
+    final q = query.toLowerCase();
+
+    setState(() {
+      _auditoria = _allAuditoria.where((aud) {
+        final titulo = (aud.titulo ?? '').toLowerCase();
+        final nota = (aud.nota ?? '').toLowerCase();
+        final cantidad = aud.cantidad.toString().toLowerCase();
+        final total = aud.total.toString().toLowerCase();
+        final politica = (aud.politica ?? '').toLowerCase();
+        final estado = (aud.estadoActual ?? aud.estado ?? '').toLowerCase();
+
+        return titulo.contains(q) ||
+            nota.contains(q) ||
+            cantidad.contains(q) ||
+            total.contains(q) ||
+            politica.contains(q) ||
+            estado.contains(q);
+      }).toList();
+    });
+  }
+
+  void _handleSearchRevision(String query) {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _revision = List.from(_allRevision);
+      });
+      return;
+    }
+
+    final q = query.toLowerCase();
+
+    setState(() {
+      _revision = _allRevision.where((rev) {
+        final titulo = (rev.titulo ?? '').toLowerCase();
+        final nota = (rev.nota ?? '').toLowerCase();
+        final cantidad = rev.cantidad.toString().toLowerCase();
+        final total = rev.total.toString().toLowerCase();
+        final politica = (rev.politica ?? '').toLowerCase();
+        final estado = (rev.estadoActual ?? rev.estado ?? '').toLowerCase();
+
+        return titulo.contains(q) ||
+            nota.contains(q) ||
+            cantidad.contains(q) ||
+            total.contains(q) ||
+            politica.contains(q) ||
+            estado.contains(q);
+      }).toList();
+    });
+  }
+  /* 
+  void _handleSearchAuditoria(String query) {
+    if (query.trim().isEmpty) {
+      setState(() {
         _informes = List.from(_allInformes);
       });
       return;
@@ -806,9 +880,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       }).toList();
     });
   }
-
+ */
   // ========== MÉTODOS DE INFORMES ==========
-
+  /* 
   Future<void> _agregarInforme() async {
     // Ocultar el FAB overlay antes de abrir el modal para evitar que quede visible
     _removeFabOverlay();
@@ -834,9 +908,37 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     // Restaurar el FAB en overlay si seguimos en la pestaña Informes
     WidgetsBinding.instance.addPostFrameCallback((_) => _updateFabOverlay());
   }
+ */
+
+  Future<void> _agregarInforme() async {
+    // ✅ Remover FAB INMEDIATAMENTE antes de abrir el modal
+    _removeFabOverlay();
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(5)),
+      ),
+      builder: (BuildContext context) => NuevoInformeModal(
+        onInformeCreated: (nuevoInforme) {
+          if (mounted) {
+            _loadInformes();
+          }
+        },
+        onCancel: () {
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+    // Restaurar el FAB después de cerrar el modal
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _updateFabOverlay());
+    }
+  }
 
   // ===== Overlay FAB helpers =====
-  OverlayEntry _createFabOverlay() {
+  /*   OverlayEntry _createFabOverlay() {
     return OverlayEntry(
       builder: (context) {
         // Calcular offset para que el FAB quede por encima de la barra inferior
@@ -867,6 +969,58 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   void _removeFabOverlay() {
     _fabOverlay?.remove();
     _fabOverlay = null;
+  }
+
+  void _updateFabOverlay() {
+    if (!mounted) return;
+    if (_selectedIndex == 1) {
+      _insertFabOverlay();
+    } else {
+      _removeFabOverlay();
+    }
+  }
+ */
+
+  OverlayEntry _createFabOverlay() {
+    return OverlayEntry(
+      builder: (context) {
+        final double safeBottom = MediaQuery.of(context).viewPadding.bottom;
+        const double bottomNavHeight = 56.0;
+        const double extraMargin = 20.0;
+        final double bottomOffset = safeBottom + bottomNavHeight + extraMargin;
+
+        /* return Positioned(
+          right: 10,
+          bottom: bottomOffset,
+          child: SafeArea(child: NuevoInformeFab(onPressed: _agregarInforme)),
+        ); */
+        return Positioned(
+          right: 10,
+          bottom: bottomOffset,
+          child: SafeArea(
+            child: AnimatedOpacity(
+              opacity: 1.0,
+              duration: const Duration(milliseconds: 200), // ← Más rápido
+              child: NuevoInformeFab(onPressed: _agregarInforme),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _insertFabOverlay() {
+    if (_fabOverlay != null) return;
+    _fabOverlay = _createFabOverlay();
+    final overlay = Overlay.of(context);
+    overlay.insert(_fabOverlay!);
+  }
+
+  void _removeFabOverlay() {
+    if (_fabOverlay != null) {
+      _fabOverlay?.remove();
+      _fabOverlay = null;
+    }
   }
 
   void _updateFabOverlay() {
@@ -971,11 +1125,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         _searchController.clear();
                         _searchFocusNode.unfocus();
 
-                        setState(() {
-                          _selectedIndex = pages.isEmpty
-                              ? 0
-                              : index.clamp(0, pages.length - 1);
-                        });
+                        // ✅ REMOVER FAB INMEDIATAMENTE (sin delay)
+                        _removeFabOverlay();
+                        if (mounted) {
+                          setState(() {
+                            _selectedIndex = pages.isEmpty
+                                ? 0
+                                : index.clamp(0, pages.length - 1);
+                          });
+                        }
 
                         // 🔁 Recargar la data correspondiente
                         if (puedeGastos && index == 0) {

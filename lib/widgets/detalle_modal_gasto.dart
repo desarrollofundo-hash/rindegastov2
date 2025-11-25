@@ -165,9 +165,9 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
       }
 
       // ⚠️ Si no se encontró la imagen
-      debugPrint(
+      /*   debugPrint(
         '⚠️ No se encontró la evidencia en el servidor (probadas: ${candidates.join(', ')})',
-      );
+      ); */
       if (mounted) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
