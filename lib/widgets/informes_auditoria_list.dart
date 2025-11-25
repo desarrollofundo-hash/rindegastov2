@@ -61,6 +61,7 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
   Widget build(BuildContext context) {
     if (widget.auditorias.isEmpty) {
       return RefreshIndicator(
+        
         // Personalizar indicador para que coincida con la apariencia de Auditoría
         color: Colors.green,
         backgroundColor: Colors.white,

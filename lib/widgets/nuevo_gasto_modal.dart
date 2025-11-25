@@ -438,27 +438,100 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: const Text('Seleccionar evidencia'),
-            content: const Text('¿Qué tipo de archivo desea agregar?'),
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
+
+            title: Row(
+              children: const [
+                Icon(Icons.attach_file, color: Colors.blue, size: 26),
+                SizedBox(width: 10),
+                Text(
+                  'Seleccionar evidencia',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ],
+            ),
+
+            content: const Text(
+              '¿Qué tipo de archivo deseas agregar?',
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: Colors.black87,
+              ),
+            ),
+
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+
             actions: [
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'camera'),
-                icon: const Icon(Icons.camera_alt),
-                label: const Text('Tomar Foto'),
-              ),
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'gallery'),
-                icon: const Icon(Icons.photo_library),
-                label: const Text('Galería'),
-              ),
-              TextButton.icon(
-                onPressed: () => Navigator.pop(context, 'pdf'),
-                icon: const Icon(Icons.picture_as_pdf),
-                label: const Text('Archivo PDF'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar'),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Tomar foto
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'camera'),
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    label: const Text(
+                      'Tomar Foto',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // Galería
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'gallery'),
+                    icon: const Icon(Icons.photo_library_rounded),
+                    label: const Text(
+                      'Galería',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // PDF
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'pdf'),
+                    icon: const Icon(Icons.picture_as_pdf_rounded),
+                    label: const Text(
+                      'Archivo PDF',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Cancelar
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -716,11 +789,67 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       Navigator.of(context).pop();
 
       // Mostrar mensaje de éxito
-      ScaffoldMessenger.of(context).showSnackBar(
+      /* ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('✅ Factura guardada exitosamente'),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
+        ),
+      ); */
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          duration: const Duration(seconds: 2),
+          content: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 8,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.7, end: 1.0),
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeOutBack,
+                  builder: (context, scale, child) {
+                    return Transform.scale(scale: scale, child: child);
+                  },
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Factura guardada exitosamente',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       );
 
@@ -1684,11 +1813,23 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             color: Colors.green,
           ),
         ),
-        const SizedBox(height: 2),
-
         // Campos que se muestran solo si NO es planilla de movilidad
         if (!esPlanillaMovilidad) ...[
           // RUC Emisor
+          TextFormField(
+            controller: _rucClienteController,
+            decoration: const InputDecoration(
+              labelText: 'RUC Cliente',
+              border: UnderlineInputBorder(),
+              prefixIcon: Icon(Icons.business),
+              suffixIcon: Icon(Icons.lock, color: Colors.grey),
+            ),
+            enabled: false,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _rucProveedorController,
@@ -1732,7 +1873,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 return null;
               },
             ),
-          const SizedBox(height: 8),
 
           // Razón Social
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
@@ -1921,18 +2061,27 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 margin: const EdgeInsets.only(right: 8),
                 child: const Icon(Icons.calendar_month, color: Colors.green),
               ),
-              suffixIcon: IconButton(
-                icon: const Icon(Icons.expand_more, color: Colors.green),
-                onPressed: _selectDate,
-                tooltip: 'Seleccionar fecha',
-              ),
+              suffixIcon: _validar
+                  ? IconButton(
+                      icon: const Icon(Icons.expand_more, color: Colors.green),
+                      onPressed: _selectDate,
+                      tooltip: 'Seleccionar fecha',
+                    )
+                  : null,
               filled: true,
               fillColor: _fechaController.text.isEmpty
                   ? Colors.white
                   : Colors.white,
             ),
-            readOnly: true,
-            onTap: _selectDate,
+            readOnly:
+                true, // ✅ Mantener true porque se selecciona con calendario
+            /*  onTap: (_validar || esPlanillaMovilidad)
+                ? _selectDate
+                : null, // ✅ Permite seleccionar fecha si es planilla de movilidad */
+            onTap: (_categoriaController.text == "PLANILLA DE MOVILIDAD")
+                ? _selectDate
+                : null, // ✅ Solo permite seleccionar si es planilla de movilidad
+
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -1956,7 +2105,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _serieFacturaController,
-                    readOnly: true, // 🔒 No editable
+                    /*                     readOnly: !_validar, // 🔒 No editable if !_validar
+ */
+                    readOnly: true, // 🔒 No editable */
                     decoration: InputDecoration(
                       labelText: 'Serie *',
                       border: UnderlineInputBorder(
@@ -1992,7 +2143,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _numeroFacturaController,
-                    readOnly: true, // 🔒 No editable
+                    /*                     readOnly: !_validar, // 🔒 No editable if !_validar
+ */
+                    readOnly: true, // 🔒 No editable */
                     decoration: InputDecoration(
                       labelText: 'Número *',
                       border: UnderlineInputBorder(
@@ -2035,7 +2188,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _igvController,
+                    /*                     readOnly: !_validar, // 🔒 No editable if !_validar
+ */
                     readOnly: true, // 🔒 No editable
+
                     decoration: InputDecoration(
                       labelText: 'Igv *',
                       border: UnderlineInputBorder(
@@ -2079,9 +2235,15 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               flex: 1,
               child: TextFormField(
                 controller: _totalController,
+                /*                 readOnly: !_validar /*  ||
+ */                    (_categoriaController.text != "PLANILLA DE MOVILIDAD" &&
+                        _categoriaController.text != "VIAJES CON COMPROBANTE") */
+                /*                 readOnly: true, // 🔒 No editable
+
+ */
                 readOnly:
-                    _categoriaController.text != "PLANILLA DE MOVILIDAD" &&
-                    _categoriaController.text != "VIAJES CON COMPROBANTE",
+                    (_categoriaController.text !=
+                    "PLANILLA DE MOVILIDAD"), // ✅ Solo editable en planilla de movilidad
 
                 decoration: InputDecoration(
                   labelText: 'Total',
@@ -2322,7 +2484,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         ),
         focusedBorder: const UnderlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderSide: BorderSide(color: Colors.green, width: 2),
         ),
         disabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -2664,6 +2826,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   /// Construir la sección del lector de código SUNAT
   Widget _buildLectorSunatSection() {
     return Card(
+      color: Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -2814,6 +2977,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       if (mounted) {
         setState(() {
           _hasScannedData = true;
+          _validar = false; // ✅ Bloquear edición de campos después de escanear
         });
       }
 
@@ -2921,6 +3085,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     if (mounted) {
       setState(() {
         _hasScannedData = false;
+        _validar = true; // ✅ Reactivar edición cuando se limpian datos
 
         // Limpiar los campos que se llenaron automáticamente
         _rucProveedorController.clear();

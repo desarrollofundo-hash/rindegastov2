@@ -65,12 +65,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleForgotPassword() {
     // Navegar a pantalla de recuperación
-    // TODO: Implementar navegación a recuperación de contraseña
   }
 
   void _handleRegister() {
     // Navegar a pantalla de registro
-    // TODO: Implementar navegación a registro
   }
 
   @override

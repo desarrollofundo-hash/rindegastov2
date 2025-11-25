@@ -29,6 +29,7 @@ class InformesReporteList extends StatelessWidget {
   Widget build(BuildContext context) {
     if (informes.isEmpty) {
       return RefreshIndicator(
+        backgroundColor: Colors.white,
         onRefresh: onRefresh ?? () async {},
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -48,6 +49,7 @@ class InformesReporteList extends StatelessWidget {
     }
 
     return RefreshIndicator(
+      backgroundColor: Colors.white,
       onRefresh: onRefresh ?? () async {},
       child: ListView.builder(
         padding: const EdgeInsets.all(8),

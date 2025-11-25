@@ -397,7 +397,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       final selectedOption = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
-          return AlertDialog(
+          /*  return AlertDialog(
             title: const Text('Seleccionar evidencia'),
             content: const Text('¿Qué tipo de archivo desea agregar?'),
             actions: [
@@ -419,6 +419,104 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Cancelar'),
+              ),
+            ],
+          ); */
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
+
+            title: Row(
+              children: const [
+                Icon(Icons.attach_file, color: Colors.blue, size: 26),
+                SizedBox(width: 10),
+                Text(
+                  'Seleccionar evidencia',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ],
+            ),
+
+            content: const Text(
+              '¿Qué tipo de archivo deseas agregar?',
+              style: TextStyle(
+                fontSize: 15,
+                height: 1.4,
+                color: Colors.black87,
+              ),
+            ),
+
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+
+            actions: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Tomar foto
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'camera'),
+                    icon: const Icon(Icons.camera_alt_rounded),
+                    label: const Text(
+                      'Tomar Foto',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // Galería
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.purple,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'gallery'),
+                    icon: const Icon(Icons.photo_library_rounded),
+                    label: const Text(
+                      'Galería',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  // PDF
+                  TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context, 'pdf'),
+                    icon: const Icon(Icons.picture_as_pdf_rounded),
+                    label: const Text(
+                      'Archivo PDF',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // Cancelar
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.grey[700],
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -773,7 +871,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         "gerencia": CompanyService().currentCompany?.gerencia ?? '',
         "area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
-        "consumidor": "",
+        "consumidor": CompanyService().currentCompany?.consumidor ?? '',
         "placa": _placaController.text,
         "estadoActual": "BORRADOR",
         "glosa": "CODIGO QR",
@@ -838,12 +936,69 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         facturaDataEvidencia,
       );
 
-      if (successEvidencia && mounted) {
+      /*   if (successEvidencia && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('✅ Factura guardada exitosamente'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
+          ),
+        ); */
+
+      if (successEvidencia && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            duration: const Duration(seconds: 2),
+            content: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 8,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.7, end: 1.0),
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.easeOutBack,
+                    builder: (context, scale, child) {
+                      return Transform.scale(scale: scale, child: child);
+                    },
+                    child: const Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Factura guardada exitosamente',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
 
@@ -2103,6 +2258,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return 'La nota es obligatoria';
+            }
+            if (value.trim().length < 5) {
+              return 'La nota debe tener al menos 5 caracteres';
             }
             return null;
           },

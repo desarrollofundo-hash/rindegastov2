@@ -16,6 +16,8 @@ class LoginController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get obscurePassword => _obscurePassword;
 
+  get errorMessage => null;
+
   // Validaciones
   String? validateUser(String? value) {
     if (value == null || value.isEmpty) {

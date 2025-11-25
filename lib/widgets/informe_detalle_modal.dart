@@ -211,16 +211,17 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           appBar: AppBar(
             backgroundColor: Colors.white,
             elevation: 0.5,
-            leading: IconButton(
+            /* leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
               onPressed: () => Navigator.of(context).pop(true),
-            ),
+            ), */
             title: const Text(
               'INFORME DETALLE',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: Colors.black87,
+                fontFamily: 'CascadiaCode',
               ),
             ),
             centerTitle: true,
@@ -491,6 +492,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                           }
 
                           return RefreshIndicator(
+                            backgroundColor: Colors.white,
                             onRefresh: _loadDetalles,
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
@@ -670,8 +672,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
       ),
     );
   }
-
-
+  /* 
   Future<void> _mostrarConfirmacionEnvio() async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -682,9 +683,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
             'Confirmar envío',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: const Text(
-            '¿Estás seguro que deseas enviar este informe?',
-          ),
+          content: const Text('¿Estás seguro que deseas enviar este informe?'),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -704,6 +703,96 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
     );
 
     // Si confirma, llama a _actualizarAuditoria()
+    if (confirmar == true) {
+      await _enviarInforme();
+    }
+  }
+ */
+
+  Future<void> _mostrarConfirmacionEnvio() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true, // Permitir cerrar tocando fuera
+      barrierColor: Colors.black54, // Fondo semitransparente
+      builder: (BuildContext context) {
+        return AlertDialog(
+          icon: const Icon(
+            Icons.rate_review_rounded,
+            size: 32,
+            color: Colors.blue,
+          ),
+          title: const Text(
+            'Enviar a auditoría',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            textAlign: TextAlign.center,
+          ),
+          content: const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '¿Estás seguro que deseas enviar este informe a auditoría?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 8),
+              Text(
+                'Una vez enviado, no podrás realizar modificaciones.',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 8, // Sombra más pronunciada
+          actionsAlignment: MainAxisAlignment.spaceBetween,
+          actions: [
+            // Botón Cancelar - Secundario
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.grey,
+                side: const BorderSide(color: Colors.grey),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: const Text('Cancelar'),
+            ),
+
+            // Botón Confirmar - Primario
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // Color más profesional
+                foregroundColor: Colors.white,
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.send, size: 18),
+                  SizedBox(width: 6),
+                  Text('Enviar'),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
     if (confirmar == true) {
       await _enviarInforme();
     }
@@ -739,16 +828,17 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
           children: [
             // Imagen placeholder
             Container(
-              width: 20,
-              height: 20,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.blue[200]!, width: 1.5),
               ),
               child: Icon(
                 Icons.receipt_long,
-                color: Colors.grey[600],
-                size: 24,
+                color: Colors.blue[600],
+                size: 20,
               ),
             ),
             const SizedBox(width: 16),
@@ -785,20 +875,22 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                       SizedBox(width: 8), // Espacio entre los textos
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 0,
+                          horizontal: 2,
                           vertical: 0,
                         ), // Espaciado interno
                         decoration: BoxDecoration(
                           color: Colors.red, // Fondo del texto
                           borderRadius: BorderRadius.circular(
-                            6,
+                            4,
                           ), // Bordes redondeados
                         ),
                         child: Text(
                           '${diferenciaEnDias(detalle.fecha.toString(), detalle.feccre.toString())} DIAS',
-                          style: TextStyle(
-                            fontSize: 12,
+                          style: const TextStyle(
+                            fontSize: 11,
                             color: Colors.white, // Color del texto
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Poppins',
                           ),
                         ),
                       ),
@@ -816,7 +908,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                   '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
                   style: const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     color: Colors.blue,
                   ),
                 ),

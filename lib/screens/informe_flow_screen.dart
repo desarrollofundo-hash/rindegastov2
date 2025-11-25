@@ -860,6 +860,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           Column(
@@ -980,8 +981,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                       controller: _searchController,
                       onChanged: _filtrarFacturas,
                       decoration: InputDecoration(
-                        hintText:
-                            'Buscar por monto, fecha, factura, empresa...',
+                        hintText: 'Buscar ',
                         hintStyle: TextStyle(
                           color: Colors.grey.shade500,
                           fontSize: 15,
@@ -1096,7 +1096,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Seleccionar todas',
+                          'Todos',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -1107,7 +1107,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                         ),
                         if (_facturasSeleccionadas.isNotEmpty)
                           Text(
-                            '${_facturasSeleccionadas.length} seleccionadas',
+                            '${_facturasSeleccionadas.length} seleccionada(s)',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w400,
@@ -1487,7 +1487,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
               // Total
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Column(
                   children: [
                     Row(
@@ -1539,7 +1539,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _facturasSeleccionadas.isEmpty
@@ -1550,7 +1550,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                               ? Colors.green
                               : Colors.grey,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           disabledBackgroundColor: Colors.grey[300],
                           disabledForegroundColor: Colors.grey[600],
                         ),
@@ -1566,6 +1566,7 @@ class _InformeFlowScreenState extends State<InformeFlowScreen> {
                   ],
                 ),
               ),
+              const SizedBox(height: 40),
             ],
           ),
         ),

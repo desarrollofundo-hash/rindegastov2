@@ -16,6 +16,7 @@ class GastosList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
+      backgroundColor: Colors.white,
       onRefresh: onRefresh,
       child: gastos.isEmpty
           ? ListView(

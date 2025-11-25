@@ -156,249 +156,395 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isSmallScreen = size.width < 360;
+    final isLargeScreen = size.width >= 480;
+
+    // Valores responsivos
+    final dialogPadding = isSmallScreen
+        ? 16.0
+        : isLargeScreen
+        ? 32.0
+        : 24.0;
+    final titleFontSize = isSmallScreen
+        ? 18.0
+        : isLargeScreen
+        ? 24.0
+        : 20.0;
+    final subtitleFontSize = isSmallScreen
+        ? 12.0
+        : isLargeScreen
+        ? 15.0
+        : 14.0;
+    final dropdownFontSize = isSmallScreen
+        ? 14.0
+        : isLargeScreen
+        ? 17.0
+        : 16.0;
+    final buttonFontSize = isSmallScreen
+        ? 14.0
+        : isLargeScreen
+        ? 17.0
+        : 16.0;
+    final spacingSmall = isSmallScreen ? 6.0 : 8.0;
+    final spacingMedium = isSmallScreen ? 10.0 : 14.0;
+    final spacingLarge = isSmallScreen
+        ? 16.0
+        : isLargeScreen
+        ? 32.0
+        : 24.0;
+    final borderRadius = isSmallScreen ? 16.0 : 20.0;
+
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(borderRadius),
+      ),
+      insetPadding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 12 : 20,
+        vertical: isSmallScreen ? 24 : 40,
+      ),
       child: Container(
-        padding: const EdgeInsets.all(24),
+        padding: EdgeInsets.all(dialogPadding),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(borderRadius),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [Colors.blue.shade50, Colors.white],
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Icono y título
-            Text(
-              '¡Bienvenido ${widget.userName} 👋!',
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono y título
+              Text(
+                '¡Bienvenido ${widget.userName} 👋!',
+                style: TextStyle(
+                  fontSize: titleFontSize,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
+              SizedBox(height: spacingSmall),
 
-            Text(
-              'Selecciona la empresa con la que vas a trabajar',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 14),
+              Text(
+                'Selecciona la empresa con la que vas a trabajar',
+                style: TextStyle(
+                  fontSize: subtitleFontSize,
+                  color: Colors.grey.shade600,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: spacingMedium),
 
-            // Lista desplegable de empresas o estados de carga/error
-            if (isLoading)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                child: const Column(
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 12),
-                    Text(
-                      'Cargando empresas...',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              )
-            else if (errorMessage != null)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  border: Border.all(color: Colors.red.shade200),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Icon(Icons.error, color: Colors.red.shade600, size: 32),
-                    const SizedBox(height: 8),
-                    Text(
-                      errorMessage!,
-                      style: TextStyle(
-                        color: Colors.red.shade700,
-                        fontSize: 14,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: _loadUserCompanies,
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Reintentar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade600,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else if (userCompanies.isEmpty)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  border: Border.all(color: Colors.orange.shade200),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.business_outlined,
-                      color: Colors.orange.shade600,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No tienes empresas asignadas',
-                      style: TextStyle(
-                        color: Colors.orange.shade700,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              )
-            else
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(12),
-                  color: Colors.white,
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: selectedCompany,
-                    hint: Text(
-                      'Seleccione una empresa',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    isExpanded: true,
-                    icon: Icon(
-                      Icons.arrow_drop_down,
-                      color: Colors.blue.shade700,
-                    ),
-                    style: const TextStyle(color: Colors.black87, fontSize: 16),
-                    items: userCompanies.map((company) {
-                      return DropdownMenuItem<String>(
-                        value: company.id.toString(),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              company.empresa,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            Text(
-                              company.ruc,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+              // Lista desplegable de empresas o estados de carga/error
+              if (isLoading)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 35,
+                        width: 35,
+                        child: CircularProgressIndicator(
+                          strokeWidth: isSmallScreen ? 2 : 2.5,
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedCompany = value;
-                      });
-                    },
-                  ),
-                ),
-              ),
-            const SizedBox(height: 24),
-
-            // Botones
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        side: BorderSide(color: Colors.grey.shade300),
                       ),
-                    ),
-                    child: Text(
-                      'Cancelar',
+                      SizedBox(height: spacingMedium),
+                      Text(
+                        'Cargando empresas...',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: subtitleFontSize,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else if (errorMessage != null)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    border: Border.all(color: Colors.red.shade200),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.error,
+                        color: Colors.red.shade600,
+                        size: isSmallScreen ? 28 : 32,
+                      ),
+                      SizedBox(height: spacingSmall),
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: subtitleFontSize,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: spacingMedium),
+                      ElevatedButton.icon(
+                        onPressed: _loadUserCompanies,
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: Text(
+                          'Reintentar',
+                          style: TextStyle(fontSize: subtitleFontSize),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: isSmallScreen ? 16 : 20,
+                            vertical: isSmallScreen ? 8 : 10,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else if (userCompanies.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    border: Border.all(color: Colors.orange.shade200),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.business_outlined,
+                        color: Colors.orange.shade600,
+                        size: isSmallScreen ? 28 : 32,
+                      ),
+                      SizedBox(height: spacingSmall),
+                      Text(
+                        'No tienes empresas asignadas',
+                        style: TextStyle(
+                          color: Colors.orange.shade700,
+                          fontSize: subtitleFontSize,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 12 : 16,
+                    vertical: isSmallScreen ? 2 : 4,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      dropdownColor: Colors.white,
+                      value: selectedCompany,
+                      hint: Text(
+                        'Seleccione una empresa',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: dropdownFontSize,
+                        ),
+                      ),
+                      isExpanded: true,
+                      icon: Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.blue.shade700,
+                        size: isSmallScreen ? 24 : 28,
+                      ),
                       style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 16,
+                        color: Colors.black87,
+                        fontSize: dropdownFontSize,
                       ),
+                      items: userCompanies.map((company) {
+                        return DropdownMenuItem<String>(
+                          value: company.id.toString(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                company.empresa,
+                                style: TextStyle(
+                                  fontSize: dropdownFontSize - 1,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                company.ruc,
+                                style: TextStyle(
+                                  fontSize: isSmallScreen ? 9 : 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? value) {
+                        setState(() {
+                          selectedCompany = value;
+                        });
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed:
-                        (selectedCompany != null &&
-                            !isLoading &&
-                            userCompanies.isNotEmpty)
-                        ? _continueToHome
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          (selectedCompany != null &&
-                              !isLoading &&
-                              userCompanies.isNotEmpty)
-                          ? Colors.blue.shade700
-                          : Colors.grey.shade300,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation:
-                          (selectedCompany != null &&
-                              !isLoading &&
-                              userCompanies.isNotEmpty)
-                          ? 2
-                          : 0,
-                    ),
-                    child: Text(
-                      isLoading
-                          ? 'Cargando...'
-                          : userCompanies.isEmpty && !isLoading
-                          ? 'Sin empresas'
-                          : 'Continuar',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+              SizedBox(height: spacingLarge),
+
+              // Botones - Responsive
+              if (isSmallScreen)
+                Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            (selectedCompany != null &&
+                                !isLoading &&
+                                userCompanies.isNotEmpty)
+                            ? _continueToHome
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              (selectedCompany != null &&
+                                  !isLoading &&
+                                  userCompanies.isNotEmpty)
+                              ? Colors.blue.shade700
+                              : Colors.grey.shade300,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          isLoading
+                              ? 'Cargando...'
+                              : userCompanies.isEmpty && !isLoading
+                              ? 'Sin empresas'
+                              : 'Continuar',
+                          style: TextStyle(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              else
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Text(
+                          'Cancelar',
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed:
+                            (selectedCompany != null &&
+                                !isLoading &&
+                                userCompanies.isNotEmpty)
+                            ? _continueToHome
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              (selectedCompany != null &&
+                                  !isLoading &&
+                                  userCompanies.isNotEmpty)
+                              ? Colors.blue.shade700
+                              : Colors.grey.shade300,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(
+                          isLoading
+                              ? 'Cargando...'
+                              : userCompanies.isEmpty && !isLoading
+                              ? 'Sin empresas'
+                              : 'Continuar',
+                          style: TextStyle(
+                            fontSize: buttonFontSize,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

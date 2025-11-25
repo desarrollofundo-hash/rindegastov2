@@ -185,7 +185,7 @@ void main() {
 }
 
 /// Muestra un SnackBar con un mensaje en la pantalla
-void showMessageError(
+/* void showMessageError(
   BuildContext context,
   String message, {
   Duration duration = const Duration(seconds: 2),
@@ -193,4 +193,191 @@ void showMessageError(
   ScaffoldMessenger.of(
     context,
   ).showSnackBar(SnackBar(content: Text(message), duration: duration));
+} */
+
+/* void showMessageError(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 2),
+}) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      duration: duration,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      behavior: SnackBarBehavior.floating,
+      content: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0.8, end: 1.0),
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeOutBack,
+        builder: (context, value, child) {
+          return Transform.scale(
+            scale: value,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.green.shade600, // Puedes cambiar color
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.shade200.withOpacity(0.5),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white, size: 26),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      message,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    ),
+  );
+}
+ */
+
+void showMessageError(
+  BuildContext context,
+  String message, {
+  Duration duration = const Duration(seconds: 2),
+}) {
+  final bool isRejected = message.toUpperCase().contains("RECHAZADO");
+
+  final Color bgColor = isRejected
+      ? Colors.red.shade600
+      : Colors.green.shade600;
+  final IconData iconData = isRejected
+      ? Icons.close_rounded
+      : Icons.check_circle;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      duration: duration,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      behavior: SnackBarBehavior.floating,
+      content: AnimatedBuilder(
+        animation: kAlwaysCompleteAnimation,
+        builder: (context, child) {
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.8, end: 1.0),
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOutBack,
+            builder: (context, scale, _) {
+              return Transform.scale(
+                scale: scale,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: bgColor.withOpacity(0.4),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // 🔥 Animación diferente según aprobado/rechazado
+                      isRejected
+                          ? _ShakeIcon(iconData)
+                          : Icon(iconData, color: Colors.white, size: 26),
+
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    ),
+  );
+}
+
+// --------------------------------------------------
+// 🔴 Ícono con animación SHAKE (vibración)
+// --------------------------------------------------
+class _ShakeIcon extends StatefulWidget {
+  final IconData icon;
+
+  const _ShakeIcon(this.icon);
+
+  @override
+  State<_ShakeIcon> createState() => _ShakeIconState();
+}
+
+class _ShakeIconState extends State<_ShakeIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _shake;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    )..forward();
+
+    _shake = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0, end: -6), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -6, end: 6), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 6, end: -4), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -4, end: 0), weight: 1),
+    ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _shake,
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(_shake.value, 0),
+          child: Icon(widget.icon, color: Colors.white, size: 26),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 }

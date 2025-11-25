@@ -40,10 +40,11 @@ class InformesList extends StatelessWidget {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
+
           child: Card(
             elevation: 4,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
             margin: const EdgeInsets.symmetric(vertical: 8),
             child: ListTile(
@@ -79,7 +80,7 @@ class InformesList extends StatelessWidget {
                   Chip(
                     label: Text(
                       inf.estado,
-                      style: const TextStyle(fontSize: 12),
+                      style: const TextStyle(fontSize: 10),
                     ),
                     backgroundColor: inf.estado == "Borrador"
                         ? Colors.orange[100]
