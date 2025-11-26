@@ -1027,7 +1027,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     }
   }
 
-  @override
+  /*   @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
@@ -1068,6 +1068,80 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             ),
             _buildActionButtons(),
           ],
+        ),
+      ),
+    );
+  }
+ */
+
+  @override
+  Widget build(BuildContext context) {
+    final double maxHeight = MediaQuery.of(context).size.height * 0.93;
+    final double minHeight = MediaQuery.of(context).size.height * 0.55;
+
+    return Container(
+      constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(22),
+          topRight: Radius.circular(22),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: true,
+
+        body: SafeArea(
+          top: false,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // HEADER
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: _buildHeader(),
+                ),
+
+                // CONTENIDO SCROLLEABLE
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildImageSection(),
+                        const SizedBox(height: 20),
+                        _buildPolicySection(),
+                        const SizedBox(height: 12),
+                        _buildCategorySection(),
+                        const SizedBox(height: 12),
+                        _buildTipoGastoSection(),
+                        const SizedBox(height: 12),
+                        _buildFacturaDataSection(),
+                        const SizedBox(height: 20),
+                        _buildNotesSection(),
+
+                        /*  const SizedBox(
+                          height: 80,
+                        ), // Espacio para evitar que se tape */
+                      ],
+                    ),
+                  ),
+                ),
+
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 1.0), // ← MÁS PEGADO
+                    child: _buildActionButtons(),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -2425,7 +2499,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   /// Construir los botones de acción
   Widget _buildActionButtons() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         border: Border(top: BorderSide(color: Colors.grey.shade300)),
@@ -2435,8 +2509,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
           // Mensaje de campos obligatorios
           if (!_isFormValid)
             Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(2),
+              margin: const EdgeInsets.only(bottom: 4),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
@@ -2472,7 +2546,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
                 child: ElevatedButton.icon(
                   onPressed: _isLoading || !_isFormValid
