@@ -2075,13 +2075,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   : Colors.white,
             ),
             readOnly:
-                true, // ✅ Mantener true porque se selecciona con calendario
-            /*  onTap: (_validar || esPlanillaMovilidad)
+                true, // ✅ Siempre true para evitar teclado, solo se usa el calendario
+            onTap:
+                (_validar &&
+                    _categoriaController.text != "VIAJES CON COMPROBANTE")
                 ? _selectDate
-                : null, // ✅ Permite seleccionar fecha si es planilla de movilidad */
-            onTap: (_categoriaController.text == "PLANILLA DE MOVILIDAD")
-                ? _selectDate
-                : null, // ✅ Solo permite seleccionar si es planilla de movilidad
+                : null, // ✅ Permite seleccionar fecha excepto en VIAJES CON COMPROBANTE
 
             style: TextStyle(
               fontSize: 16,
@@ -2106,9 +2105,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _serieFacturaController,
-                    /*                     readOnly: !_validar, // 🔒 No editable if !_validar
- */
-                    readOnly: true, // 🔒 No editable */
+                    readOnly:
+                        !_validar ||
+                        _categoriaController.text ==
+                            "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear QR o si es VIAJES CON COMPROBANTE
                     decoration: InputDecoration(
                       labelText: 'Serie *',
                       border: UnderlineInputBorder(
@@ -2144,9 +2144,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _numeroFacturaController,
-                    /*                     readOnly: !_validar, // 🔒 No editable if !_validar
- */
-                    readOnly: true, // 🔒 No editable */
+                    readOnly:
+                        !_validar ||
+                        _categoriaController.text ==
+                            "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear QR o si es VIAJES CON COMPROBANTE
+
                     decoration: InputDecoration(
                       labelText: 'Número *',
                       border: UnderlineInputBorder(
@@ -2189,9 +2191,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _igvController,
+
                     /*                     readOnly: !_validar, // 🔒 No editable if !_validar
  */
-                    readOnly: true, // 🔒 No editable
+                    /*                     readOnly: true, // 🔒 No editable
+ */
+                    readOnly: true, // 🔒 Bloqueado solo después de escanear QR
 
                     decoration: InputDecoration(
                       labelText: 'Igv *',
