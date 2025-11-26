@@ -930,7 +930,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         "useElim": 0,
       };
 
-      // Usar el nuevo servicio API para guardar la evide ncia
+      // Usar el nuevo servicio API para guardar la evidencia
 
       final successEvidencia = await _apiService.saveRendicionGastoEvidencia(
         facturaDataEvidencia,
