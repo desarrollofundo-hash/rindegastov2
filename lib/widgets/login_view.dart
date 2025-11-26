@@ -20,27 +20,46 @@ class LoginView extends StatefulWidget {
   State<LoginView> createState() => _LoginViewState();
 }
 
-class _LoginViewState extends State<LoginView> {
+class _LoginViewState extends State<LoginView>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+
   final FocusNode _userFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
+
+  bool _isUserFocused = false;
+  bool _isPasswordFocused = false;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+
     _setupFocusListeners();
+    _animationController.forward();
   }
 
   void _setupFocusListeners() {
     _userFocusNode.addListener(() {
-      setState(() {});
+      setState(() => _isUserFocused = _userFocusNode.hasFocus);
     });
     _passwordFocusNode.addListener(() {
-      setState(() {});
+      setState(() => _isPasswordFocused = _passwordFocusNode.hasFocus);
     });
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     _userFocusNode.dispose();
     _passwordFocusNode.dispose();
     super.dispose();
@@ -55,22 +74,40 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
-      backgroundColor: const Color(0xFFF5F7FA),
+      resizeToAvoidBottomInset:
+          true, // ✅ Evita que el teclado tape el contenido
+      backgroundColor: const Color(0xFFF2F6FC),
       body: SafeArea(
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildLogos(),
-                const SizedBox(height: 80),
-                _buildHeader(),
-                const SizedBox(height: 160),
-                _buildLoginForm(),
-              ],
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 30,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildHeader(),
+                          const SizedBox(height: 40),
+                          _buildLoginForm(),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -78,53 +115,63 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
-  Widget _buildLogos() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset('assets/img/interandina.jpg', height: 70),
-          const SizedBox(width: 32),
-          Image.asset('assets/img/santaazul.jpg', height: 50),
-        ],
-      ),
-    );
-  }
-
   Widget _buildHeader() {
     return Column(
       children: [
-        const Text(
-          "ASA Rinde Gastos",
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF1A2843),
-            letterSpacing: -0.5,
-            /*             fontFamily: 'Rubik',
- */
+        // Círculo con efecto de profundidad y gradiente moderno
+
+        // Título principal
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Color(0xFF003CFF), Color(0xFF00A7FF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ).createShader(bounds),
+          child: const Text(
+            "ASA Rinde Gastos",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: Colors.white, // se sobreescribe por el shader
+              letterSpacing: -0.3,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
+
+        const SizedBox(height: 10),
+
+        // Subtítulo con estilo elegante
         Text(
           "Ingresa tus credenciales para continuar",
+          textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey.shade600,
-            fontWeight: FontWeight.w400,
-            letterSpacing: 0.2,
+            color: Colors.grey.shade700,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.1,
+          ),
+        ),
+
+        const SizedBox(height: 8),
+
+        // Línea decorativa animada (detalle moderno)
+        Container(
+          margin: const EdgeInsets.only(top: 10),
+          height: 3,
+          width: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF0072FF), Color(0xFF00CFFF)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blue.withOpacity(0.3),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
         ),
       ],
@@ -133,17 +180,27 @@ class _LoginViewState extends State<LoginView> {
 
   Widget _buildLoginForm() {
     return Container(
-      padding: const EdgeInsets.all(0),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueGrey.withOpacity(0.15),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Form(
         key: widget.controller.formKey,
         child: Column(
           children: [
             _buildUserField(),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             _buildPasswordField(),
-            const SizedBox(height: 32),
+            const SizedBox(height: 30),
             _buildLoginButton(),
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -155,39 +212,30 @@ class _LoginViewState extends State<LoginView> {
       controller: widget.controller.userController,
       focusNode: _userFocusNode,
       keyboardType: TextInputType.number,
-      style: const TextStyle(
-        fontSize: 16,
-        color: Color(0xFF1A2843),
-        fontWeight: FontWeight.w500,
-      ),
+      style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
-        labelText: "DNI",
-        hintText: "Ej: 12345678",
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF4A5F7F),
+        labelText: "Dni",
+        labelStyle: TextStyle(
+          color: _isUserFocused
+              ? const Color(0xFF0066FF)
+              : Colors.grey.shade700,
         ),
-        hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade400),
-        prefixIcon: const Icon(Icons.person_outline, color: Color(0xFF6B7FA3)),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE3E8F3), width: 1),
+        prefixIcon: Icon(
+          Icons.person_outline_rounded,
+          color: _isUserFocused
+              ? const Color(0xFF0066FF)
+              : Colors.grey.shade600,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE3E8F3), width: 1),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF0066CC), width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF0066FF), width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        filled: true,
+        fillColor: Colors.grey.shade50,
       ),
       validator: widget.controller.validateUser,
       textInputAction: TextInputAction.next,
@@ -198,58 +246,49 @@ class _LoginViewState extends State<LoginView> {
 
   Widget _buildPasswordField() {
     return TextFormField(
-      textCapitalization: TextCapitalization.words,
-      textInputAction: TextInputAction.done,
-      keyboardType: TextInputType.visiblePassword,
       controller: widget.controller.passwordController,
       focusNode: _passwordFocusNode,
       obscureText: widget.controller.obscurePassword,
-      style: const TextStyle(
-        fontSize: 16,
-        color: Color(0xFF1A2843),
-        fontWeight: FontWeight.w500,
-      ),
+      style: const TextStyle(fontSize: 16),
       decoration: InputDecoration(
         labelText: "Contraseña",
-        hintText: "Ingrese su contraseña",
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF4A5F7F),
+        labelStyle: TextStyle(
+          color: _isPasswordFocused
+              ? const Color(0xFF0066FF)
+              : Colors.grey.shade700,
         ),
-        hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade400),
-        prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF6B7FA3)),
+        prefixIcon: Icon(
+          Icons.lock_outline_rounded,
+          color: _isPasswordFocused
+              ? const Color(0xFF0066FF)
+              : Colors.grey.shade600,
+        ),
         suffixIcon: IconButton(
           icon: Icon(
             widget.controller.obscurePassword
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
-            color: const Color(0xFF6B7FA3),
+            color: _isPasswordFocused
+                ? const Color(0xFF0066FF)
+                : Colors.grey.shade600,
           ),
           onPressed: () => setState(() {
             widget.controller.togglePasswordVisibility();
           }),
         ),
-        filled: true,
-        fillColor: Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE3E8F3), width: 1),
-        ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFFE3E8F3), width: 1),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF0066CC), width: 2),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF0066FF), width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        filled: true,
+        fillColor: Colors.grey.shade50,
       ),
       validator: widget.controller.validatePassword,
+      textInputAction: TextInputAction.done,
       onFieldSubmitted: (_) => _onLoginPressed(),
     );
   }
@@ -261,38 +300,32 @@ class _LoginViewState extends State<LoginView> {
 
     return SizedBox(
       width: double.infinity,
-      height: 50,
+      height: 56,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: isValid
-              ? const Color(0xFF0066CC)
-              : const Color(0xFFCCDCF0),
+              ? const Color(0xFF0066FF)
+              : Colors.grey.shade400,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
-          elevation: isValid ? 4 : 0,
-          shadowColor: const Color(0xFF0066CC).withOpacity(0.4),
+          elevation: isValid ? 6 : 0,
         ),
         onPressed: (isValid && !widget.controller.isLoading)
             ? _onLoginPressed
             : null,
         child: widget.controller.isLoading
             ? const SizedBox(
-                height: 20,
-                width: 20,
+                height: 24,
+                width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : Text(
+            : const Text(
                 "Iniciar sesión",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: isValid ? Colors.white : Colors.grey.shade500,
-                  letterSpacing: 0.3,
-                ),
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
       ),
     );
