@@ -1816,7 +1816,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // Campos que se muestran solo si NO es planilla de movilidad
         if (!esPlanillaMovilidad) ...[
           // RUC Emisor
-          TextFormField(
+          /* TextFormField(
             controller: _rucClienteController,
             decoration: const InputDecoration(
               labelText: 'RUC Cliente',
@@ -1829,7 +1829,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               color: Colors.grey,
               fontWeight: FontWeight.w500,
             ),
-          ),
+          ), */
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _rucProveedorController,
@@ -1908,21 +1908,22 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           const SizedBox(height: 12),
 
           // RUC Cliente
-          if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
-            TextFormField(
-              controller: _rucClienteController,
-              decoration: const InputDecoration(
-                labelText: 'RUC Cliente',
-                border: UnderlineInputBorder(),
-                prefixIcon: Icon(Icons.business),
-                suffixIcon: Icon(Icons.lock, color: Colors.grey),
-              ),
-              enabled: false,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
+          /*           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+ */
+          TextFormField(
+            controller: _rucClienteController,
+            decoration: const InputDecoration(
+              labelText: 'RUC Cliente',
+              border: UnderlineInputBorder(),
+              prefixIcon: Icon(Icons.business),
+              suffixIcon: Icon(Icons.lock, color: Colors.grey),
             ),
+            enabled: false,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
 
           // 🔍 Mensaje de validación del RUC Cliente
           if (_rucClienteController.text.trim().isEmpty)
