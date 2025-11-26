@@ -50,7 +50,7 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
       });
     }
   }
-
+  /* 
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -147,7 +147,8 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
               },
             ),
 
-          const SizedBox(height: 175),
+          const Spacer(),
+
           // Botones de acción
           Row(
             children: [
@@ -182,6 +183,167 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
                   child: const Text(
                     'Continuar',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+ */
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.55,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 50),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle del modal
+          Center(
+            child: Container(
+              width: 45,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Título con mejor estilo
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.policy_outlined,
+                  color: Theme.of(context).primaryColor,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Seleccionar Política',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            'Elige la política aplicable para continuar.',
+            style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+          ),
+
+          const SizedBox(height: 24),
+
+          // CONTENIDO
+          if (_isLoading) const Center(child: CircularProgressIndicator()),
+
+          if (!_isLoading && _error != null)
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    'Error al cargar políticas',
+                    style: TextStyle(color: Colors.red[700], fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(_error!, style: TextStyle(color: Colors.red[400])),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadPoliticas,
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ),
+
+          if (!_isLoading && _error == null)
+            DropdownButtonFormField<String>(
+              dropdownColor: Colors.white,
+              decoration: InputDecoration(
+                labelText: 'Seleccionar Política',
+                labelStyle: TextStyle(color: Colors.grey[700]),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                prefixIcon: const Icon(Icons.policy_outlined),
+              ),
+              value: _selectedPolitica,
+              items: _politicas
+                  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                  .toList(),
+              onChanged: (value) {
+                setState(() => _selectedPolitica = value);
+              },
+            ),
+
+          const Spacer(),
+
+          // BOTONES DE ACCIÓN MEJORADOS
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    side: BorderSide(color: Colors.grey[350]!),
+                  ),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _selectedPolitica == null
+                      ? null
+                      : () => widget.onPoliticaSelected(_selectedPolitica!),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    elevation: 3,
+                  ),
+                  child: const Text(
+                    'Continuar',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                    ),
                   ),
                 ),
               ),

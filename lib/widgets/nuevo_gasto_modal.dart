@@ -1247,7 +1247,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       },
     );
   }
-
+  /* 
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1300,6 +1300,158 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+ */
+
+  /* @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: SafeArea(
+          child: _buildHeader(), // Tu encabezado original
+        ),
+      ),
+
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildImageSection(),
+                    const SizedBox(height: 10),
+
+                    if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
+                      _buildLectorSunatSection(),
+
+                    const SizedBox(height: 10),
+                    _buildDatosGeneralesSection(),
+                    const SizedBox(height: 10),
+                    _buildDatosFacturaSection(),
+                    const SizedBox(height: 10),
+
+                    if (_politicaController.text.contains(
+                      'GASTOS DE MOVILIDAD',
+                    ))
+                      _buildDatosMovilidadSection(),
+
+                    const SizedBox(height: 10),
+                    _buildNotasSection(),
+                  ],
+                ),
+              ),
+            ),
+
+            // Zona inferior segura para evitar que se tape con el teclado
+            SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: _buildActionButtons(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+ */
+
+  @override
+  Widget build(BuildContext context) {
+    final double maxHeight = MediaQuery.of(context).size.height * 0.93;
+    final double minHeight = MediaQuery.of(context).size.height * 0.55;
+
+    return Container(
+      constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(22),
+          topRight: Radius.circular(22),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+
+        // Para que no agregue paddings automáticos
+        resizeToAvoidBottomInset: true,
+
+        body: SafeArea(
+          top: false,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // HEADER
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 8),
+                  child: _buildHeader(),
+                ),
+
+                // CONTENIDO SCROLLEABLE
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildImageSection(),
+                        const SizedBox(height: 10),
+
+                        if (_categoriaController.text !=
+                            "PLANILLA DE MOVILIDAD")
+                          _buildLectorSunatSection(),
+
+                        const SizedBox(height: 10),
+                        _buildDatosGeneralesSection(),
+                        const SizedBox(height: 10),
+                        _buildDatosFacturaSection(),
+                        const SizedBox(height: 10),
+
+                        if (_politicaController.text.contains(
+                          'GASTOS DE MOVILIDAD',
+                        ))
+                          _buildDatosMovilidadSection(),
+
+                        const SizedBox(height: 10),
+                        _buildNotasSection(),
+
+                        /*                         const SizedBox(height: 80), // Para separar del botón
+ */
+                      ],
+                    ),
+                  ),
+                ),
+
+                // BOTONES ABAJO
+                /* SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: _buildActionButtons(),
+                  ),
+                ), */
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 0.0), // ← MÁS PEGADO
+                    child: _buildActionButtons(),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -3124,6 +3276,8 @@ class _QRScannerScreenState extends State<_QRScannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset:
+          true, //Esto hace que la pantalla se ajuste al teclado
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,

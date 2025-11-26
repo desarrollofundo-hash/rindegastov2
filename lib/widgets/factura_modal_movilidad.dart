@@ -970,7 +970,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       }
     }
   }
-
+  /* 
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1010,6 +1010,80 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             ),
             _buildActionButtons(),
           ],
+        ),
+      ),
+    );
+  }
+ */
+
+  @override
+  Widget build(BuildContext context) {
+    final double maxHeight = MediaQuery.of(context).size.height * 0.93;
+    final double minHeight = MediaQuery.of(context).size.height * 0.55;
+
+    return Container(
+      constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(22),
+          topRight: Radius.circular(22),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: true, // evita que el teclado tape los campos
+
+        body: SafeArea(
+          top: false,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // HEADER SUPERIOR
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: _buildHeader(),
+                ),
+
+                // CONTENIDO SCROLLEABLE
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildImageSection(),
+                        const SizedBox(height: 10),
+
+                        _buildPolicySection(),
+                        const SizedBox(height: 10),
+
+                        _buildCategorySection(),
+                        const SizedBox(height: 10),
+
+                        _buildFacturaDataSection(),
+                        const SizedBox(height: 10),
+
+                        _buildMovilidadSection(),
+                        const SizedBox(height: 10),
+
+                        _buildNotesSection(),
+                      ],
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 1.0), // ← MÁS PEGADO
+                    child: _buildActionButtons(),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -2545,14 +2619,19 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   /// Construir los botones de acción
   Widget _buildActionButtons() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(
+        20,
+        8,
+        20,
+        8,
+      ), // ← Reducido el padding superior
       child: Column(
         children: [
           // Mensaje de campos obligatorios
           if (!_isFormValid)
             Container(
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(2),
+              margin: const EdgeInsets.only(bottom: 6),
               decoration: BoxDecoration(
                 color: Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
@@ -2580,7 +2659,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 child: OutlinedButton(
                   onPressed: widget.onCancel,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     side: BorderSide(color: Colors.grey[400]!),
                   ),
                   child: const Text(
@@ -2596,7 +2675,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       ? null
                       : _saveFacturaAPI,
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     backgroundColor: _isFormValid ? Colors.blue : Colors.grey,
                     foregroundColor: Colors.white,
                     disabledBackgroundColor: Colors.grey[300],
