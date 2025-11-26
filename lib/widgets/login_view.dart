@@ -119,6 +119,7 @@ class _LoginViewState extends State<LoginView>
     return Column(
       children: [
         // Círculo con efecto de profundidad y gradiente moderno
+        
 
         // Título principal
         ShaderMask(
