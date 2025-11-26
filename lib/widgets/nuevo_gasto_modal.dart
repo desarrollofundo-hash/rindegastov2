@@ -2191,12 +2191,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _igvController,
-
-                    /*                     readOnly: !_validar, // 🔒 No editable if !_validar
- */
-                    /*                     readOnly: true, // 🔒 No editable
- */
-                    readOnly: true, // 🔒 Bloqueado solo después de escanear QR
+                    /*  readOnly: true, // 🔒 Bloqueado solo después de escanear QR */
+                    readOnly:
+                        _categoriaController.text == "VIAJES CON COMPROBANTE" ||
+                        _hasScannedData, // ✅ Solo bloqueado en VIAJES CON COMPROBANTE
 
                     decoration: InputDecoration(
                       labelText: 'Igv *',
@@ -2241,15 +2239,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               flex: 1,
               child: TextFormField(
                 controller: _totalController,
-                /*                 readOnly: !_validar /*  ||
- */                    (_categoriaController.text != "PLANILLA DE MOVILIDAD" &&
-                        _categoriaController.text != "VIAJES CON COMPROBANTE") */
-                /*                 readOnly: true, // 🔒 No editable
 
- */
-                readOnly:
+                /*   readOnly:
                     (_categoriaController.text !=
                     "PLANILLA DE MOVILIDAD"), // ✅ Solo editable en planilla de movilidad
+ */
+                readOnly:
+                    _categoriaController.text == "VIAJES CON COMPROBANTE" ||
+                    _hasScannedData, // ✅ Solo bloqueado en VIAJES CON COMPROBANTE
 
                 decoration: InputDecoration(
                   labelText: 'Total',
