@@ -292,157 +292,164 @@ class _ReportesListState extends State<ReportesList>
               itemBuilder: (context, index) {
                 final reporte = data[index];
 
-                return GestureDetector(
-                  onTap: widget.onTap != null
-                      ? () => widget.onTap!(reporte)
-                      : null,
+                return _AnimatedListItem(
+                  key: ValueKey('${reporte.idrend}_animated'),
+                  index: index,
+                  child: GestureDetector(
+                    onTap: widget.onTap != null
+                        ? () => widget.onTap!(reporte)
+                        : null,
 
-                  ///aqui comienza el card para editar
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 2),
+                    ///aqui comienza el card para editar
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 2),
 
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: Colors.grey.shade200, width: 1),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12.withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.grey.shade200,
+                          width: 1,
                         ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12.withOpacity(0.1),
+                            blurRadius: 6,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // 🔹 Icono + información
-                          Expanded(
-                            child: Row(
-                              children: [
-                                // 🔸 Ícono decorativo fuera de lo común
-                                const SizedBox(width: 3),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // 🔹 Icono + información
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  // 🔸 Ícono decorativo fuera de lo común
+                                  const SizedBox(width: 3),
 
-                                // 🔸 Datos principales
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        reporte.proveedor ??
-                                            reporte.ruc ??
-                                            reporte.ruccliente ??
-                                            '',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                          color: Color(0xFF1E293B),
+                                  // 🔸 Datos principales
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          reporte.proveedor ??
+                                              reporte.ruc ??
+                                              reporte.ruccliente ??
+                                              '',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: Color(0xFF1E293B),
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.local_offer_rounded,
-                                            size: 14,
-                                            color: Colors.amberAccent.shade700,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Expanded(
-                                            child: Text(
-                                              reporte.categoria ?? '',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w400,
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
-                                              overflow: TextOverflow.ellipsis,
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.local_offer_rounded,
+                                              size: 14,
+                                              color:
+                                                  Colors.amberAccent.shade700,
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.calendar_month_rounded,
-                                            size: 13,
-                                            color: Colors.grey,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          // Fecha + etiqueta de días juntos
-                                          Expanded(
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Text(
-                                                  formatDate(reporte.fecha),
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.black54,
-                                                  ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                reporte.categoria ?? '',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w400,
+                                                  fontSize: 12,
+                                                  color: Colors.black54,
                                                 ),
-                                                const SizedBox(
-                                                  width: 8,
-                                                ), // pequeño espacio visual
-                                                Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 2,
-                                                        vertical: 2,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors
-                                                        .red, // Fondo de la etiqueta
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          4,
-                                                        ),
-                                                  ),
-                                                  child: Text(
-                                                    '${diferenciaEnDias(reporte.fecha.toString(), reporte.feccre.toString())} DÍAS',
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.calendar_month_rounded,
+                                              size: 13,
+                                              color: Colors.grey,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            // Fecha + etiqueta de días juntos
+                                            Expanded(
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    formatDate(reporte.fecha),
                                                     style: const TextStyle(
-                                                      fontFamily: 'FiraSans',
-                                                      fontSize: 11,
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      fontSize: 12,
+                                                      color: Colors.black54,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 8,
+                                                  ), // pequeño espacio visual
+                                                  Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          horizontal: 2,
+                                                          vertical: 2,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors
+                                                          .red, // Fondo de la etiqueta
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            4,
+                                                          ),
+                                                    ),
+                                                    child: Text(
+                                                      '${diferenciaEnDias(reporte.fecha.toString(), reporte.feccre.toString())} DÍAS',
+                                                      style: const TextStyle(
+                                                        fontFamily: 'FiraSans',
+                                                        fontSize: 11,
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              ],
+                                                ],
+                                              ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
 
-                          // 🔹 Monto + estado
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Row(
-                                children: [
-                                  /* const Icon(
+                            // 🔹 Monto + estado
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Row(
+                                  children: [
+                                    /* const Icon(
                                     Icons.payments_rounded,
                                     color: Color(0xFF2563EB),
                                     size: 17,
                                   ), */
-                                  /* Image.asset(
+                                    /* Image.asset(
                                     'assets/icon/sol.png',
                                     width: 20,
                                     height: 20,
@@ -454,51 +461,52 @@ class _ReportesListState extends State<ReportesList>
                                     ),
                                     colorBlendMode: BlendMode.srcIn,
                                   ), */
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    '${reporte.total} ${reporte.moneda} ',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 14,
-                                      color: Color(0xFF2563EB),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: getStatusColor(reporte.estadoActual),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.blur_circular_rounded,
-                                      size: 12,
-                                      color: Colors.white,
-                                    ),
-                                    const SizedBox(width: 5),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      reporte.estadoActual ?? '',
+                                      '${reporte.total} ${reporte.moneda} ',
                                       style: const TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontSize: 11,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 14,
+                                        color: Color(0xFF2563EB),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const SizedBox(height: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: getStatusColor(reporte.estadoActual),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.blur_circular_rounded,
+                                        size: 12,
+                                        color: Colors.white,
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        reporte.estadoActual ?? '',
+                                        style: const TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontSize: 11,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -509,4 +517,91 @@ class _ReportesListState extends State<ReportesList>
   }
 
   // El color del estado se obtiene desde el controlador.
+}
+
+// Widget de animación para items de la lista
+class _AnimatedListItem extends StatefulWidget {
+  final Widget child;
+  final int index;
+
+  const _AnimatedListItem({
+    super.key,
+    required this.child,
+    required this.index,
+  });
+
+  @override
+  State<_AnimatedListItem> createState() => _AnimatedListItemState();
+}
+
+class _AnimatedListItemState extends State<_AnimatedListItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _hasAnimated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _startAnimation();
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reinicia la animación cuando el widget se actualiza (ej: refresh)
+    if (oldWidget.index != widget.index || oldWidget.child != widget.child) {
+      _controller.reset();
+      _hasAnimated = false;
+      _startAnimation();
+    }
+  }
+
+  void _startAnimation() {
+    // Cada elemento anima con un delay basado en su índice
+    final delay = widget.index < 10
+        ? widget.index * 100
+        : 100; // Solo los primeros 10 tienen delay incremental
+
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (mounted && !_hasAnimated) {
+        _controller.forward();
+        _hasAnimated = true;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final value = _animation.value.clamp(0.0, 1.0);
+        return Transform.translate(
+          offset: Offset(0, 60 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Transform.scale(scale: 0.85 + (0.15 * value), child: child),
+          ),
+        );
+      },
+      child: widget.child,
+    );
+  }
 }

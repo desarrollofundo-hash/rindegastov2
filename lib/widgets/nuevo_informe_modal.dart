@@ -154,118 +154,138 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          // Handle del modal
-          Container(
-            /* margin: const EdgeInsets.only(top: 2),
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardVisible = keyboardHeight > 0;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboardHeight),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: isKeyboardVisible
+              ? MediaQuery.of(context).size.height * 0.5
+              : MediaQuery.of(context).size.height * 0.75,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // Handle del modal
+            Container(
+              /* margin: const EdgeInsets.only(top: 2),
             width: 40,
             height: 4, */
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
 
-          // Header
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.indigo.shade700, Colors.indigo.shade400],
+            // Header
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.indigo.shade700, Colors.indigo.shade400],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+              child: Row(
+                children: [
+                  const Icon(Icons.description, color: Colors.white, size: 28),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'NUEVO INFORME',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          'Crea un nuevo informe ',
+                          style: TextStyle(fontSize: 12, color: Colors.white70),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _handleCancel,
+                    icon: const Icon(Icons.close, color: Colors.white),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                const Icon(Icons.description, color: Colors.white, size: 28),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'NUEVO INFORME',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+
+            // Contenido
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildContent(),
+              ),
+            ),
+
+            // Botones de acción fijos
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _isCreatingInforme ? null : _handleCancel,
+                        icon: const Icon(Icons.cancel),
+                        label: const Text('Cancelar'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          side: BorderSide(color: Colors.grey.shade400),
+                          foregroundColor: Colors.grey.shade700,
                         ),
                       ),
-                      Text(
-                        'Crea un nuevo informe ',
-                        style: TextStyle(fontSize: 12, color: Colors.white70),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            _tituloController.text.trim().isEmpty ||
+                                _selectedPolitica == null
+                            ? null
+                            : _crearInforme,
+                        icon: Icon(Icons.save),
+                        label: Text('Crear Informe'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.indigo,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          disabledBackgroundColor: Colors.grey[300],
+                          disabledForegroundColor: Colors.grey[600],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: _handleCancel,
-                  icon: const Icon(Icons.close, color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-
-          // Contenido
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: _buildContent(),
-            ),
-          ),
-
-          // Botones de acción
-          Container(
-            padding: const EdgeInsets.all(20),
-
-            child: Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _isCreatingInforme ? null : _handleCancel,
-                    icon: const Icon(Icons.cancel),
-                    label: const Text('Cancelar'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      side: BorderSide(color: Colors.grey.shade400),
-                      foregroundColor: Colors.grey.shade700,
                     ),
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed:
-                        _tituloController.text.trim().isEmpty ||
-                            _selectedPolitica == null
-                        ? null
-                        : _crearInforme,
-                    icon: Icon(Icons.save),
-                    label: Text('Crear Informe'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      disabledBackgroundColor: Colors.grey[300],
-                      disabledForegroundColor: Colors.grey[600],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(height: 35),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -389,9 +409,6 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
             ),
 
             // Información adicional
-
-            // Espaciador para el scrolling
-            const SizedBox(height: 20),
           ],
         ),
       ),

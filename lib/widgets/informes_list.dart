@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/gasto_model.dart';
 import '../screens/informes/detalle_informe_screen.dart';
 
-class InformesList extends StatelessWidget {
+class InformesList extends StatefulWidget {
   final List<Gasto> informes;
   final Function(Gasto) onInformeUpdated;
   final Function(Gasto) onInformeDeleted;
@@ -20,13 +20,18 @@ class InformesList extends StatelessWidget {
   });
 
   @override
+  State<InformesList> createState() => _InformesListState();
+}
+
+class _InformesListState extends State<InformesList> {
+  @override
   Widget build(BuildContext context) {
-    if (informes.isEmpty) {
+    if (widget.informes.isEmpty) {
       return EmptyState(
         message: "No hay informes disponibles",
-        buttonText: showEmptyStateButton ? "Agregar Informe" : null,
-        onButtonPressed: showEmptyStateButton
-            ? onEmptyStateButtonPressed
+        buttonText: widget.showEmptyStateButton ? "Agregar Informe" : null,
+        onButtonPressed: widget.showEmptyStateButton
+            ? widget.onEmptyStateButtonPressed
             : null,
         icon: Icons.description,
       );
@@ -34,13 +39,12 @@ class InformesList extends StatelessWidget {
 
     return ListView.builder(
       padding: const EdgeInsets.all(12),
-      itemCount: informes.length,
+      itemCount: widget.informes.length,
       itemBuilder: (context, index) {
-        final inf = informes[index];
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-
+        final inf = widget.informes[index];
+        return _AnimatedListItem(
+          key: ValueKey('${inf.titulo}_$index'),
+          index: index,
           child: Card(
             elevation: 4,
             shape: RoundedRectangleBorder(
@@ -107,10 +111,97 @@ class InformesList extends StatelessWidget {
   void _handleInformeResult(dynamic result, Gasto informe) {
     if (result != null && result is Map) {
       if (result["accion"] == "eliminar") {
-        onInformeDeleted(informe);
+        widget.onInformeDeleted(informe);
       } else if (result["accion"] == "editar" && result["data"] is Gasto) {
-        onInformeUpdated(result["data"]);
+        widget.onInformeUpdated(result["data"]);
       }
     }
+  }
+}
+
+// Widget de animación para items de la lista
+class _AnimatedListItem extends StatefulWidget {
+  final Widget child;
+  final int index;
+
+  const _AnimatedListItem({
+    super.key,
+    required this.child,
+    required this.index,
+  });
+
+  @override
+  State<_AnimatedListItem> createState() => _AnimatedListItemState();
+}
+
+class _AnimatedListItemState extends State<_AnimatedListItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _hasAnimated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _startAnimation();
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reinicia la animación cuando el widget se actualiza (ej: refresh)
+    if (oldWidget.index != widget.index || oldWidget.child != widget.child) {
+      _controller.reset();
+      _hasAnimated = false;
+      _startAnimation();
+    }
+  }
+
+  void _startAnimation() {
+    // Cada elemento anima con un delay basado en su índice
+    final delay = widget.index < 10
+        ? widget.index * 100
+        : 100; // Solo los primeros 10 tienen delay incremental
+
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (mounted && !_hasAnimated) {
+        _controller.forward();
+        _hasAnimated = true;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final value = _animation.value.clamp(0.0, 1.0);
+        return Transform.translate(
+          offset: Offset(0, 60 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Transform.scale(scale: 0.85 + (0.15 * value), child: child),
+          ),
+        );
+      },
+      child: widget.child,
+    );
   }
 }

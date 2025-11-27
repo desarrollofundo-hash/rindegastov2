@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/gasto_model.dart';
 
-class GastosList extends StatelessWidget {
+class GastosList extends StatefulWidget {
   final List<Gasto> gastos;
   final Future<void> Function() onRefresh;
   final void Function(Gasto)? onTap;
@@ -14,11 +14,16 @@ class GastosList extends StatelessWidget {
   });
 
   @override
+  State<GastosList> createState() => _GastosListState();
+}
+
+class _GastosListState extends State<GastosList> {
+  @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
       backgroundColor: Colors.white,
-      onRefresh: onRefresh,
-      child: gastos.isEmpty
+      onRefresh: widget.onRefresh,
+      child: widget.gastos.isEmpty
           ? ListView(
               children: const [
                 SizedBox(height: 100),
@@ -33,12 +38,12 @@ class GastosList extends StatelessWidget {
             )
           : ListView.builder(
               padding: const EdgeInsets.all(12),
-              itemCount: gastos.length,
+              itemCount: widget.gastos.length,
               itemBuilder: (context, index) {
-                final gasto = gastos[index];
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeInOut,
+                final gasto = widget.gastos[index];
+                return _AnimatedListItem(
+                  key: ValueKey('${gasto.titulo}_$index'),
+                  index: index,
                   child: Card(
                     elevation: 4,
                     shape: RoundedRectangleBorder(
@@ -94,12 +99,101 @@ class GastosList extends StatelessWidget {
                           ),
                         ],
                       ),
-                      onTap: onTap != null ? () => onTap!(gasto) : null,
+                      onTap: widget.onTap != null
+                          ? () => widget.onTap!(gasto)
+                          : null,
                     ),
                   ),
                 );
               },
             ),
+    );
+  }
+}
+
+// Widget de animación para items de la lista
+class _AnimatedListItem extends StatefulWidget {
+  final Widget child;
+  final int index;
+
+  const _AnimatedListItem({
+    super.key,
+    required this.child,
+    required this.index,
+  });
+
+  @override
+  State<_AnimatedListItem> createState() => _AnimatedListItemState();
+}
+
+class _AnimatedListItemState extends State<_AnimatedListItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _hasAnimated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _startAnimation();
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reinicia la animación cuando el widget se actualiza (ej: refresh)
+    if (oldWidget.index != widget.index || oldWidget.child != widget.child) {
+      _controller.reset();
+      _hasAnimated = false;
+      _startAnimation();
+    }
+  }
+
+  void _startAnimation() {
+    // Cada elemento anima con un delay basado en su índice
+    final delay = widget.index < 10
+        ? widget.index * 100
+        : 100; // Solo los primeros 10 tienen delay incremental
+
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (mounted && !_hasAnimated) {
+        _controller.forward();
+        _hasAnimated = true;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final value = _animation.value.clamp(0.0, 1.0);
+        return Transform.translate(
+          offset: Offset(0, 60 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Transform.scale(scale: 0.85 + (0.15 * value), child: child),
+          ),
+        );
+      },
+      child: widget.child,
     );
   }
 }
