@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flu2/widgets/empty_state.dart';
 // Nota: se eliminó import innecesario
 
-class InformesRevisionList extends StatelessWidget {
+class InformesRevisionList extends StatefulWidget {
   final List<ReporteRevision> revision; // Cambié el tipo de la lista aquí
   final Function(ReporteRevision)
   onRevisionUpdated; // Cambié el tipo de la función aquí
@@ -29,15 +29,20 @@ class InformesRevisionList extends StatelessWidget {
   });
 
   @override
+  State<InformesRevisionList> createState() => _InformesRevisionListState();
+}
+
+class _InformesRevisionListState extends State<InformesRevisionList> {
+  @override
   Widget build(BuildContext context) {
-    if (revision.isEmpty) {
+    if (widget.revision.isEmpty) {
       return RefreshIndicator(
         // Personalizar indicador para que coincida con la apariencia de Auditoría
         color: Colors.green,
         backgroundColor: Colors.white,
         strokeWidth: 2.5,
         displacement: 40,
-        onRefresh: onRefresh ?? () async {},
+        onRefresh: widget.onRefresh ?? () async {},
         child: SingleChildScrollView(
           // AlwaysScrollable + Bouncing ayuda a detectar el gesto incluso
           // cuando hay pocos elementos o estamos dentro de un TabBarView.
@@ -50,10 +55,12 @@ class InformesRevisionList extends StatelessWidget {
               minHeight: MediaQuery.of(context).size.height * 0.7,
             ),
             child: EmptyState(
-              message: emptyMessage,
-              buttonText: showEmptyStateButton ? "Agregar Revision" : null,
-              onButtonPressed: showEmptyStateButton
-                  ? onEmptyStateButtonPressed
+              message: widget.emptyMessage,
+              buttonText: widget.showEmptyStateButton
+                  ? "Agregar Revision"
+                  : null,
+              onButtonPressed: widget.showEmptyStateButton
+                  ? widget.onEmptyStateButtonPressed
                   : null,
               icon: Icons.local_activity,
             ),
@@ -68,7 +75,7 @@ class InformesRevisionList extends StatelessWidget {
       backgroundColor: Colors.white,
       strokeWidth: 2.5,
       displacement: 40,
-      onRefresh: onRefresh ?? () async {},
+      onRefresh: widget.onRefresh ?? () async {},
       child: ListView.builder(
         key: const PageStorageKey('auditoria_list'),
         padding: const EdgeInsets.all(8),
@@ -76,13 +83,13 @@ class InformesRevisionList extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        itemCount: revision.length,
+        itemCount: widget.revision.length,
         itemBuilder: (context, index) {
           try {
-            final revisionn = revision[index];
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
+            final revisionn = widget.revision[index];
+            return _AnimatedListItem(
+              key: ValueKey('${revisionn.titulo}_$index'),
+              index: index,
               child: Card(
                 color: Colors.white,
                 elevation: 2,
@@ -288,8 +295,8 @@ class InformesRevisionList extends StatelessWidget {
           );
 
           // Si el modal devuelve true, refresca la lista
-          if (result == true && onRefresh != null) {
-            await onRefresh!();
+          if (result == true && widget.onRefresh != null) {
+            await widget.onRefresh!();
           }
         } catch (e, st) {
           debugPrint('Error opening revision DetalleModal: $e\n$st');
@@ -310,7 +317,7 @@ class InformesRevisionList extends StatelessWidget {
         break;
 
       case 'editar':
-        onRevisionUpdated(revisionn);
+        widget.onRevisionUpdated(revisionn);
         break;
 
       case 'eliminar':
@@ -336,7 +343,7 @@ class InformesRevisionList extends StatelessWidget {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                onRevisionDeleted(revision);
+                widget.onRevisionDeleted(revision);
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Eliminar'),
@@ -344,6 +351,93 @@ class InformesRevisionList extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+// Widget de animación para items de la lista
+class _AnimatedListItem extends StatefulWidget {
+  final Widget child;
+  final int index;
+
+  const _AnimatedListItem({
+    super.key,
+    required this.child,
+    required this.index,
+  });
+
+  @override
+  State<_AnimatedListItem> createState() => _AnimatedListItemState();
+}
+
+class _AnimatedListItemState extends State<_AnimatedListItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  bool _hasAnimated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 600),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _startAnimation();
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reinicia la animación cuando el widget se actualiza (ej: refresh)
+    if (oldWidget.index != widget.index || oldWidget.child != widget.child) {
+      _controller.reset();
+      _hasAnimated = false;
+      _startAnimation();
+    }
+  }
+
+  void _startAnimation() {
+    // Cada elemento anima con un delay basado en su índice
+    final delay = widget.index < 10
+        ? widget.index * 100
+        : 100; // Solo los primeros 10 tienen delay incremental
+
+    Future.delayed(Duration(milliseconds: delay), () {
+      if (mounted && !_hasAnimated) {
+        _controller.forward();
+        _hasAnimated = true;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final value = _animation.value.clamp(0.0, 1.0);
+        return Transform.translate(
+          offset: Offset(0, 60 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Transform.scale(scale: 0.85 + (0.15 * value), child: child),
+          ),
+        );
+      },
+      child: widget.child,
     );
   }
 }

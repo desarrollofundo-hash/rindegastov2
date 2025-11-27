@@ -1985,7 +1985,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _rucProveedorController,
-              readOnly: true, // 🔒 No editable
+              readOnly:
+                  _hasScannedData ||
+                  _categoriaController.text ==
+                      "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear o si es VIAJES CON COMPROBANTE
               decoration: InputDecoration(
                 labelText: 'RUC Emisor',
                 border: UnderlineInputBorder(
@@ -2030,7 +2033,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _razonSocialController,
-              readOnly: true, // 🔒 No editable
+              readOnly:
+                  _hasScannedData ||
+                  _categoriaController.text ==
+                      "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear o si es VIAJES CON COMPROBANTE
               decoration: InputDecoration(
                 labelText: 'Razón Social',
                 hintText: 'Ingresa Razón Social',
