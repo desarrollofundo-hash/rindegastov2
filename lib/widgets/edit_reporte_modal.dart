@@ -1321,9 +1321,34 @@ class _EditReporteModalState extends State<EditReporteModal> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          /* const SnackBar(
             content: Text('Datos del QR aplicados correctamente'),
             backgroundColor: Colors.green,
+          ), */
+          SnackBar(
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            backgroundColor: Colors.green.shade700.withOpacity(0.95),
+            elevation: 8,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+            content: Row(
+              children: const [
+                Icon(Icons.verified, color: Colors.white, size: 26),
+                SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Datos del QR aplicados correctamente',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       } else {

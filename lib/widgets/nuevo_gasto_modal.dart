@@ -3207,10 +3207,37 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         }
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          /*  ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Datos del QR aplicados correctamente'),
               backgroundColor: Colors.green,
+            ),
+          ); */
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              backgroundColor: Colors.green.shade700.withOpacity(0.95),
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              content: Row(
+                children: const [
+                  Icon(Icons.verified, color: Colors.white, size: 26),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Datos del QR aplicados correctamente',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -3254,9 +3281,35 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        /*    const SnackBar(
           content: Text('Datos del QR limpiados'),
           backgroundColor: Colors.orange,
+        ), */
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          backgroundColor: Colors.orange.shade700,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Row(
+            children: const [
+              Icon(Icons.cleaning_services, color: Colors.white, size: 26),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Datos del QR limpiados',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          duration: Duration(seconds: 2),
         ),
       );
     }
