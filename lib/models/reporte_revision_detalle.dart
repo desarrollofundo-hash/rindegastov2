@@ -65,7 +65,7 @@ class ReporteRevisionDetalle {
     return ReporteRevisionDetalle(
       id: json['id'] ?? 0,
       idRev: json['idrev'] ?? 0,
-      idAd: json['idas'] ?? 0,
+      idAd: json['idad'] ?? 0,
       idAdDet: json['idaddet'] ?? 0,
       idInf: json['idinf'] ?? 0,
       idRend: json['idrend'] ?? 0,

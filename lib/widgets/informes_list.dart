@@ -26,6 +26,8 @@ class InformesList extends StatefulWidget {
 class _InformesListState extends State<InformesList> {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (widget.informes.isEmpty) {
       return EmptyState(
         message: "No hay informes disponibles",
@@ -47,6 +49,7 @@ class _InformesListState extends State<InformesList> {
           index: index,
           child: Card(
             elevation: 4,
+            color: isDark ? Colors.grey[800] : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
@@ -55,18 +58,26 @@ class _InformesListState extends State<InformesList> {
               contentPadding: const EdgeInsets.all(12),
               title: Text(
                 inf.titulo,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     inf.categoria,
-                    style: TextStyle(color: Colors.grey[700]),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[700],
+                    ),
                   ),
                   Text(
                     inf.fecha,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[500] : Colors.grey[600],
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -75,8 +86,8 @@ class _InformesListState extends State<InformesList> {
                 children: [
                   Text(
                     inf.monto,
-                    style: const TextStyle(
-                      color: Colors.indigo,
+                    style: TextStyle(
+                      color: isDark ? Colors.lightBlue[300] : Colors.indigo,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -84,11 +95,14 @@ class _InformesListState extends State<InformesList> {
                   Chip(
                     label: Text(
                       inf.estado,
-                      style: const TextStyle(fontSize: 10),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.black87 : Colors.black,
+                      ),
                     ),
                     backgroundColor: inf.estado == "Borrador"
-                        ? Colors.orange[100]
-                        : Colors.green[100],
+                        ? (isDark ? Colors.orange[800] : Colors.orange[100])
+                        : (isDark ? Colors.green[800] : Colors.green[100]),
                   ),
                 ],
               ),

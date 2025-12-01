@@ -47,7 +47,9 @@ class _ProfileModalState extends State<ProfileModal>
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            color: Colors.black.withOpacity(_controller.isDragging ? 0.3 : 0.0),
+            color: (Theme.of(context).brightness == Brightness.dark
+                ? Colors.black.withOpacity(_controller.isDragging ? 0.7 : 0.5)
+                : Colors.black.withOpacity(_controller.isDragging ? 0.3 : 0.0)),
             child: Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -71,16 +73,22 @@ class _ProfileModalState extends State<ProfileModal>
                       child: Container(
                         padding: const EdgeInsets.fromLTRB(24, 12, 24, 30),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).scaffoldBackgroundColor,
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(24),
                             topRight: Radius.circular(24),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(
-                                _controller.isDragging ? 0.1 : 0.3,
-                              ),
+                              color:
+                                  (Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.black.withOpacity(
+                                      _controller.isDragging ? 0.3 : 0.6,
+                                    )
+                                  : Colors.black.withOpacity(
+                                      _controller.isDragging ? 0.1 : 0.3,
+                                    )),
                               blurRadius: 20,
                               offset: Offset(
                                 0,
@@ -96,6 +104,7 @@ class _ProfileModalState extends State<ProfileModal>
                             children: [
                               // Header con botón de cerrar
                               ProfileModalWidgets.buildHeaderWithCloseButton(
+                                context,
                                 _controller,
                                 () => _controller.closeModal(context),
                               ),
@@ -104,20 +113,21 @@ class _ProfileModalState extends State<ProfileModal>
                               SlideTransition(
                                 position: _controller.slideAnimation,
                                 child: ProfileModalWidgets.buildTitleSection(
+                                  context,
                                   _controller,
                                 ),
                               ),
 
-                             /*  // Avatar con animación de escala
+                              /*  // Avatar con animación de escala
                               ProfileModalWidgets.buildAnimatedAvatar(
                                 _controller,
                                 _onAvatarTap,
                               ), */
-
                               const SizedBox(height: 32),
 
                               // Formulario con animaciones escalonadas
                               ProfileModalWidgets.buildAnimatedForm(
+                                context,
                                 _controller,
                               ),
 
@@ -125,6 +135,7 @@ class _ProfileModalState extends State<ProfileModal>
 
                               // Botones animados
                               ProfileModalWidgets.buildAnimatedActionButtons(
+                                context,
                                 _controller,
                                 () => _controller.logout(context),
                                 () => _controller.closeModal(context),

@@ -602,6 +602,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       final selectedOption = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
           /* return AlertDialog(
             title: const Text('Seleccionar evidencia'),
             content: const Text('¿Qué tipo de archivo desea agregar?'),
@@ -629,7 +630,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
           );
         }, */
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark
+                ? Theme.of(context).cardColor
+                : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
@@ -637,22 +640,30 @@ class _EditReporteModalState extends State<EditReporteModal> {
             contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
 
             title: Row(
-              children: const [
-                Icon(Icons.attach_file, color: Colors.blue, size: 26),
-                SizedBox(width: 10),
+              children: [
+                const Icon(Icons.attach_file, color: Colors.blue, size: 26),
+                const SizedBox(width: 10),
                 Text(
                   'Seleccionar evidencia',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: isDark
+                        ? Theme.of(context).textTheme.headlineSmall?.color
+                        : Colors.black,
+                  ),
                 ),
               ],
             ),
 
-            content: const Text(
+            content: Text(
               '¿Qué tipo de archivo deseas agregar?',
               style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
-                color: Colors.black87,
+                color: isDark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : Colors.black87,
               ),
             ),
 
@@ -1015,11 +1026,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Construir la sección de imagen/evidencia
   Widget _buildImageSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Card(
-        color: Colors.white,
-
+        color: isDark ? Theme.of(context).cardColor : Colors.white,
         elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(5),
@@ -1126,11 +1137,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   height: 100,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: isDark
+                        ? Theme.of(context).cardColor.withOpacity(0.3)
+                        : Colors.grey.shade100,
                     border: Border.all(
                       color: (_selectedImage == null)
                           ? Colors.red.shade300
-                          : Colors.grey.shade300,
+                          : (isDark
+                                ? Theme.of(context).dividerColor
+                                : Colors.grey.shade300),
                       width: (_selectedImage == null) ? 2 : 1,
                     ),
                     borderRadius: BorderRadius.circular(8),
@@ -1468,6 +1483,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Construir la sección de categoría
   Widget _buildCategorySection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // Determinar las categorías disponibles según la política
     List<DropdownMenuItem<String>> items = [];
     // Valor seleccionado calculado de forma robusta (se determina más abajo)
@@ -1515,9 +1531,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: isDark
+                    ? Colors.red.shade900.withOpacity(0.2)
+                    : Colors.red.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
+                border: Border.all(
+                  color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+                ),
               ),
               child: Row(
                 children: [
@@ -1591,9 +1611,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isDark
+                    ? Colors.orange.shade900.withOpacity(0.2)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.orange.shade700
+                      : Colors.orange.shade200,
+                ),
               ),
               child: const Row(
                 children: [
@@ -1648,10 +1674,12 @@ class _EditReporteModalState extends State<EditReporteModal> {
           ),
           filled: true,
           fillColor: isPlanillaMovilidad
-              ? Colors
-                    .grey
-                    .shade200 // ✅ Color diferente para indicar que no es editable
-              : (_isEditMode ? Colors.white : Colors.white),
+              ? (isDark
+                    ? Theme.of(context).disabledColor.withOpacity(0.1)
+                    : Colors.grey.shade200)
+              : (_isEditMode
+                    ? (isDark ? Theme.of(context).cardColor : Colors.white)
+                    : (isDark ? Theme.of(context).cardColor : Colors.white)),
           // ✅ Agregar sufijo para indicar que está bloqueada
           suffixIcon: isPlanillaMovilidad
               ? Icon(Icons.lock, color: Colors.grey.shade600, size: 20)
@@ -1695,6 +1723,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Construir la sección de tipo de gasto
   Widget _buildTipoGastoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1715,9 +1744,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.2)
+                  : Colors.red.shade50,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.shade200),
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+              ),
             ),
             child: Row(
               children: [
@@ -1763,7 +1796,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   borderSide: const BorderSide(color: Colors.white, width: 1),
                 ),
                 filled: true,
-                fillColor: _isEditMode ? Colors.white : Colors.white,
+                fillColor: _isEditMode
+                    ? (isDark ? Theme.of(context).cardColor : Colors.white)
+                    : (isDark ? Theme.of(context).cardColor : Colors.white),
               ),
               value:
                   _tipoGastoController.text.isNotEmpty &&
@@ -2184,6 +2219,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     String? nombreArchivo,
   }) async {
     if (!mounted) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // Supongamos que tienes estos valores
     final ruc = widget.reporte.ruc;
     final serie = widget.reporte.serie;
@@ -2259,7 +2295,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xff121212),
+            color: isDark ? const Color(0xff1e1e1e) : const Color(0xff121212),
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
@@ -2469,15 +2505,18 @@ class _EditReporteModalState extends State<EditReporteModal> {
   }
 
   // Removed unused success snackbar helper; success feedback is shown inline after save.
-
+  /* 
   @override
   Widget build(BuildContext context) {
     final isMovilidad = _isPlanillaDeMovilidad();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      height: MediaQuery.of(context).size.height * 0.90,
+      decoration: BoxDecoration(
+        color: isDark
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.white,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -2536,7 +2575,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
                             TextInputType.text,
                             readOnly: !_isEditMode,
                           ),
-                          const SizedBox(height: 10),
                         ]
                       : [
                           // Campos normales (formulario completo)
@@ -2565,14 +2603,252 @@ class _EditReporteModalState extends State<EditReporteModal> {
       ),
     );
   }
+ */
 
+  @override
+  Widget build(BuildContext context) {
+    final isMovilidad = _isPlanillaDeMovilidad();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final double maxHeight = MediaQuery.of(context).size.height * 0.90;
+    final double minHeight = MediaQuery.of(context).size.height * 0.55;
+
+    return Container(
+      constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
+      decoration: BoxDecoration(
+        color: isDark
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: true, // ✅ Permite ajuste al teclado
+
+        body: SafeArea(
+          top: false,
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                // Header fijo
+                _buildHeader(),
+
+                // Contenido scrolleable
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(), // ✅ Scroll suave
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: isMovilidad
+                          ? [
+                              // Campos simplificados para PLANILLA DE MOVILIDAD
+                              _buildImageSection(),
+                              const SizedBox(height: 4),
+                              _buildPolicySection(),
+                              const SizedBox(height: 4),
+                              _buildCategorySection(),
+                              const SizedBox(height: 4),
+                              _buildDateField(
+                                _fechaEmisionController,
+                                'Fecha Emisión ',
+                                Icons.calendar_month_sharp,
+                                isRequired: true,
+                                readOnly: !_isEditMode,
+                              ),
+                              const SizedBox(height: 4),
+                              _buildTextField(
+                                _totalController,
+                                'Total ',
+                                Icons.price_change,
+                                TextInputType.numberWithOptions(decimal: true),
+                                isRequired: true,
+                                readOnly: !_isEditMode,
+                              ),
+                              const SizedBox(height: 4),
+                              _buildMonedaDropdown(),
+                              const SizedBox(height: 4),
+                              _buildMovilidadSection(),
+                              const SizedBox(height: 4),
+                              _buildTextField(
+                                _notaController,
+                                'Nota o Glosa:',
+                                Icons.comment,
+                                TextInputType.text,
+                                readOnly: !_isEditMode,
+                              ),
+                              /*        const SizedBox(
+                                height: 80,
+                              ), // ✅ Espacio extra para scroll */
+                            ]
+                          : [
+                              // Campos normales (formulario completo)
+                              _buildImageSection(),
+                              const SizedBox(height: 10),
+                              _buildPolicySection(),
+                              const SizedBox(height: 10),
+                              _buildCategorySection(),
+                              const SizedBox(height: 10),
+                              _buildTipoGastoSection(),
+                              const SizedBox(height: 10),
+                              _buildInvoiceDataSection(),
+                              const SizedBox(height: 10),
+                              _buildNotesSection(),
+                              const SizedBox(height: 10),
+                              _buildMovilidadSection(),
+                              /*   const SizedBox(
+                                height: 80,
+                              ), */
+                              // ✅ Espacio extra para scroll
+                            ],
+                    ),
+                  ),
+                ),
+
+                // Botones fijos abajo
+                SafeArea(top: false, child: _buildActionButtons()),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /* 
+  @override
+  Widget build(BuildContext context) {
+    final isMovilidad = _isPlanillaDeMovilidad();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      resizeToAvoidBottomInset: true, // ✔️ como pediste
+      body: Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.90, // ✔️ altura fija
+          decoration: BoxDecoration(
+            color: isDark
+                ? Theme.of(context).scaffoldBackgroundColor
+                : Colors.white,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+
+          /// 🔥 ESTO ES LO MÁS IMPORTANTE 🔥
+          /// Mantiene altura fija aunque el teclado aparezca.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: constraints.maxHeight, // ✔️ NO permite que crezca
+                ),
+
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      _buildHeader(),
+
+                      /// 🔥 AQUÍ EL SCROLL INTERNO SIN CAMBIAR ALTURA EXTERNA
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(15),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: isMovilidad
+                                ? [
+                                    _buildImageSection(),
+                                    const SizedBox(height: 4),
+                                    _buildPolicySection(),
+                                    const SizedBox(height: 4),
+                                    _buildCategorySection(),
+                                    const SizedBox(height: 4),
+
+                                    _buildDateField(
+                                      _fechaEmisionController,
+                                      'Fecha Emisión ',
+                                      Icons.calendar_month_sharp,
+                                      isRequired: true,
+                                      readOnly: !_isEditMode,
+                                    ),
+                                    const SizedBox(height: 4),
+
+                                    _buildTextField(
+                                      _totalController,
+                                      'Total ',
+                                      Icons.price_change,
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                      isRequired: true,
+                                      readOnly: !_isEditMode,
+                                    ),
+                                    const SizedBox(height: 4),
+
+                                    _buildMonedaDropdown(),
+                                    const SizedBox(height: 4),
+
+                                    _buildMovilidadSection(),
+                                    const SizedBox(height: 4),
+
+                                    _buildTextField(
+                                      _notaController,
+                                      'Nota o Glosa:',
+                                      Icons.comment,
+                                      TextInputType.text,
+                                      readOnly: !_isEditMode,
+                                    ),
+                                    const SizedBox(height: 10),
+                                  ]
+                                : [
+                                    _buildImageSection(),
+                                    const SizedBox(height: 10),
+                                    _buildPolicySection(),
+                                    const SizedBox(height: 10),
+                                    _buildCategorySection(),
+                                    const SizedBox(height: 10),
+                                    _buildTipoGastoSection(),
+                                    const SizedBox(height: 10),
+                                    _buildInvoiceDataSection(),
+                                    const SizedBox(height: 10),
+                                    _buildNotesSection(),
+                                    const SizedBox(height: 10),
+                                    _buildMovilidadSection(),
+                                    const SizedBox(height: 10),
+                                  ],
+                          ),
+                        ),
+                      ),
+
+                      _buildActionButtons(),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+ */
   /// Construir el header del modal
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.red.shade700, Colors.red.shade400],
+          colors: isDark
+              ? [Colors.red.shade800, Colors.red.shade600]
+              : [Colors.red.shade700, Colors.red.shade400],
         ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -2818,7 +3094,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
           TextInputType.text,
           readOnly: !_isEditMode,
         ),
-        const SizedBox(height: 10),
         Text(
           _motivorechazoController.text,
           style: const TextStyle(fontSize: 16),
@@ -2832,7 +3107,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
     final politica = _politicaController.text.toLowerCase();
     if (!politica.contains('movilidad')) return const SizedBox.shrink();
     // Fondo y estilos para la sección de Movilidad
-    final Color sectionBg = Colors.white; // color de fondo de la sección
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final Color sectionBg = isDark ? Theme.of(context).cardColor : Colors.white;
 
     return Card(
       color: sectionBg,
@@ -2862,13 +3138,22 @@ class _EditReporteModalState extends State<EditReporteModal> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: sectionBg.withOpacity(0.25),
+                        color: isDark
+                            ? Colors.grey.shade800.withOpacity(0.5)
+                            : sectionBg.withOpacity(0.25),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade300),
+                        border: Border.all(
+                          color: isDark
+                              ? Colors.grey.shade700
+                              : Colors.grey.shade300,
+                        ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Solo lectura',
-                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.grey.shade400 : Colors.black54,
+                        ),
                       ),
                     ),
                 ],
@@ -2888,7 +3173,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2896,12 +3184,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade800 : Colors.white,
+                      width: 1,
+                    ),
                   ),
                   prefixIcon: const Icon(Icons.place),
                   filled: true,
                   fillColor: _isEditMode
-                      ? Colors.white
+                      ? (isDark ? Theme.of(context).cardColor : Colors.white)
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
@@ -2920,7 +3211,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2928,12 +3222,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade800 : Colors.white,
+                      width: 1,
+                    ),
                   ),
                   prefixIcon: const Icon(Icons.flag),
                   filled: true,
                   fillColor: _isEditMode
-                      ? Colors.white
+                      ? (isDark ? Theme.of(context).cardColor : Colors.white)
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
@@ -2952,7 +3249,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2960,17 +3260,18 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade800 : Colors.white,
+                      width: 1,
+                    ),
                   ),
                   prefixIcon: const Icon(Icons.event_note),
                   filled: true,
                   fillColor: _isEditMode
-                      ? Colors.white
+                      ? (isDark ? Theme.of(context).cardColor : Colors.white)
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
-              const SizedBox(height: 8),
-
               /*  TextFormField(
                 controller: _tipoMovilidadController,
                 readOnly: !_isEditMode,
@@ -3036,7 +3337,13 @@ class _EditReporteModalState extends State<EditReporteModal> {
                     ),
                     prefixIcon: const Icon(Icons.directions_transit),
                     filled: true,
-                    fillColor: _isEditMode ? Colors.white : Colors.grey.shade50,
+                    fillColor: _isEditMode
+                        ? (isDark ? Theme.of(context).cardColor : Colors.white)
+                        : (isDark
+                              ? Theme.of(
+                                  context,
+                                ).disabledColor.withOpacity(0.05)
+                              : Colors.grey.shade50),
                   ),
                   isExpanded: true,
                   items: _tiposMovilidad.map((tipo) {
@@ -3076,7 +3383,10 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
                   focusedBorder: const UnderlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -3084,12 +3394,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade800 : Colors.white,
+                      width: 1,
+                    ),
                   ),
                   prefixIcon: const Icon(Icons.directions_transit),
                   filled: true,
                   fillColor: _isEditMode
-                      ? Colors.white
+                      ? (isDark ? Theme.of(context).cardColor : Colors.white)
                       : sectionBg.withOpacity(0.12),
                 ),
               ),
@@ -3109,31 +3422,36 @@ class _EditReporteModalState extends State<EditReporteModal> {
     bool isRequired = false,
     bool readOnly = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-
       readOnly: readOnly,
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+        fillColor: readOnly
+            ? (isDark
+                  ? Theme.of(context).disabledColor.withOpacity(0.1)
+                  : Colors.grey.shade100)
+            : (isDark ? Theme.of(context).cardColor : Colors.white),
 
         // 👇 aquí cambiamos a underline y personalizamos bordes
         border: const UnderlineInputBorder(),
         enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey.shade400), // color normal
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
+          ),
           borderRadius: BorderRadius.circular(16),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.red, width: 1),
-          // color al enfocar
         ),
         disabledBorder: UnderlineInputBorder(
           borderSide: BorderSide(
-            color: Colors.grey.shade300,
-          ), // color cuando es readOnly
+            color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+          ),
         ),
       ),
       validator: isRequired
@@ -3158,6 +3476,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     bool isRequired = false,
     bool readOnly = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       readOnly: true,
@@ -3183,17 +3502,25 @@ class _EditReporteModalState extends State<EditReporteModal> {
         labelText: isRequired ? '$label *' : label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.white,
+        fillColor: readOnly
+            ? (isDark
+                  ? Theme.of(context).disabledColor.withOpacity(0.1)
+                  : Colors.grey.shade100)
+            : (isDark ? Theme.of(context).cardColor : Colors.white),
         border: const UnderlineInputBorder(),
         enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey.shade400),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
+          ),
           borderRadius: BorderRadius.circular(16),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.red, width: 1),
         ),
         disabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+          ),
         ),
       ),
       validator: isRequired
@@ -3225,6 +3552,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Construir dropdown para moneda
   Widget _buildMonedaDropdown() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return AbsorbPointer(
       absorbing: !_isEditMode,
       child: DropdownButtonFormField<String>(
@@ -3249,7 +3577,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
           ),
           prefixIcon: const Icon(Icons.monetization_on),
           filled: true,
-          fillColor: _isEditMode ? Colors.white : Colors.white,
+          fillColor: _isEditMode
+              ? (isDark ? Theme.of(context).cardColor : Colors.white)
+              : (isDark ? Theme.of(context).cardColor : Colors.white),
         ),
         items: _monedas.map((moneda) {
           return DropdownMenuItem<String>(value: moneda, child: Text(moneda));
@@ -3275,8 +3605,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
   /// Construir los botones de acción
   Widget _buildActionButtons() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 50),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       /*  decoration: BoxDecoration(
         color: Colors.grey.shade50,
         border: Border(top: BorderSide(color: Colors.grey.shade300)),
@@ -3286,12 +3617,18 @@ class _EditReporteModalState extends State<EditReporteModal> {
           // Mensaje de campos obligatorios
           if (_isEditMode && !_isFormValid)
             Container(
-              padding: const EdgeInsets.all(6),
+              padding: const EdgeInsets.all(2),
               margin: const EdgeInsets.only(bottom: 8),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isDark
+                    ? Colors.orange.shade900.withOpacity(0.2)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.orange.shade700
+                      : Colors.orange.shade200,
+                ),
               ),
               child: Row(
                 children: [

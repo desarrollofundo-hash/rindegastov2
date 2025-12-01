@@ -615,8 +615,11 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               ),
             ],
           ); */
+          final isDarkDialog = Theme.of(context).brightness == Brightness.dark;
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: isDarkDialog
+                ? Theme.of(context).cardColor
+                : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
@@ -624,22 +627,34 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
 
             title: Row(
-              children: const [
-                Icon(Icons.attach_file, color: Colors.blue, size: 26),
-                SizedBox(width: 10),
+              children: [
+                Icon(
+                  Icons.attach_file,
+                  color: isDarkDialog ? Colors.lightBlue : Colors.blue,
+                  size: 26,
+                ),
+                const SizedBox(width: 10),
                 Text(
                   'Seleccionar evidencia',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: isDarkDialog
+                        ? Theme.of(context).textTheme.titleLarge?.color
+                        : Colors.black,
+                  ),
                 ),
               ],
             ),
 
-            content: const Text(
+            content: Text(
               '¿Qué tipo de archivo deseas agregar?',
               style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
-                color: Colors.black87,
+                color: isDarkDialog
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : Colors.black87,
               ),
             ),
 
@@ -653,7 +668,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   // Tomar foto
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.blue,
+                      foregroundColor: isDarkDialog
+                          ? Colors.lightBlue
+                          : Colors.blue,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context, 'camera'),
@@ -667,7 +684,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   // Galería
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.purple,
+                      foregroundColor: isDarkDialog
+                          ? Colors.purpleAccent
+                          : Colors.purple,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context, 'gallery'),
@@ -681,7 +700,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   // PDF
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
+                      foregroundColor: isDarkDialog
+                          ? Colors.redAccent
+                          : Colors.red,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context, 'pdf'),
@@ -697,15 +718,20 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   // Cancelar
                   TextButton(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
+                      foregroundColor: isDarkDialog
+                          ? Colors.grey[400]
+                          : Colors.grey[700],
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
+                    child: Text(
                       'Cancelar',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        color: isDarkDialog
+                            ? Colors.grey[400]
+                            : Colors.grey[700],
                       ),
                     ),
                   ),
@@ -816,6 +842,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Mostrar alerta en medio de la pantalla con mensaje del servidor
   void _showServerAlert(String message) {
+    final isDarkAlert = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -826,7 +853,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             padding: const EdgeInsets.all(10),
             margin: const EdgeInsets.symmetric(horizontal: 40),
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: isDarkAlert ? Colors.red.shade800 : Colors.red,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
@@ -864,8 +891,12 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.red,
+                    backgroundColor: isDarkAlert
+                        ? Colors.grey.shade200
+                        : Colors.white,
+                    foregroundColor: isDarkAlert
+                        ? Colors.red.shade800
+                        : Colors.red,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 30,
                       vertical: 12,
@@ -1246,12 +1277,13 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   Widget build(BuildContext context) {
     final double maxHeight = MediaQuery.of(context).size.height * 0.93;
     final double minHeight = MediaQuery.of(context).size.height * 0.55;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: isDark ? Theme.of(context).cardColor : Colors.white,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(22),
           topRight: Radius.circular(22),
         ),
@@ -1366,8 +1398,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Construir la sección de imagen
   Widget _buildImageSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
-      color: Colors.white,
+      color: isDark ? Theme.of(context).cardColor : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(2),
         child: Column(
@@ -1375,11 +1408,20 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           children: [
             Row(
               children: [
-                const Icon(Icons.attach_file, color: Colors.red),
+                Icon(
+                  Icons.attach_file,
+                  color: isDark ? Colors.redAccent : Colors.red,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Adjuntar Evidencia',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Theme.of(context).textTheme.bodyLarge?.color
+                        : Colors.black,
+                  ),
                 ),
                 const Text(
                   ' *',
@@ -1411,7 +1453,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
+                  border: Border.all(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: GestureDetector(
@@ -1449,18 +1493,25 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
+                                    Text(
                                       'Archivo PDF seleccionado',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
+                                        color: isDark
+                                            ? Theme.of(
+                                                context,
+                                              ).textTheme.bodyLarge?.color
+                                            : Colors.black,
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
                                       _selectedFileName ?? 'archivo.pdf',
                                       style: TextStyle(
-                                        color: Colors.grey.shade700,
+                                        color: isDark
+                                            ? Colors.grey.shade400
+                                            : Colors.grey.shade700,
                                         fontSize: 12,
                                       ),
                                       maxLines: 2,
@@ -1484,11 +1535,13 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                 height: 100,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: isDark ? Colors.grey.shade800 : Colors.grey.shade100,
                   border: Border.all(
                     color: (selectedFile == null)
-                        ? Colors.red.shade300
-                        : Colors.grey.shade300,
+                        ? (isDark ? Colors.redAccent : Colors.red.shade300)
+                        : (isDark
+                              ? Colors.grey.shade600
+                              : Colors.grey.shade300),
                     width: (selectedFile == null) ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -1498,7 +1551,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   children: [
                     Icon(
                       Icons.attach_file,
-                      color: (selectedFile == null) ? Colors.red : Colors.grey,
+                      color: (selectedFile == null)
+                          ? (isDark ? Colors.redAccent : Colors.red)
+                          : (isDark ? Colors.grey.shade400 : Colors.grey),
                       size: 40,
                     ),
                     const SizedBox(height: 8),
@@ -1506,8 +1561,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                       'Agregar evidencia (Obligatorio)',
                       style: TextStyle(
                         color: (selectedFile == null)
-                            ? Colors.red
-                            : Colors.grey,
+                            ? (isDark ? Colors.redAccent : Colors.red)
+                            : (isDark ? Colors.grey.shade400 : Colors.grey),
                         fontWeight: (selectedFile == null)
                             ? FontWeight.bold
                             : FontWeight.normal,
@@ -1517,7 +1572,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                     Text(
                       'Imagen o PDF',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
                         fontSize: 12,
                       ),
                     ),
@@ -1597,10 +1654,21 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
             // Fallback: mostrar imagen por URL directamente
             if (!mounted) return;
+            final isDarkEvid = Theme.of(context).brightness == Brightness.dark;
             showDialog(
               context: context,
               builder: (_) => AlertDialog(
-                title: const Text('Evidencia'),
+                backgroundColor: isDarkEvid
+                    ? Theme.of(context).cardColor
+                    : Colors.white,
+                title: Text(
+                  'Evidencia',
+                  style: TextStyle(
+                    color: isDarkEvid
+                        ? Theme.of(context).textTheme.titleLarge?.color
+                        : Colors.black,
+                  ),
+                ),
                 content: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.8,
                   height: MediaQuery.of(context).size.height * 0.6,
@@ -1615,7 +1683,14 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('Cerrar'),
+                    child: Text(
+                      'Cerrar',
+                      style: TextStyle(
+                        color: isDarkEvid
+                            ? Theme.of(context).textTheme.bodyMedium?.color
+                            : null,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1629,15 +1704,40 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
       // 3️⃣ Si no hay evidencia o es inválida
       if (!mounted) return;
+      final isDarkFinalEvid = Theme.of(context).brightness == Brightness.dark;
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Evidencia'),
-          content: const Text('No hay imagen disponible para previsualizar.'),
+          backgroundColor: isDarkFinalEvid
+              ? Theme.of(context).cardColor
+              : Colors.white,
+          title: Text(
+            'Evidencia',
+            style: TextStyle(
+              color: isDarkFinalEvid
+                  ? Theme.of(context).textTheme.titleLarge?.color
+                  : Colors.black,
+            ),
+          ),
+          content: Text(
+            'No hay imagen disponible para previsualizar.',
+            style: TextStyle(
+              color: isDarkFinalEvid
+                  ? Theme.of(context).textTheme.bodyMedium?.color
+                  : Colors.black,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cerrar'),
+              child: Text(
+                'Cerrar',
+                style: TextStyle(
+                  color: isDarkFinalEvid
+                      ? Theme.of(context).textTheme.bodyMedium?.color
+                      : null,
+                ),
+              ),
             ),
           ],
         ),
@@ -1727,15 +1827,16 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Construir la sección de política
   Widget _buildPolicySection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Datos Generales',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.red,
+            color: isDark ? Colors.redAccent : Colors.red,
           ),
         ),
         const SizedBox(height: 16),
@@ -1769,6 +1870,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Construir la sección de categoría
   Widget _buildCategorySection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     // Determinar las categorías disponibles según la política
     List<DropdownMenuItem<String>> items = [];
 
@@ -1777,19 +1879,27 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     // Si la política es movilidad o general, mostrar las categorías cargadas
     if (politica.contains('movilidad') || politica.contains('general')) {
       if (_isLoadingCategorias) {
-        return const Column(
+        return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Categoría',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? Theme.of(context).textTheme.titleMedium?.color
+                    : Colors.black,
+              ),
             ),
-            SizedBox(height: 8),
-            Center(child: CircularProgressIndicator()),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
+            const Center(child: CircularProgressIndicator()),
+            const SizedBox(height: 8),
             Text(
               'Cargando categorías...',
-              style: TextStyle(color: Colors.grey),
+              style: TextStyle(
+                color: isDark ? Colors.grey.shade400 : Colors.grey,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -1800,31 +1910,53 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Categoría',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? Theme.of(context).textTheme.titleMedium?.color
+                    : Colors.black,
+              ),
             ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
+                color: isDark
+                    ? Colors.red.shade900.withOpacity(0.3)
+                    : Colors.red.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
+                border: Border.all(
+                  color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.error, color: Colors.red.shade600),
+                  Icon(
+                    Icons.error,
+                    color: isDark ? Colors.red.shade400 : Colors.red.shade600,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Error al cargar categorías: $_errorCategorias',
-                      style: TextStyle(color: Colors.red.shade700),
+                      style: TextStyle(
+                        color: isDark
+                            ? Colors.red.shade400
+                            : Colors.red.shade700,
+                      ),
                     ),
                   ),
                   TextButton(
                     onPressed: _loadCategorias,
-                    child: const Text('Reintentar'),
+                    child: Text(
+                      'Reintentar',
+                      style: TextStyle(
+                        color: isDark ? Colors.red.shade300 : Colors.red,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -1837,7 +1969,14 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           .map(
             (categoria) => DropdownMenuItem<String>(
               value: categoria.categoria,
-              child: Text(_formatCategoriaName(categoria.categoria)),
+              child: Text(
+                _formatCategoriaName(categoria.categoria),
+                style: TextStyle(
+                  color: isDark
+                      ? Theme.of(context).textTheme.bodyLarge?.color
+                      : null,
+                ),
+              ),
             ),
           )
           .toList();
@@ -1846,26 +1985,43 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Categoría',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? Theme.of(context).textTheme.titleMedium?.color
+                    : Colors.black,
+              ),
             ),
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isDark
+                    ? Colors.orange.shade900.withOpacity(0.3)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.orange.shade700
+                      : Colors.orange.shade200,
+                ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange),
-                  SizedBox(width: 8),
+                  Icon(
+                    Icons.warning,
+                    color: isDark ? Colors.orange.shade400 : Colors.orange,
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'No hay categorías disponibles para esta política',
-                      style: TextStyle(color: Colors.orange),
+                      style: TextStyle(
+                        color: isDark ? Colors.orange.shade400 : Colors.orange,
+                      ),
                     ),
                   ),
                 ],
@@ -1879,25 +2035,43 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
 
     return DropdownButtonFormField<String>(
+      dropdownColor: isDark ? Theme.of(context).cardColor : Colors.white,
       decoration: InputDecoration(
         labelText: 'Categoría *',
-        prefixIcon: const Icon(Icons.category),
+        labelStyle: TextStyle(
+          color: isDark ? Theme.of(context).textTheme.bodyMedium?.color : null,
+        ),
+        prefixIcon: Icon(
+          Icons.category,
+          color: isDark ? Theme.of(context).iconTheme.color : null,
+        ),
         border: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.transparent, width: 0),
         ),
         enabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade600 : Colors.grey,
+            width: 1,
+          ),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.red, width: 2),
+        focusedBorder: UnderlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(
+            color: isDark ? Colors.redAccent : Colors.red,
+            width: 2,
+          ),
         ),
         disabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade600 : Colors.grey,
+            width: 1,
+          ),
         ),
+        fillColor: isDark ? Theme.of(context).cardColor : null,
+        filled: isDark,
       ),
       initialValue:
           _categoriaController.text.isNotEmpty &&
@@ -2027,18 +2201,21 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
  */
   /// Construir la sección de tipo de gasto
   Widget _buildTipoGastoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Si está cargando, mostrar indicador
         if (_isLoadingTiposGasto)
-          const Column(
+          Column(
             children: [
-              Center(child: CircularProgressIndicator()),
-              SizedBox(height: 8),
+              const Center(child: CircularProgressIndicator()),
+              const SizedBox(height: 8),
               Text(
                 'Cargando tipos de gasto...',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: isDark ? Colors.grey.shade400 : Colors.grey,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -2047,23 +2224,37 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.shade200),
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.error, color: Colors.red.shade600),
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade600,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Error al cargar tipos de gasto: $_errorTiposGasto',
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
                   ),
                 ),
                 TextButton(
                   onPressed: _loadTiposGasto,
-                  child: const Text('Reintentar'),
+                  child: Text(
+                    'Reintentar',
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade300 : Colors.red,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -2072,10 +2263,20 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           AbsorbPointer(
             absorbing: !_isEditMode,
             child: DropdownButtonFormField<String>(
-              dropdownColor: Colors.white,
+              dropdownColor: isDark
+                  ? Theme.of(context).cardColor
+                  : Colors.white,
               decoration: InputDecoration(
                 labelText: 'Tipo de Gasto *',
-                prefixIcon: Icon(Icons.attach_money),
+                labelStyle: TextStyle(
+                  color: isDark
+                      ? Theme.of(context).textTheme.bodyMedium?.color
+                      : null,
+                ),
+                prefixIcon: Icon(
+                  Icons.attach_money,
+                  color: isDark ? Theme.of(context).iconTheme.color : null,
+                ),
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
@@ -2085,18 +2286,29 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                 ),
                 enabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.red, width: 2),
+                focusedBorder: UnderlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.redAccent : Colors.red,
+                    width: 2,
+                  ),
                 ),
                 disabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
                 filled: true,
-                fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                fillColor: _isEditMode
+                    ? (isDark ? Theme.of(context).cardColor : Colors.white)
+                    : (isDark ? Colors.grey.shade800 : Colors.grey[100]),
               ),
               value:
                   _tipoGastoController.text.isNotEmpty &&
@@ -2109,7 +2321,14 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   .map(
                     (tipo) => DropdownMenuItem<String>(
                       value: tipo.value,
-                      child: Text(tipo.value),
+                      child: Text(
+                        tipo.value,
+                        style: TextStyle(
+                          color: isDark
+                              ? Theme.of(context).textTheme.bodyLarge?.color
+                              : null,
+                        ),
+                      ),
                     ),
                   )
                   .toList(),
@@ -2134,24 +2353,33 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   }
 
   Widget _buildTipoMovilidad() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Tipo de movilidad',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: isDark
+                ? Theme.of(context).textTheme.titleMedium?.color
+                : Colors.black,
+          ),
         ),
         const SizedBox(height: 8),
 
         // Si está cargando, mostrar indicador
         if (_isLoadingTipoMovilidad)
-          const Column(
+          Column(
             children: [
-              Center(child: CircularProgressIndicator()),
-              SizedBox(height: 8),
+              const Center(child: CircularProgressIndicator()),
+              const SizedBox(height: 8),
               Text(
                 'Cargando tipos movilidad...',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: isDark ? Colors.grey.shade400 : Colors.grey,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -2160,23 +2388,37 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.shade200),
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.error, color: Colors.red.shade600),
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade600,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Error al cargar tipos movilidad: $_errorTiposMovilidad',
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
                   ),
                 ),
                 TextButton(
                   onPressed: _loadTiposGasto,
-                  child: const Text('Reintentar'),
+                  child: Text(
+                    'Reintentar',
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade300 : Colors.red,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -2185,9 +2427,20 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           AbsorbPointer(
             absorbing: !_isEditMode,
             child: DropdownButtonFormField<String>(
+              dropdownColor: isDark
+                  ? Theme.of(context).cardColor
+                  : Colors.white,
               decoration: InputDecoration(
                 labelText: 'Tipo de Movilidad *',
-                prefixIcon: Icon(Icons.attach_money),
+                labelStyle: TextStyle(
+                  color: isDark
+                      ? Theme.of(context).textTheme.bodyMedium?.color
+                      : null,
+                ),
+                prefixIcon: Icon(
+                  Icons.attach_money,
+                  color: isDark ? Theme.of(context).iconTheme.color : null,
+                ),
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
@@ -2197,18 +2450,29 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                 ),
                 enabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.red, width: 2),
+                focusedBorder: UnderlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.redAccent : Colors.red,
+                    width: 2,
+                  ),
                 ),
                 disabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
                 filled: true,
-                fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                fillColor: _isEditMode
+                    ? (isDark ? Theme.of(context).cardColor : Colors.white)
+                    : (isDark ? Colors.grey.shade800 : Colors.grey[100]),
               ),
               value:
                   _tipoTransporteController.text.isNotEmpty &&
@@ -2221,7 +2485,14 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   .map(
                     (tipo) => DropdownMenuItem<String>(
                       value: tipo.value,
-                      child: Text(tipo.value),
+                      child: Text(
+                        tipo.value,
+                        style: TextStyle(
+                          color: isDark
+                              ? Theme.of(context).textTheme.bodyLarge?.color
+                              : null,
+                        ),
+                      ),
                     ),
                   )
                   .toList(),
@@ -2247,15 +2518,16 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Construir la sección de datos de la factura
   Widget _buildFacturaDataSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Datos de la Factura',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.red,
+            color: isDark ? Colors.redAccent : Colors.red,
           ),
         ),
         const SizedBox(height: 16),
@@ -2426,10 +2698,17 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             const SizedBox(width: 6),
             Expanded(
               child: DropdownButtonFormField<String>(
-                dropdownColor: Colors.white,
+                dropdownColor: isDark
+                    ? Theme.of(context).cardColor
+                    : Colors.white,
                 value: _selectedMoneda,
                 decoration: InputDecoration(
                   labelText: 'Moneda',
+                  labelStyle: TextStyle(
+                    color: isDark
+                        ? Theme.of(context).textTheme.bodyMedium?.color
+                        : null,
+                  ),
                   border: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
@@ -2439,22 +2718,41 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade600 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.red, width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.redAccent : Colors.red,
+                      width: 2,
+                    ),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade600 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
-                  prefixIcon: const Icon(Icons.monetization_on),
+                  prefixIcon: Icon(
+                    Icons.monetization_on,
+                    color: isDark ? Theme.of(context).iconTheme.color : null,
+                  ),
                 ),
                 items: _monedas.map((moneda) {
                   return DropdownMenuItem<String>(
                     value: moneda,
-                    child: Text(moneda),
+                    child: Text(
+                      moneda,
+                      style: TextStyle(
+                        color: isDark
+                            ? Theme.of(context).textTheme.bodyLarge?.color
+                            : null,
+                      ),
+                    ),
                   );
                 }).toList(),
                 onChanged: (value) {
@@ -2567,15 +2865,44 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     );
   } */
   Widget _buildNotesSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
           controller: _notaController,
-          decoration: const InputDecoration(
+          style: TextStyle(
+            color: isDark ? Theme.of(context).textTheme.bodyLarge?.color : null,
+          ),
+          decoration: InputDecoration(
             labelText: 'Nota o Glosa:',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.note),
+            labelStyle: TextStyle(
+              color: isDark
+                  ? Theme.of(context).textTheme.bodyMedium?.color
+                  : null,
+            ),
+            border: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey.shade600 : Colors.grey,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey.shade600 : Colors.grey,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: isDark ? Colors.redAccent : Colors.red,
+                width: 2,
+              ),
+            ),
+            prefixIcon: Icon(
+              Icons.note,
+              color: isDark ? Theme.of(context).iconTheme.color : null,
+            ),
+            fillColor: isDark ? Theme.of(context).cardColor : null,
+            filled: isDark,
           ),
           maxLines: 2,
           maxLength: 500,
@@ -2595,6 +2922,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Construir la sección específica de movilidad
   Widget _buildMovilidadSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.all(2),
       child: Column(
@@ -2602,11 +2930,20 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         children: [
           Row(
             children: [
-              const Icon(Icons.directions_car, color: Colors.red),
+              Icon(
+                Icons.directions_car,
+                color: isDark ? Colors.redAccent : Colors.red,
+              ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Detalles de Movilidad',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDark
+                      ? Theme.of(context).textTheme.titleMedium?.color
+                      : Colors.black,
+                ),
               ),
             ],
           ),
@@ -2616,8 +2953,18 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               Expanded(
                 child: TextFormField(
                   controller: _origenController,
+                  style: TextStyle(
+                    color: isDark
+                        ? Theme.of(context).textTheme.bodyLarge?.color
+                        : null,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Origen *',
+                    labelStyle: TextStyle(
+                      color: isDark
+                          ? Theme.of(context).textTheme.bodyMedium?.color
+                          : null,
+                    ),
                     border: UnderlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(
@@ -2627,23 +2974,31 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                     ),
                     enabledBorder: UnderlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.grey.shade600 : Colors.grey,
                         width: 1,
                       ),
                     ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    focusedBorder: UnderlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.redAccent : Colors.red,
+                        width: 2,
+                      ),
                     ),
                     disabledBorder: UnderlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.grey.shade600 : Colors.grey,
                         width: 1,
                       ),
                     ),
-                    prefixIcon: const Icon(Icons.my_location),
+                    prefixIcon: Icon(
+                      Icons.my_location,
+                      color: isDark ? Theme.of(context).iconTheme.color : null,
+                    ),
+                    fillColor: isDark ? Theme.of(context).cardColor : null,
+                    filled: isDark,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -2661,8 +3016,18 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               Expanded(
                 child: TextFormField(
                   controller: _destinoController,
+                  style: TextStyle(
+                    color: isDark
+                        ? Theme.of(context).textTheme.bodyLarge?.color
+                        : null,
+                  ),
                   decoration: InputDecoration(
                     labelText: 'Destino *',
+                    labelStyle: TextStyle(
+                      color: isDark
+                          ? Theme.of(context).textTheme.bodyMedium?.color
+                          : null,
+                    ),
                     border: UnderlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(
@@ -2672,23 +3037,31 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                     ),
                     enabledBorder: UnderlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.grey.shade600 : Colors.grey,
                         width: 1,
                       ),
                     ),
-                    focusedBorder: const UnderlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                      borderSide: BorderSide(color: Colors.red, width: 2),
+                    focusedBorder: UnderlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.redAccent : Colors.red,
+                        width: 2,
+                      ),
                     ),
                     disabledBorder: UnderlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Colors.grey,
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.grey.shade600 : Colors.grey,
                         width: 1,
                       ),
                     ),
-                    prefixIcon: const Icon(Icons.location_on),
+                    prefixIcon: Icon(
+                      Icons.location_on,
+                      color: isDark ? Theme.of(context).iconTheme.color : null,
+                    ),
+                    fillColor: isDark ? Theme.of(context).cardColor : null,
+                    filled: isDark,
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -2703,8 +3076,18 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           const SizedBox(height: 12),
           TextFormField(
             controller: _motivoViajeController,
+            style: TextStyle(
+              color: isDark
+                  ? Theme.of(context).textTheme.bodyLarge?.color
+                  : null,
+            ),
             decoration: InputDecoration(
               labelText: 'Motivo del Viaje *',
+              labelStyle: TextStyle(
+                color: isDark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : null,
+              ),
               border: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(
@@ -2714,17 +3097,31 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               ),
               enabledBorder: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade600 : Colors.grey,
+                  width: 1,
+                ),
               ),
-              focusedBorder: const UnderlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.red, width: 2),
+              focusedBorder: UnderlineInputBorder(
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.redAccent : Colors.red,
+                  width: 2,
+                ),
               ),
               disabledBorder: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade600 : Colors.grey,
+                  width: 1,
+                ),
               ),
-              prefixIcon: const Icon(Icons.description),
+              prefixIcon: Icon(
+                Icons.description,
+                color: isDark ? Theme.of(context).iconTheme.color : null,
+              ),
+              fillColor: isDark ? Theme.of(context).cardColor : null,
+              filled: isDark,
             ),
             validator: (value) {
               if (value == null || value.trim().isEmpty) {
@@ -2741,8 +3138,18 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           // PLACA
           TextFormField(
             controller: _placaController,
+            style: TextStyle(
+              color: isDark
+                  ? Theme.of(context).textTheme.bodyLarge?.color
+                  : null,
+            ),
             decoration: InputDecoration(
               labelText: 'Placa',
+              labelStyle: TextStyle(
+                color: isDark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : null,
+              ),
               border: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: const BorderSide(
@@ -2752,17 +3159,31 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               ),
               enabledBorder: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade600 : Colors.grey,
+                  width: 1,
+                ),
               ),
-              focusedBorder: const UnderlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(12)),
-                borderSide: BorderSide(color: Colors.red, width: 2),
+              focusedBorder: UnderlineInputBorder(
+                borderRadius: const BorderRadius.all(Radius.circular(12)),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.redAccent : Colors.red,
+                  width: 2,
+                ),
               ),
               disabledBorder: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey.shade600 : Colors.grey,
+                  width: 1,
+                ),
               ),
-              prefixIcon: const Icon(Icons.badge),
+              prefixIcon: Icon(
+                Icons.badge,
+                color: isDark ? Theme.of(context).iconTheme.color : null,
+              ),
+              fillColor: isDark ? Theme.of(context).cardColor : null,
+              filled: isDark,
             ),
             keyboardType: TextInputType.text,
           ),
@@ -2795,11 +3216,16 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Construir los botones de acción
   Widget _buildActionButtons() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? Colors.grey.shade600 : Colors.grey.shade300,
+          ),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min, // ← Importante: tamaño mínimo
@@ -2811,19 +3237,30 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
               padding: const EdgeInsets.all(2),
               margin: const EdgeInsets.only(bottom: 4),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isDark
+                    ? Colors.orange.shade900.withOpacity(0.3)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.orange.shade700
+                      : Colors.orange.shade200,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange.shade600),
+                  Icon(
+                    Icons.warning,
+                    color: isDark
+                        ? Colors.orange.shade400
+                        : Colors.orange.shade600,
+                  ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Por favor complete todos los campos',
                       style: TextStyle(
-                        color: Colors.orange,
+                        color: isDark ? Colors.orange.shade400 : Colors.orange,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2897,31 +3334,52 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     bool isRequired = false,
     bool readOnly = false,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       readOnly: readOnly,
+      style: TextStyle(
+        color: isDark ? Theme.of(context).textTheme.bodyLarge?.color : null,
+      ),
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
-        prefixIcon: Icon(icon),
+        labelStyle: TextStyle(
+          color: isDark ? Theme.of(context).textTheme.bodyMedium?.color : null,
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: isDark ? Theme.of(context).iconTheme.color : null,
+        ),
         border: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.transparent, width: 0),
         ),
         enabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade600 : Colors.grey,
+            width: 1,
+          ),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.red, width: 2),
+        focusedBorder: UnderlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(
+            color: isDark ? Colors.redAccent : Colors.red,
+            width: 2,
+          ),
         ),
         disabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade600 : Colors.grey,
+            width: 1,
+          ),
         ),
         filled: true,
-        fillColor: readOnly ? Colors.white : Colors.white,
+        fillColor: readOnly
+            ? (isDark ? Colors.grey.shade800 : Colors.grey.shade100)
+            : (isDark ? Theme.of(context).cardColor : Colors.white),
       ),
       validator: isRequired
           ? (value) {
