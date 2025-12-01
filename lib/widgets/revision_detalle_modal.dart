@@ -51,7 +51,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       try {
         reportesRevision = await _apiService
             .getReportesRendicionRevision_Detalle(
-              idrev: widget.revision.idRev.toString(),
+              idrev: widget.revision.idAd.toString(),
             );
       } catch (apiError) {
         // fallback: dejar la lista vacía para mostrar el estado "No hay gastos"
@@ -119,8 +119,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
             OutlinedButton(
               onPressed: () => Navigator.of(context).pop(false),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.grey,
-                side: const BorderSide(color: Colors.grey),
+                foregroundColor: isDark ? Colors.grey[400] : Colors.grey,
+                side: BorderSide(
+                  color: isDark ? Colors.grey[600]! : Colors.grey,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -407,6 +409,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
 
   void _mostrarDialogoComentario(BuildContext context) {
     // Controlador para el cuadro de texto();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
@@ -455,7 +458,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                     'Explica brevemente el motivo del rechazo',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey.shade600,
+                      color: isDark ? Colors.grey[400] : Colors.grey.shade600,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -469,27 +472,36 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                       });
                     },
                     maxLines: 5,
-                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                     decoration: InputDecoration(
                       hintText:
                           'Ejemplo: La factura 1728 es rechazada porque...',
                       hintStyle: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade400,
+                        color: isDark ? Colors.grey[500] : Colors.grey.shade400,
                       ),
                       filled: true,
-                      fillColor: Colors.grey.shade50,
+                      fillColor: isDark
+                          ? Colors.grey[700]
+                          : Colors.grey.shade50,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.grey.shade300,
+                          color: isDark
+                              ? Colors.grey[600]!
+                              : Colors.grey.shade300,
                           width: 1,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.grey.shade300,
+                          color: isDark
+                              ? Colors.grey[600]!
+                              : Colors.grey.shade300,
                           width: 1,
                         ),
                       ),
@@ -549,7 +561,9 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey.shade600,
+                    foregroundColor: isDark
+                        ? Colors.grey[400]
+                        : Colors.grey.shade600,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
                       vertical: 12,
@@ -594,7 +608,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
             );
             /* return AlertDialog(
               title: const Text('MOTIVO DE RECHAZO'),
-              backgroundColor: Colors.white,
+              backgroundColor: isDark ? Colors.grey[800] : Colors.white,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -647,6 +661,8 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       insetPadding: const EdgeInsets.only(top: 10), // Solo margen superior
       clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -661,9 +677,9 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         height: double
             .maxFinite, // Usa toda la altura disponible desde el margen superior
         child: Scaffold(
-          backgroundColor: Colors.grey[50],
+          backgroundColor: isDark ? Colors.grey[900] : Colors.grey[50],
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark ? Colors.grey[850] : Colors.white,
             elevation: 0.1,
             leadingWidth: 50,
             titleSpacing: 12,
@@ -673,12 +689,12 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 4),
-                const Text(
+                Text(
                   'DETALLE REVISIÓN',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -746,7 +762,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.grey),
+                icon: Icon(
+                  Icons.close,
+                  color: isDark ? Colors.white70 : Colors.grey,
+                ),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
@@ -941,11 +960,13 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
 
               // Tabs mejoradas
               Container(
-                color: Colors.white,
+                color: isDark ? Colors.grey[850] : Colors.white,
                 child: TabBar(
                   controller: _tabController,
                   labelColor: Colors.blue,
-                  unselectedLabelColor: Colors.grey[600],
+                  unselectedLabelColor: isDark
+                      ? Colors.grey[400]
+                      : Colors.grey[600],
                   indicatorColor: Colors.blue,
                   indicatorWeight: 3,
                   labelStyle: const TextStyle(
@@ -970,7 +991,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                   children: [
                     // Tab de Gastos
                     Container(
-                      color: Colors.grey[50],
+                      color: isDark ? Colors.grey[900] : Colors.grey[50],
                       child: Builder(
                         builder: (context) {
                           print(
@@ -978,11 +999,14 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                           );
 
                           if (_isLoading) {
-                            return const Center(
+                            return Center(
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   Colors.blue,
                                 ),
+                                backgroundColor: isDark
+                                    ? Colors.grey[700]
+                                    : null,
                               ),
                             );
                           }
@@ -992,17 +1016,21 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.receipt_long,
                                     size: 64,
-                                    color: Colors.grey,
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey,
                                   ),
                                   const SizedBox(height: 16),
-                                  const Text(
+                                  Text(
                                     'No hay gastos en esta auditoria',
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey,
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -1017,7 +1045,9 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                           }
 
                           return RefreshIndicator(
-                            backgroundColor: Colors.white,
+                            backgroundColor: isDark
+                                ? Colors.grey[800]
+                                : Colors.white,
                             onRefresh: _loadDetalles,
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
@@ -1038,7 +1068,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                     ),
                     // Tab de Detalle
                     Container(
-                      color: Colors.grey[50],
+                      color: isDark ? Colors.grey[900] : Colors.grey[50],
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -1104,7 +1134,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
 
               // Botones de acción mejorados
               Container(
-                color: Colors.white,
+                color: isDark ? Colors.grey[850] : Colors.white,
                 padding: const EdgeInsets.all(20),
                 child: SafeArea(
                   top: false,
@@ -1183,8 +1213,15 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
   }
 
   Widget _buildGastoCard(ReporteRevisionDetalle detalle, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () {
+        // 👈 Agregar debugging para verificar el ID
+        print('📱 Abriendo detalle del gasto con idAdDet: ${detalle.idAdDet}');
+        print('📱 Abriendo detalle del gasto con idRend: ${detalle.idRend}');
+        print('📱 Abriendo detalle del gasto con idInf: ${detalle.idInf}');
+        print('📱 Datos completos del detalle: $detalle');
         // Llamar al modal y pasar el detalle
         showDialog(
           context: context,
@@ -1196,11 +1233,11 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? Colors.grey[800] : Colors.white,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 2),
@@ -1214,13 +1251,16 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: isDark ? Colors.grey[700] : Colors.blue[50],
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.blue[200]!, width: 1.5),
+                border: Border.all(
+                  color: isDark ? Colors.grey[600]! : Colors.blue[200]!,
+                  width: 1.5,
+                ),
               ),
               child: Icon(
                 Icons.receipt_long,
-                color: Colors.blue[600],
+                color: isDark ? Colors.grey[400] : Colors.blue[600],
                 size: 20,
               ),
             ),
@@ -1236,10 +1276,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         detalle.ruc ??
                         'Proveedor no especificado',
                     maxLines: 1,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 0),
@@ -1247,13 +1287,19 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                     detalle.categoria != null && detalle.categoria!.isNotEmpty
                         ? '${detalle.categoria}'
                         : 'Sin categoría',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
                   Row(
                     children: [
                       Text(
                         formatDate(detalle.fecha),
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
                       ),
                       SizedBox(width: 8), // Espacio entre los textos
                       Container(
@@ -1418,15 +1464,17 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
   }
 */
   Widget _buildDetailSection(String title, List<Widget> children) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -1438,10 +1486,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           const SizedBox(height: 12),
@@ -1456,6 +1504,8 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     String value, {
     Color? valueColor, // 👈 parámetro opcional
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -1467,7 +1517,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1477,7 +1527,11 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
               value,
               style: TextStyle(
                 fontSize: 14,
-                color: valueColor ?? Colors.black87, // 👈 usa el color dinámico
+                color:
+                    valueColor ??
+                    (isDark
+                        ? Colors.white
+                        : Colors.black87), // 👈 usa el color dinámico
                 fontWeight: FontWeight.w600,
               ),
             ),

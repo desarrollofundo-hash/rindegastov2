@@ -33,22 +33,41 @@ class InformesRevisionList extends StatefulWidget {
 }
 
 class _InformesRevisionListState extends State<InformesRevisionList> {
+  bool _isRefreshing = false;
+
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing || widget.onRefresh == null) return;
+
+    setState(() {
+      _isRefreshing = true;
+    });
+
+    try {
+      await widget.onRefresh!();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isRefreshing = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (widget.revision.isEmpty) {
       return RefreshIndicator(
         // Personalizar indicador para que coincida con la apariencia de Auditoría
         color: Colors.green,
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.grey[800] : Colors.white,
         strokeWidth: 2.5,
         displacement: 40,
-        onRefresh: widget.onRefresh ?? () async {},
+        onRefresh: _handleRefresh,
         child: SingleChildScrollView(
-          // AlwaysScrollable + Bouncing ayuda a detectar el gesto incluso
-          // cuando hay pocos elementos o estamos dentro de un TabBarView.
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
+          // AlwaysScrollableScrollPhysics permite el pull-to-refresh siempre
+          physics: const AlwaysScrollableScrollPhysics(),
           child: ConstrainedBox(
             constraints: BoxConstraints(
               // Garantiza suficiente área para que el gesto de pull se detecte
@@ -72,17 +91,15 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
     return RefreshIndicator(
       // Personalizar indicador para que coincida con la apariencia de Auditoría
       color: Colors.green,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[800] : Colors.white,
       strokeWidth: 2.5,
       displacement: 40,
-      onRefresh: widget.onRefresh ?? () async {},
+      onRefresh: _handleRefresh,
       child: ListView.builder(
         key: const PageStorageKey('auditoria_list'),
         padding: const EdgeInsets.all(8),
-        // Siempre scrollable y con rebote para mejorar la detección del pull
-        physics: const AlwaysScrollableScrollPhysics(
-          parent: BouncingScrollPhysics(),
-        ),
+        // AlwaysScrollableScrollPhysics permite el pull-to-refresh siempre
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: widget.revision.length,
         itemBuilder: (context, index) {
           try {
@@ -91,7 +108,7 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
               key: ValueKey('${revisionn.titulo}_$index'),
               index: index,
               child: Card(
-                color: Colors.white,
+                color: isDark ? Colors.grey[800] : Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -119,12 +136,12 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: isDark ? Colors.grey[700] : Colors.grey[100],
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
                             Icons.description,
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                             size: 20,
                           ),
                         ),
@@ -143,10 +160,12 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
                                     // Título de la auditoría (más compacto)
                                     Text(
                                       revisionn.titulo ?? 'Sin título',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -157,16 +176,21 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
                                       'Creación: ${formatDate(revisionn.fecCre?.toIso8601String())}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey[600],
+                                        color: isDark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     // Cantidad de detalles
                                     Text(
                                       '${revisionn.cantidad} detalles',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black,
                                       ),
                                     ),
                                   ],
@@ -179,10 +203,12 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
                                   // Total en PEN (más compacto)
                                   Text(
                                     '${_getTotal(revisionn)} PEN',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
+                                      color: isDark
+                                          ? Colors.lightBlue[300]
+                                          : Colors.blue,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -289,14 +315,17 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
           // Esperar el resultado del modal
           final result = await showDialog(
             context: context,
-            builder: (BuildContext context) => RevisionDetalleModal(
-              revision: revisionn, // <-- sigue pasando el callback
-            ),
+            builder: (BuildContext context) =>
+                RevisionDetalleModal(revision: revisionn),
           );
 
-          // Si el modal devuelve true, refresca la lista
-          if (result == true && widget.onRefresh != null) {
-            await widget.onRefresh!();
+          // Solo refrescar si hay cambios reales y el widget sigue montado
+          if (result == true && mounted && widget.onRefresh != null) {
+            // Agregar un pequeño delay para evitar múltiples llamadas
+            await Future.delayed(const Duration(milliseconds: 100));
+            if (mounted) {
+              await widget.onRefresh!();
+            }
           }
         } catch (e, st) {
           debugPrint('Error opening revision DetalleModal: $e\n$st');
@@ -395,8 +424,8 @@ class _AnimatedListItemState extends State<_AnimatedListItem>
   @override
   void didUpdateWidget(_AnimatedListItem oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Reinicia la animación cuando el widget se actualiza (ej: refresh)
-    if (oldWidget.index != widget.index || oldWidget.child != widget.child) {
+    // Solo reinicia la animación si realmente cambió el contenido importante
+    if (oldWidget.index != widget.index) {
       _controller.reset();
       _hasAnimated = false;
       _startAnimation();

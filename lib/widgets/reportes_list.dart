@@ -39,8 +39,8 @@ class _ReportesListState extends State<ReportesList>
 
   void _escanerIA() => _controller.escanerIA(context, () => mounted);
 
-  // 🔹 Widget para puntos de carga animados
-  Widget _buildLoadingDot(int index) {
+  // 🕹 Widget para puntos de carga animados
+  Widget _buildLoadingDot(int index, bool isDark) {
     final delay = index * 0.15;
     return AnimatedBuilder(
       animation: _animationController!,
@@ -55,7 +55,8 @@ class _ReportesListState extends State<ReportesList>
             margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF2563EB).withOpacity(opacity),
+              color: (isDark ? Colors.white : const Color(0xFF2563EB))
+                  .withOpacity(opacity),
             ),
           ),
         );
@@ -90,6 +91,8 @@ class _ReportesListState extends State<ReportesList>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_animationController == null) {
       _animationController = AnimationController(
         duration: const Duration(seconds: 1),
@@ -117,13 +120,16 @@ class _ReportesListState extends State<ReportesList>
                   height: 100,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF2563EB).withOpacity(0.1),
+                    color: (isDark ? Colors.white : const Color(0xFF2563EB))
+                        .withOpacity(0.1),
                   ),
                 ),
                 // Indicador de progreso
-                const CircularProgressIndicator(
+                CircularProgressIndicator(
                   strokeWidth: 3,
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF2563EB)),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isDark ? Colors.white : const Color(0xFF2563EB),
+                  ),
                   backgroundColor: Colors.transparent,
                 ),
               ],
@@ -133,10 +139,10 @@ class _ReportesListState extends State<ReportesList>
             // 📝 Texto principal
             Text(
               'Cargando reportes...',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1E293B),
+                color: isDark ? Colors.white : const Color(0xFF1E293B),
               ),
             ),
 
@@ -148,7 +154,7 @@ class _ReportesListState extends State<ReportesList>
               style: TextStyle(
                 fontFamily: 'FiraSans',
                 fontSize: 13,
-                color: Colors.grey[500],
+                color: isDark ? Colors.grey[400] : Colors.grey[500],
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -159,9 +165,9 @@ class _ReportesListState extends State<ReportesList>
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _buildLoadingDot(0),
-                _buildLoadingDot(1),
-                _buildLoadingDot(2),
+                _buildLoadingDot(0, isDark),
+                _buildLoadingDot(1, isDark),
+                _buildLoadingDot(2, isDark),
               ],
             ),
           ],
@@ -170,7 +176,7 @@ class _ReportesListState extends State<ReportesList>
     }
 
     return Scaffold(
-      backgroundColor: Colors.white, // COLOR DE FONDO DE REPORTE LIST
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       body: DefaultTabController(
         length: 3,
         child: Column(
@@ -234,6 +240,7 @@ class _ReportesListState extends State<ReportesList>
   }
 
   Widget _buildList(EstadoReporte filtro) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final data = _controller.filtrarReportes(widget.reportes, filtro);
 
     // Obtener el mensaje según el filtro
@@ -249,7 +256,7 @@ class _ReportesListState extends State<ReportesList>
     }
 
     return RefreshIndicator(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[800] : Colors.white,
       onRefresh: widget.onRefresh,
       child: data.isEmpty
           ? ListView(
@@ -275,8 +282,8 @@ class _ReportesListState extends State<ReportesList>
                       const SizedBox(height: 6),
                       Text(
                         _getEmptyMessage(filtro),
-                        style: const TextStyle(
-                          color: Colors.black54,
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.black54,
                           fontSize: 20,
                           fontWeight: FontWeight.w500,
                         ),
@@ -305,15 +312,19 @@ class _ReportesListState extends State<ReportesList>
                       margin: const EdgeInsets.symmetric(vertical: 2),
 
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: isDark ? Colors.grey[800] : Colors.white,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: Colors.grey.shade200,
+                          color: isDark
+                              ? Colors.grey[700]!
+                              : Colors.grey.shade200,
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black12.withOpacity(0.1),
+                            color: isDark
+                                ? Colors.black.withOpacity(0.3)
+                                : Colors.black12.withOpacity(0.1),
                             blurRadius: 6,
                             offset: const Offset(0, 3),
                           ),
@@ -345,10 +356,12 @@ class _ReportesListState extends State<ReportesList>
                                               reporte.ruc ??
                                               reporte.ruccliente ??
                                               '',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w600,
                                             fontSize: 14,
-                                            color: Color(0xFF1E293B),
+                                            color: isDark
+                                                ? Colors.white
+                                                : const Color(0xFF1E293B),
                                           ),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -365,10 +378,12 @@ class _ReportesListState extends State<ReportesList>
                                             Expanded(
                                               child: Text(
                                                 reporte.categoria ?? '',
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontWeight: FontWeight.w400,
                                                   fontSize: 12,
-                                                  color: Colors.black54,
+                                                  color: isDark
+                                                      ? Colors.grey[400]
+                                                      : Colors.black54,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
@@ -381,7 +396,9 @@ class _ReportesListState extends State<ReportesList>
                                             Icon(
                                               Icons.calendar_month_rounded,
                                               size: 13,
-                                              color: Colors.grey,
+                                              color: isDark
+                                                  ? Colors.grey[500]
+                                                  : Colors.grey,
                                             ),
                                             const SizedBox(width: 4),
                                             // Fecha + etiqueta de días juntos
@@ -391,9 +408,11 @@ class _ReportesListState extends State<ReportesList>
                                                 children: [
                                                   Text(
                                                     formatDate(reporte.fecha),
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 12,
-                                                      color: Colors.black54,
+                                                      color: isDark
+                                                          ? Colors.grey[400]
+                                                          : Colors.black54,
                                                     ),
                                                     overflow:
                                                         TextOverflow.ellipsis,

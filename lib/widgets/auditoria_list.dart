@@ -20,17 +20,22 @@ class AuditoriaList extends StatefulWidget {
 class _AuditoriaListState extends State<AuditoriaList> {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return RefreshIndicator(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[800] : Colors.white,
       onRefresh: widget.onRefresh,
       child: widget.auditorias.isEmpty
           ? ListView(
-              children: const [
-                SizedBox(height: 100),
+              children: [
+                const SizedBox(height: 100),
                 Center(
                   child: Text(
                     "No hay auditorias disponibles",
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey,
+                      fontSize: 16,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -46,6 +51,7 @@ class _AuditoriaListState extends State<AuditoriaList> {
                   index: index,
                   child: Card(
                     elevation: 4,
+                    color: isDark ? Colors.grey[800] : Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -54,9 +60,10 @@ class _AuditoriaListState extends State<AuditoriaList> {
                       contentPadding: const EdgeInsets.all(12),
                       title: Text(
                         auditoria.titulo ?? 'Sin título',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                       ),
                       subtitle: Column(
@@ -64,20 +71,35 @@ class _AuditoriaListState extends State<AuditoriaList> {
                         children: [
                           Text(
                             auditoria.politica ?? 'Sin política',
-                            style: TextStyle(color: Colors.grey[700]),
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[700],
+                            ),
                           ),
                           Text(
                             auditoria.estadoActual ?? 'Sin estado',
-                            style: TextStyle(color: Colors.grey[700]),
+                            style: TextStyle(
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[700],
+                            ),
                           ),
                           if (auditoria.fecCre != null)
                             Text(
                               'Creado el: ${auditoria.fecCre}',
-                              style: TextStyle(color: Colors.grey[500]),
+                              style: TextStyle(
+                                color: isDark
+                                    ? Colors.grey[500]
+                                    : Colors.grey[500],
+                              ),
                             ),
                         ],
                       ),
-                      trailing: const Icon(Icons.chevron_right),
+                      trailing: Icon(
+                        Icons.chevron_right,
+                        color: isDark ? Colors.grey[400] : Colors.grey[600],
+                      ),
                       onTap: widget.onTap != null
                           ? () => widget.onTap!(auditoria)
                           : null,

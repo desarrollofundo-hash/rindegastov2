@@ -17,8 +17,9 @@ import 'package:share_plus/share_plus.dart';
 
 class DetalleModalGasto extends StatefulWidget {
   final String id;
+  final String? tipo;
 
-  const DetalleModalGasto({required this.id});
+  const DetalleModalGasto({required this.id, this.tipo});
 
   @override
   _DetalleModalGastoState createState() => _DetalleModalGastoState();
@@ -252,6 +253,8 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
     Uint8List bytes, {
     String? nombreArchivo,
   }) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (!mounted) return;
     // Supongamos que tienes estos valores
     final ruc = _reporte!.ruc;
@@ -271,9 +274,16 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: Colors.black,
+        backgroundColor: isDark ? Theme.of(context).cardColor : Colors.black,
         title: Center(
-          child: const Text('Evidencia', style: TextStyle(color: Colors.white)),
+          child: Text(
+            'Evidencia',
+            style: TextStyle(
+              color: isDark
+                  ? Theme.of(context).textTheme.headlineSmall?.color
+                  : Colors.white,
+            ),
+          ),
         ),
         content: SizedBox(
           width: MediaQuery.of(context).size.width * 0.9,
@@ -303,17 +313,31 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
                 );
               }
             },
-            icon: const Icon(Icons.share, color: Colors.white),
-            label: const Text(
+            icon: Icon(
+              Icons.share,
+              color: isDark ? Theme.of(context).iconTheme.color : Colors.white,
+            ),
+            label: Text(
               'Compartir',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(
+                color: isDark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : Colors.white,
+              ),
             ),
           ),
 
           // Botón de cerrar
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
+            child: Text(
+              'Cerrar',
+              style: TextStyle(
+                color: isDark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : Colors.white,
+              ),
+            ),
           ),
         ],
       ),
@@ -439,11 +463,28 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
       // 3️⃣ Si no hay evidencia o es inválida
       if (!mounted) return;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Evidencia'),
-          content: const Text('No hay imagen disponible para previsualizar.'),
+          backgroundColor: isDark ? Theme.of(context).cardColor : null,
+          title: Text(
+            'Evidencia',
+            style: TextStyle(
+              color: isDark
+                  ? Theme.of(context).textTheme.headlineSmall?.color
+                  : null,
+            ),
+          ),
+          content: Text(
+            'No hay imagen disponible para previsualizar.',
+            style: TextStyle(
+              color: isDark
+                  ? Theme.of(context).textTheme.bodyMedium?.color
+                  : null,
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -462,6 +503,8 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       insetPadding: const EdgeInsets.only(top: 100), // Solo margen superior
       shape: const RoundedRectangleBorder(
@@ -472,23 +515,32 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
         height: double
             .maxFinite, // Usa toda la altura disponible desde el margen superior
         child: Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : Colors.white,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark
+                ? Theme.of(context).cardColor
+                : Colors.white,
             elevation: 0.5,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.green),
+              icon: Icon(
+                Icons.arrow_back,
+                color: isDark ? Colors.green[300] : Colors.green,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
+              children: [
                 Text(
                   'DETALLE DEL GASTO',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: isDark
+                        ? Theme.of(context).textTheme.headlineSmall?.color
+                        : Colors.black87,
                   ),
                 ),
               ],
@@ -496,7 +548,10 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.red),
+                icon: Icon(
+                  Icons.close,
+                  color: isDark ? Colors.red[300] : Colors.red,
+                ),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
@@ -504,7 +559,13 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isDark ? Colors.blue[300]! : Colors.blue,
+                      ),
+                    ),
+                  )
                 : _reporte != null
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -537,12 +598,21 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   // Sección de encabezado con ID y fecha del gasto
   Widget _buildHeaderSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_reporte == null) return Container();
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.blue[800],
+        gradient: isDark
+            ? LinearGradient(
+                colors: [Colors.blue[800]!, Colors.blue[700]!],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: isDark ? null : Colors.blue[800],
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -590,10 +660,12 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   /// Construir la sección de imagen/evidencia
   Widget _buildImageSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: Card(
-        color: Colors.white,
+        color: isDark ? Theme.of(context).cardColor : Colors.white,
         elevation: 2,
         child: Padding(
           padding: const EdgeInsets.all(5),
@@ -602,11 +674,20 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.receipt, color: Colors.red),
+                  Icon(
+                    Icons.receipt,
+                    color: isDark ? Colors.red[300] : Colors.red,
+                  ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Evidencia',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark
+                          ? Theme.of(context).textTheme.bodyLarge?.color
+                          : null,
+                    ),
                   ),
                   const Spacer(),
                   if (_isLoading)
@@ -679,13 +760,17 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
                   height: 100,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: isDark
+                        ? Theme.of(context).cardColor.withOpacity(0.5)
+                        : Colors.grey.shade100,
                     border: Border.all(
                       color:
                           (_selectedImage == null &&
                               (_apiEvidencia == null || _apiEvidencia!.isEmpty))
-                          ? Colors.red.shade300
-                          : Colors.grey.shade300,
+                          ? (isDark ? Colors.red[400]! : Colors.red.shade300)
+                          : (isDark
+                                ? Colors.grey.shade600
+                                : Colors.grey.shade300),
                       width:
                           (_selectedImage == null &&
                               (_apiEvidencia == null || _apiEvidencia!.isEmpty))
@@ -715,8 +800,8 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
                               (_selectedImage == null &&
                                   (_apiEvidencia == null ||
                                       _apiEvidencia!.isEmpty))
-                              ? Colors.red
-                              : Colors.grey,
+                              ? (isDark ? Colors.red[300] : Colors.red)
+                              : (isDark ? Colors.grey[400] : Colors.grey),
                           fontWeight:
                               (_selectedImage == null &&
                                   (_apiEvidencia == null ||
@@ -836,14 +921,22 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   // Sección de datos generales del gasto
   Widget _buildGeneralDataSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_reporte == null) return Container();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Datos Generales del Gasto',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark
+                ? Theme.of(context).textTheme.headlineSmall?.color
+                : null,
+          ),
         ),
         const SizedBox(height: 8),
         _buildReadOnlyField('Politica', _reporte!.politica ?? 'N/A'),
@@ -858,14 +951,22 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   // Sección del monto del gasto
   Widget _buildAmountSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_reporte == null) return Container();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Monto del Gasto',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark
+                ? Theme.of(context).textTheme.headlineSmall?.color
+                : null,
+          ),
         ),
         const SizedBox(height: 8),
         _buildReadOnlyField('Total', '${_reporte!.total} ${_reporte!.moneda}'),
@@ -896,12 +997,20 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   // Sección de Datos de la Factura
   Widget _buildFacturaDataSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Datos de la Factura',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark
+                ? Theme.of(context).textTheme.headlineSmall?.color
+                : null,
+          ),
         ),
         _buildReadOnlyField(
           'Tipo Comprobante',
@@ -934,12 +1043,20 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   // Sección de Datos de la Factura
   Widget _buildFacturaNotaSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Observacion',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isDark
+                ? Theme.of(context).textTheme.headlineSmall?.color
+                : null,
+          ),
         ),
         _buildReadOnlyField('Comentario', _reporte?.obs ?? 'N/A'),
       ],
@@ -948,6 +1065,8 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
 
   // Campo de solo lectura
   Widget _buildReadOnlyField(String label, String value) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -956,9 +1075,9 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
             width: 120,
             child: Text(
               '$label:',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: isDark ? Colors.grey[400] : Colors.grey,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -966,7 +1085,13 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : null,
+              ),
             ),
           ),
         ],

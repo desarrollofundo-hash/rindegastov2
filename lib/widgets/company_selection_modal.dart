@@ -207,11 +207,20 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
         padding: EdgeInsets.all(dialogPadding),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blue.shade50, Colors.white],
-          ),
+          gradient: Theme.of(context).brightness == Brightness.dark
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Theme.of(context).cardColor,
+                    Theme.of(context).scaffoldBackgroundColor,
+                  ],
+                )
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.blue.shade50, Colors.white],
+                ),
         ),
         child: SingleChildScrollView(
           child: Column(
@@ -223,7 +232,9 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                 style: TextStyle(
                   fontSize: titleFontSize,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).textTheme.headlineSmall?.color
+                      : Colors.black87,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -235,7 +246,11 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                 'Selecciona la empresa con la que vas a trabajar',
                 style: TextStyle(
                   fontSize: subtitleFontSize,
-                  color: Colors.grey.shade600,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color?.withOpacity(0.7)
+                      : Colors.grey.shade600,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -261,7 +276,9 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                       Text(
                         'Cargando empresas...',
                         style: TextStyle(
-                          color: Colors.grey,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).textTheme.bodyMedium?.color
+                              : Colors.grey,
                           fontSize: subtitleFontSize,
                         ),
                       ),
@@ -273,8 +290,14 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                   width: double.infinity,
                   padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                   decoration: BoxDecoration(
-                    color: Colors.red.shade50,
-                    border: Border.all(color: Colors.red.shade200),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.red.shade900.withOpacity(0.3)
+                        : Colors.red.shade50,
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.red.shade700
+                          : Colors.red.shade200,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -288,7 +311,9 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                       Text(
                         errorMessage!,
                         style: TextStyle(
-                          color: Colors.red.shade700,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.red.shade300
+                              : Colors.red.shade700,
                           fontSize: subtitleFontSize,
                         ),
                         textAlign: TextAlign.center,
@@ -318,8 +343,14 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                   width: double.infinity,
                   padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
                   decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    border: Border.all(color: Colors.orange.shade200),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.orange.shade900.withOpacity(0.3)
+                        : Colors.orange.shade50,
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.orange.shade700
+                          : Colors.orange.shade200,
+                    ),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -333,7 +364,9 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                       Text(
                         'No tienes empresas asignadas',
                         style: TextStyle(
-                          color: Colors.orange.shade700,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.orange.shade300
+                              : Colors.orange.shade700,
                           fontSize: subtitleFontSize,
                           fontWeight: FontWeight.w500,
                         ),
@@ -349,29 +382,44 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                     vertical: isSmallScreen ? 2 : 4,
                   ),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).dividerColor
+                          : Colors.grey.shade300,
+                    ),
                     borderRadius: BorderRadius.circular(12),
-                    color: Colors.white,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Theme.of(context).cardColor
+                        : Colors.white,
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      dropdownColor: Colors.white,
+                      dropdownColor:
+                          Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).cardColor
+                          : Colors.white,
                       value: selectedCompany,
                       hint: Text(
                         'Seleccione una empresa',
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).hintColor
+                              : Colors.grey.shade600,
                           fontSize: dropdownFontSize,
                         ),
                       ),
                       isExpanded: true,
                       icon: Icon(
                         Icons.arrow_drop_down,
-                        color: Colors.blue.shade700,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).primaryColor
+                            : Colors.blue.shade700,
                         size: isSmallScreen ? 24 : 28,
                       ),
                       style: TextStyle(
-                        color: Colors.black87,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).textTheme.bodyMedium?.color
+                            : Colors.black87,
                         fontSize: dropdownFontSize,
                       ),
                       items: userCompanies.map((company) {
@@ -430,13 +478,22 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey.shade300),
+                            side: BorderSide(
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(context).dividerColor
+                                  : Colors.grey.shade300,
+                            ),
                           ),
                         ),
                         child: Text(
                           'Cancelar',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).textTheme.bodyMedium?.color
+                                : Colors.grey.shade600,
                             fontSize: buttonFontSize,
                             fontWeight: FontWeight.w600,
                           ),
@@ -458,8 +515,12 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                               (selectedCompany != null &&
                                   !isLoading &&
                                   userCompanies.isNotEmpty)
-                              ? Colors.blue.shade700
-                              : Colors.grey.shade300,
+                              ? (Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.blue.shade600
+                                    : Colors.blue.shade700)
+                              : (Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade300),
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
@@ -493,13 +554,22 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey.shade300),
+                            side: BorderSide(
+                              color:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Theme.of(context).dividerColor
+                                  : Colors.grey.shade300,
+                            ),
                           ),
                         ),
                         child: Text(
                           'Cancelar',
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Theme.of(context).textTheme.bodyMedium?.color
+                                : Colors.grey.shade600,
                             fontSize: buttonFontSize,
                             fontWeight: FontWeight.w600,
                           ),
@@ -520,8 +590,12 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                               (selectedCompany != null &&
                                   !isLoading &&
                                   userCompanies.isNotEmpty)
-                              ? Colors.blue.shade700
-                              : Colors.grey.shade300,
+                              ? (Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.blue.shade600
+                                    : Colors.blue.shade700)
+                              : (Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.shade300),
                           foregroundColor: Colors.white,
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(

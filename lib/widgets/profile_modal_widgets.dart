@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../controllers/profile_modal_controller.dart';
-import 'company_selection_modal.dart';
 
 class ProfileModalWidgets {
   static Widget buildHeaderWithCloseButton(
+    BuildContext context,
     ProfileModalController controller,
     VoidCallback onClose,
   ) {
@@ -25,8 +25,12 @@ class ProfileModalWidgets {
                   height: 2,
                   decoration: BoxDecoration(
                     color: controller.isDragging
-                        ? Colors.grey[500]
-                        : Colors.grey[300],
+                        ? (Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).hintColor
+                              : Colors.grey[500])
+                        : (Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).dividerColor
+                              : Colors.grey[300]),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -38,7 +42,11 @@ class ProfileModalWidgets {
                         : "Desliza para cerrar",
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.color?.withOpacity(0.6)
+                          : Colors.grey[600],
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -57,10 +65,18 @@ class ProfileModalWidgets {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]
+                      : Colors.grey[100],
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.close, size: 20, color: Colors.grey),
+                child: Icon(
+                  Icons.close,
+                  size: 20,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).iconTheme.color
+                      : Colors.grey,
+                ),
               ),
               splashRadius: 20,
             ),
@@ -70,7 +86,10 @@ class ProfileModalWidgets {
     );
   }
 
-  static Widget buildTitleSection(ProfileModalController controller) {
+  static Widget buildTitleSection(
+    BuildContext context,
+    ProfileModalController controller,
+  ) {
     final userName = controller.getFieldValue(0);
 
     return AnimatedOpacity(
@@ -95,7 +114,11 @@ class ProfileModalWidgets {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w500,
-                      color: Colors.grey[700],
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(
+                              context,
+                            ).textTheme.bodyLarge?.color?.withOpacity(0.7)
+                          : Colors.grey[700],
                     ),
                   ),
                   Transform.rotate(
@@ -111,10 +134,12 @@ class ProfileModalWidgets {
           Text(
             userName.isNotEmpty ? userName : 'Perfil de Usuario',
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w700,
-              color: Color(0xFF1A1D1F),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Theme.of(context).textTheme.headlineSmall?.color
+                  : const Color(0xFF1A1D1F),
               letterSpacing: -0.5,
             ),
           ),
@@ -124,6 +149,7 @@ class ProfileModalWidgets {
   }
 
   static Widget buildAnimatedAvatar(
+    BuildContext context,
     ProfileModalController controller,
     VoidCallback onAvatarTap,
   ) {
@@ -147,7 +173,10 @@ class ProfileModalWidgets {
     );
   }
 
-  static Widget buildAnimatedForm(ProfileModalController controller) {
+  static Widget buildAnimatedForm(
+    BuildContext context,
+    ProfileModalController controller,
+  ) {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: controller.isDragging ? 0.3 : 1.0,
@@ -169,17 +198,20 @@ class ProfileModalWidgets {
           child: Column(
             children: [
               buildAnimatedFormSection(
+                context: context,
                 controller: controller,
                 title: "EMPRESA",
                 icon: Icons.info_outline,
                 fields: [
                   buildAnimatedField(
+                    context: context,
                     controller: controller,
                     index: 4,
                     label: "Empresa",
                     hint: "Ej: Tech Solutions SA",
                   ),
                   buildAnimatedField(
+                    context: context,
                     controller: controller,
                     index: 5,
                     label: "RUC",
@@ -190,17 +222,20 @@ class ProfileModalWidgets {
               ),
               const SizedBox(height: 10),
               buildAnimatedFormSection(
+                context: context,
                 controller: controller,
                 title: "Información Personal",
                 icon: Icons.person_outline,
                 fields: [
                   buildAnimatedField(
+                    context: context,
                     controller: controller,
                     index: 0,
                     label: "Nombre completo",
                     hint: "Ej: Ana Rodríguez",
                   ),
                   buildAnimatedField(
+                    context: context,
                     controller: controller,
                     index: 1,
                     label: "Dni",
@@ -217,6 +252,7 @@ class ProfileModalWidgets {
   }
 
   static Widget buildAnimatedFormSection({
+    required BuildContext context,
     required ProfileModalController controller,
     required String title,
     IconData? icon,
@@ -226,10 +262,18 @@ class ProfileModalWidgets {
   }) {
     return AnimatedContainer(
       duration: Duration(milliseconds: 300 + delay),
-      padding: const EdgeInsets.all(4),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Theme.of(context).cardColor
+            : Colors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Theme.of(context).brightness == Brightness.dark
+            ? Border.all(
+                color: Theme.of(context).dividerColor.withOpacity(0.3),
+                width: 0.5,
+              )
+            : null,
       ),
       curve: Curves.easeInOut,
       child: Column(
@@ -238,17 +282,36 @@ class ProfileModalWidgets {
           Row(
             children: [
               if (iconImage != null)
-                SizedBox(width: 18, height: 18, child: Image.asset(iconImage))
+                ColorFiltered(
+                  colorFilter: Theme.of(context).brightness == Brightness.dark
+                      ? const ColorFilter.mode(Colors.white70, BlendMode.srcIn)
+                      : const ColorFilter.mode(
+                          Colors.transparent,
+                          BlendMode.multiply,
+                        ),
+                  child: SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: Image.asset(iconImage),
+                  ),
+                )
               else if (icon != null)
-                Icon(icon, size: 18, color: Colors.grey[600]),
+                Icon(
+                  icon,
+                  size: 18,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).iconTheme.color?.withOpacity(0.6)
+                      : Colors.grey[600],
+                ),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  /*                   color: Colors.grey[700],
- */
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Theme.of(context).textTheme.titleMedium?.color
+                      : Colors.grey[700],
                 ),
               ),
             ],
@@ -261,6 +324,7 @@ class ProfileModalWidgets {
   }
 
   static Widget buildAnimatedField({
+    required BuildContext context,
     required ProfileModalController controller,
     required int index,
     required String label,
@@ -280,19 +344,34 @@ class ProfileModalWidgets {
           children: [
             Text(
               label,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : Colors.black,
+              ),
             ),
             const SizedBox(height: 3),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               height: 44,
               decoration: BoxDecoration(
-                color: isReadOnly ? Colors.white : Colors.white,
+                color: isReadOnly
+                    ? (Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).disabledColor.withOpacity(0.05)
+                          : Colors.white)
+                    : (Theme.of(context).brightness == Brightness.dark
+                          ? (Theme.of(context).inputDecorationTheme.fillColor ??
+                                Theme.of(context).cardColor)
+                          : Colors.white),
                 borderRadius: BorderRadius.circular(8),
                 boxShadow: controller.focusNodes[index].hasFocus && !isReadOnly
                     ? [
                         BoxShadow(
-                          color: Colors.blue[100]!,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).primaryColor.withOpacity(0.3)
+                              : Colors.blue[100]!,
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -310,7 +389,12 @@ class ProfileModalWidgets {
                       : null,
                   decoration: InputDecoration(
                     hintText: isReadOnly ? null : hint,
-                    hintStyle: TextStyle(color: Colors.white, fontSize: 14),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).hintColor
+                          : Colors.grey[400],
+                      fontSize: 14,
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 8,
@@ -326,13 +410,20 @@ class ProfileModalWidgets {
 
                     enabledBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
-                        color: Colors.grey[300]!,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).dividerColor
+                            : Colors.grey[300]!,
                         width: 1,
                       ),
                     ),
 
-                    focusedBorder: const UnderlineInputBorder(
-                      borderSide: BorderSide(color: Colors.blue, width: 2),
+                    focusedBorder: UnderlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).primaryColor
+                            : Colors.blue,
+                        width: 2,
+                      ),
                     ),
 
                     disabledBorder: const UnderlineInputBorder(),
@@ -340,7 +431,15 @@ class ProfileModalWidgets {
 
                   style: TextStyle(
                     fontSize: 14,
-                    color: isReadOnly ? Colors.grey[700] : Colors.black,
+                    color: isReadOnly
+                        ? (Theme.of(context).brightness == Brightness.dark
+                              ? Colors
+                                    .white // Color para campos deshabilitados en modo oscuro
+                              : Colors.grey[700])
+                        : (Theme.of(context).brightness == Brightness.dark
+                              ? Colors
+                                    .white // Texto blanco en modo oscuro
+                              : Colors.black), // Texto negro en modo claro
                     fontWeight: isReadOnly
                         ? FontWeight.w500
                         : FontWeight.normal,
@@ -355,6 +454,7 @@ class ProfileModalWidgets {
   }
 
   static Widget buildAnimatedActionButtons(
+    BuildContext context,
     ProfileModalController controller,
     VoidCallback onLogout,
     VoidCallback onCancel,
@@ -387,13 +487,20 @@ class ProfileModalWidgets {
                 height: 40,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[600],
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue[700]
+                        : Colors.blue[600],
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 2,
-                    shadowColor: Colors.blue.withOpacity(0.3),
+                    elevation: Theme.of(context).brightness == Brightness.dark
+                        ? 4
+                        : 2,
+                    shadowColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blue.withOpacity(0.5)
+                        : Colors.blue.withOpacity(0.3),
                   ),
                   onPressed: onChangeCompany,
                   icon: const Icon(Icons.business, size: 20),
@@ -411,13 +518,20 @@ class ProfileModalWidgets {
                 height: 40,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[600],
+                    backgroundColor:
+                        Theme.of(context).brightness == Brightness.dark
+                        ? Colors.red[700]
+                        : Colors.red[600],
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    elevation: 2,
-                    shadowColor: Colors.red.withOpacity(0.3),
+                    elevation: Theme.of(context).brightness == Brightness.dark
+                        ? 4
+                        : 2,
+                    shadowColor: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.red.withOpacity(0.5)
+                        : Colors.red.withOpacity(0.3),
                   ),
                   onPressed: onLogout,
                   icon: const Icon(Icons.logout, size: 20),

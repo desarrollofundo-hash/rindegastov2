@@ -27,9 +27,11 @@ class InformesReporteList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (informes.isEmpty) {
       return RefreshIndicator(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.grey[800] : Colors.white,
         onRefresh: onRefresh ?? () async {},
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -49,7 +51,7 @@ class InformesReporteList extends StatelessWidget {
     }
 
     return RefreshIndicator(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[800] : Colors.white,
       onRefresh: onRefresh ?? () async {},
       child: ListView.builder(
         padding: const EdgeInsets.all(8),
@@ -61,7 +63,7 @@ class InformesReporteList extends StatelessWidget {
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             child: Card(
-              color: Colors.white,
+              color: isDark ? Colors.grey[800] : Colors.white,
               elevation: 2,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -90,13 +92,13 @@ class InformesReporteList extends StatelessWidget {
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: isDark ? Colors.grey[700] : Colors.grey[100],
                             borderRadius: BorderRadius.circular(6),
                             backgroundBlendMode: BlendMode.multiply,
                           ),
                           child: Icon(
                             Icons.description,
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                             size: 20,
                           ),
                         ),
@@ -115,10 +117,12 @@ class InformesReporteList extends StatelessWidget {
                                     // Título del informe (más compacto)
                                     Text(
                                       inf.titulo ?? 'Sin título',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -129,16 +133,21 @@ class InformesReporteList extends StatelessWidget {
                                       'Creación: ${_formatDate(inf.fecCre)}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey[600],
+                                        color: isDark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     // Cantidad de gastos
                                     Text(
                                       '${inf.cantidad} gastos',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black,
                                       ),
                                     ),
                                   ],
@@ -151,10 +160,12 @@ class InformesReporteList extends StatelessWidget {
                                   // Total en PEN (más compacto)
                                   Text(
                                     '${inf.total.toStringAsFixed(2)} PEN',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
+                                      color: isDark
+                                          ? Colors.lightBlue[300]
+                                          : Colors.blue,
                                     ),
                                   ),
                                   const SizedBox(height: 2),

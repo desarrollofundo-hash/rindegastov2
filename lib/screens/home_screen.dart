@@ -458,11 +458,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _mostrarEditarReporte(Reporte reporte) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     _removeFabOverlay();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -482,11 +483,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   // ========== PANTALLAS REFACTORIZADAS ==========
 
   Widget _buildPantallaInicio() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         appBar: CustomAppBar(
           hintText: "Buscar Reportes...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
@@ -507,11 +510,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Widget _buildPantallaInformes() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
 
         appBar: CustomAppBar(
           hintText: "Buscar Informes...",
@@ -573,11 +578,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Widget _buildPantallaAditoria() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
         appBar: CustomAppBar(
           hintText: "Buscar en Auditoría...",
           onProfilePressed: () => _mostrarEditarPerfil(context),
@@ -641,11 +648,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Widget _buildPantallaRevision() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
 
         appBar: CustomAppBar(
           hintText: "Buscar en Revisión...",
@@ -1034,6 +1043,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     // ✅ Función auxiliar para verificar si el usuario tiene acceso por idSubMenu
     bool _tienePermiso(int idSubMenu) {
       return _rolusuario.any((item) => item.idSubMenu == idSubMenu);
@@ -1068,14 +1079,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         : _selectedIndex.clamp(0, pages.length - 1);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: pages.isNotEmpty
             ? pages[safeIndex]
-            : const Center(
+            : Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xFF1565C0), // color azul moderno
+                  color: isDark ? Colors.white : const Color(0xFF1565C0),
                   strokeWidth: 5.0,
                 ),
               ),
@@ -1089,11 +1100,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 400),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Colors.grey[850] : Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: isDark
+                          ? Colors.black.withOpacity(0.5)
+                          : Colors.black.withOpacity(0.2),
                       blurRadius: 15,
                       offset: const Offset(0, 4),
                     ),
@@ -1104,13 +1117,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   child: NavigationBarTheme(
                     data: NavigationBarThemeData(
                       height: 70,
-                      indicatorColor: Colors.white,
+                      indicatorColor: isDark ? Colors.grey[700] : Colors.white,
                       backgroundColor: Colors.transparent,
                       labelTextStyle:
                           WidgetStateProperty.resolveWith<TextStyle>((states) {
                             return TextStyle(
                               color: states.contains(WidgetState.selected)
                                   ? const Color(0xFF1565C0)
+                                  : isDark
+                                  ? Colors.grey[400]
                                   : Colors.grey.shade700,
                               fontWeight: states.contains(WidgetState.selected)
                                   ? FontWeight.bold
@@ -1161,6 +1176,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   /// 🎨 Ícono animado tipo Material con efecto de rebote
   NavigationDestination _animatedIcon(IconData icon, String label, int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     bool isSelected = _selectedIndex == index;
 
     return NavigationDestination(
@@ -1175,7 +1191,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           child: Icon(
             icon,
             size: 26,
-            color: isSelected ? const Color(0xFF1565C0) : Colors.grey.shade600,
+            color: isSelected
+                ? const Color(0xFF1565C0)
+                : isDark
+                ? Colors.grey[400]
+                : Colors.grey.shade600,
           ),
         ),
       ),
