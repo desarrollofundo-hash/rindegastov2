@@ -130,7 +130,6 @@ class _AnimatedListItemState extends State<_AnimatedListItem>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  bool _hasAnimated = false;
 
   @override
   void initState() {
@@ -151,12 +150,7 @@ class _AnimatedListItemState extends State<_AnimatedListItem>
   @override
   void didUpdateWidget(_AnimatedListItem oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Reinicia la animación cuando el widget se actualiza (ej: refresh)
-    if (oldWidget.index != widget.index || oldWidget.child != widget.child) {
-      _controller.reset();
-      _hasAnimated = false;
-      _startAnimation();
-    }
+    // No reiniciar animaciones en actualizaciones
   }
 
   void _startAnimation() {
@@ -166,9 +160,8 @@ class _AnimatedListItemState extends State<_AnimatedListItem>
         : 100; // Solo los primeros 10 tienen delay incremental
 
     Future.delayed(Duration(milliseconds: delay), () {
-      if (mounted && !_hasAnimated) {
+      if (mounted) {
         _controller.forward();
-        _hasAnimated = true;
       }
     });
   }

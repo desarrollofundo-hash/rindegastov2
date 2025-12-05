@@ -226,10 +226,37 @@ class ReportesListController {
               );
             } else {
               if (mounted()) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                /*  ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('CODIGO QR NO ENCONTRADO EN IMAGEN'),
                     backgroundColor: Colors.red,
+                  ),
+                ); */
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.red.shade700,
+                    content: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Código QR no encontrado en la imagen',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 3),
                   ),
                 );
               }
@@ -312,10 +339,37 @@ class ReportesListController {
               );
             } else {
               if (mounted()) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                /* ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('CODIGO QR NO ENCONTRADO EN DOCUMENTO'),
                     backgroundColor: Colors.red,
+                  ),
+                ); */
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.red.shade700,
+                    content: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Código QR no encontrado en el documento',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 3),
                   ),
                 );
               }
