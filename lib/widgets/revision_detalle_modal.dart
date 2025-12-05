@@ -719,7 +719,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                          color: Colors.white,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -748,7 +748,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black87,
+                          color: Colors.white,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -963,12 +963,14 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                 color: isDark ? Colors.grey[850] : Colors.white,
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.blue,
+                  labelColor: Colors.indigo,
                   unselectedLabelColor: isDark
                       ? Colors.grey[400]
                       : Colors.grey[600],
-                  indicatorColor: Colors.blue,
+                  indicatorColor: Colors.indigo,
                   indicatorWeight: 3,
+                  dividerColor: Colors.grey.withOpacity(0.4),
+                  dividerHeight: 0.5,
                   labelStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1035,9 +1037,32 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  ElevatedButton(
+                                  /* ElevatedButton(
                                     onPressed: _loadDetalles,
                                     child: const Text('Recargar'),
+                                  ), */
+                                  ElevatedButton.icon(
+                                    onPressed: _loadDetalles,
+                                    icon: const Icon(Icons.refresh, size: 20),
+                                    label: const Text(
+                                      'Recargar',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 2,
+                                    ),
                                   ),
                                 ],
                               ),

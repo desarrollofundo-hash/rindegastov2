@@ -598,7 +598,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         // 🔹 TabbedScreen con 3 pestañas
         body: TabbedScreen(
           tabLabels: const ["Todos", "Pendiente", "Rechazado"],
-          tabColors: const [Colors.green, Colors.orange, Colors.red],
+          tabColors: const [Colors.indigo, Colors.orange, Colors.red],
 
           tabViews: [
             // 🟢 TAB 1: Todos
@@ -667,7 +667,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ),
         body: TabbedScreen(
           tabLabels: const ["Todos", "Pendiente", "Aprobado"],
-          tabColors: const [Colors.green],
+          tabColors: const [Colors.indigo],
           tabViews: [
             InformesRevisionList(
               revision: _revision,
@@ -1100,7 +1100,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 400),
                 decoration: BoxDecoration(
-                  color: isDark ? Colors.grey[850] : Colors.white,
+                  color: isDark ? Colors.black : Colors.white,
                   borderRadius: BorderRadius.circular(30),
                   boxShadow: [
                     BoxShadow(
@@ -1117,8 +1117,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   child: NavigationBarTheme(
                     data: NavigationBarThemeData(
                       height: 70,
-                      indicatorColor: isDark ? Colors.grey[700] : Colors.white,
+                      indicatorColor: isDark ? Colors.black : Colors.white,
                       backgroundColor: Colors.transparent,
+
                       labelTextStyle:
                           WidgetStateProperty.resolveWith<TextStyle>((states) {
                             return TextStyle(

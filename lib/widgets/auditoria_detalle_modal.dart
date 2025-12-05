@@ -986,12 +986,14 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                 color: isDark ? Colors.grey[850] : Colors.white,
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.blue,
+                  labelColor: Colors.indigo,
                   unselectedLabelColor: isDark
                       ? Colors.grey[400]
                       : Colors.grey[600],
-                  indicatorColor: Colors.blue,
+                  indicatorColor: Colors.indigo,
                   indicatorWeight: 3,
+                  dividerColor: Colors.grey.withOpacity(0.4),
+                  dividerHeight: 0.5,
                   labelStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1303,8 +1305,12 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: isDark ? Colors.grey[800] : Colors.white,
+          color: isDark ? Colors.grey[860] : Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: isDark
+              ? Border.all(color: Colors.white, width: 1.0)
+              : Border.all(color: Colors.grey[300]!, width: 1.0),
+
           boxShadow: [
             BoxShadow(
               color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.1),

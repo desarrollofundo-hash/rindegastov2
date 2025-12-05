@@ -45,14 +45,14 @@ class ApiService {
           baseUrl,
         );
         debugPrint('🔬 Diagnóstico completo: $diagnostic');
-
+        /* 
         if (!diagnostic['internetConnection']) {
           throw Exception('❌ Sin conexión a internet');
         }
 
         if (!diagnostic['serverReachable']) {
           throw Exception('❌ No se puede alcanzar el servidor $baseUrl');
-        }
+        } */
       }
 
       // Construir la URL con los parámetros dinámicos
@@ -182,10 +182,10 @@ class ApiService {
       throw Exception(
         'Sin conexión al servidor. Verifica tu conexión a internet y que el servidor esté disponible.',
       );
-    }  catch (e) {
+    } /*   catch (e) {
       debugPrint('💥 Error no manejado: $e');
       throw Exception('Error inesperado: $e');
-    }
+    } */
   }
 
   //RENDICION INFORME
@@ -758,7 +758,12 @@ class ApiService {
 
       // Construir la URL con los parámetros dinámicos
       final uri = Uri.parse('$baseUrl/reporte/rendicionrevision').replace(
-        queryParameters: {'id': id, 'idrev': idrev, 'gerencia': gerencia, 'ruc': ruc},
+        queryParameters: {
+          'id': id,
+          'idrev': idrev,
+          'gerencia': gerencia,
+          'ruc': ruc,
+        },
       );
       debugPrint('📍 Request URL: $uri');
       /* 
@@ -2326,7 +2331,6 @@ class ApiService {
     }
   }
 
-
   // REPORTES ROL USUARIO
   Future<List<RolUsuarioApp>> getRolUsuarioApp({
     required String iduser,
@@ -3209,5 +3213,4 @@ class ApiService {
       );
     }
   }
-
 }

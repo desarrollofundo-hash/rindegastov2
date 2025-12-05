@@ -181,11 +181,13 @@ class _ReportesListState extends State<ReportesList>
         length: 3,
         child: Column(
           children: [
-            const TabBar(
+            TabBar(
               labelColor: Colors.indigo,
               unselectedLabelColor: Colors.grey,
               indicatorColor: Colors.indigo,
-              tabs: [
+              dividerColor: Colors.grey.withOpacity(0.4),
+              dividerHeight: 0.5,
+              tabs: const [
                 Tab(text: "Todos"),
                 Tab(text: "Borradores"),
                 Tab(text: "Enviados"),

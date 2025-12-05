@@ -1,10 +1,7 @@
 import 'package:flu2/models/reporte_auditioria_model.dart';
 import 'package:flu2/services/api_service.dart';
-import 'package:flu2/services/company_service.dart';
-import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/reporte_auditoria_detalle.dart';
 
 class EditarAuditoriaModal extends StatefulWidget {
@@ -26,9 +23,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
   List<ReporteAuditoriaDetalle> detallesFiltrados = [];
   Map<int, bool> detallesSeleccionados = {};
   bool todosMarcados = true;
-  
+
   late TextEditingController _notaController;
-  
+
   final ApiService _apiService = ApiService();
 
   @override
@@ -80,26 +77,34 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF121212) : Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: Icon(
+            Icons.arrow_back,
+            color: isDark ? Colors.white : Colors.black,
+          ),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: Text(
           'Editar auditoría',
           style: TextStyle(
-            color: Colors.black,
+            color: isDark ? Colors.white : Colors.black,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.close, color: Colors.black),
+            icon: Icon(
+              Icons.close,
+              color: isDark ? Colors.white : Colors.black,
+            ),
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -111,14 +116,14 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
           // Cabecera con política
           Container(
             width: double.infinity,
-            color: Colors.blue.shade50,
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.blue.shade50,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'Política',
                   style: TextStyle(
-                    color: Colors.blue,
+                    color: isDark ? Colors.white : Colors.blue,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -126,7 +131,10 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                 const SizedBox(width: 8),
                 Text(
                   widget.auditoria.politica ?? 'General',
-                  style: const TextStyle(color: Colors.black, fontSize: 14),
+                  style: TextStyle(
+                    color: isDark ? const Color(0xFFE0E0E0) : Colors.black,
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -137,11 +145,11 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
-              children: const [
+              children: [
                 Text(
                   'Detalles',
                   style: TextStyle(
-                    color: Colors.blue,
+                    color: isDark ? Colors.white : Colors.blue,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -164,7 +172,11 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: todosMarcados ? Colors.blue : Colors.grey.shade300,
+                      color: todosMarcados
+                          ? Colors.blue
+                          : (isDark
+                                ? const Color(0xFF2A2A2A)
+                                : Colors.grey.shade300),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -174,7 +186,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                           todosMarcados ? Icons.check : Icons.remove,
                           color: todosMarcados
                               ? Colors.white
-                              : Colors.grey.shade600,
+                              : (isDark
+                                    ? const Color(0xFFB0B0B0)
+                                    : Colors.grey.shade600),
                           size: 16,
                         ),
                         const SizedBox(width: 4),
@@ -183,7 +197,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                           style: TextStyle(
                             color: todosMarcados
                                 ? Colors.white
-                                : Colors.grey.shade600,
+                                : (isDark
+                                      ? const Color(0xFFB0B0B0)
+                                      : Colors.grey.shade600),
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -206,7 +222,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _getSeleccionadosCount() > 0
                           ? Colors.red
-                          : Colors.grey.shade300, // Color según estado
+                          : (isDark
+                                ? const Color(0xFF2A2A2A)
+                                : Colors.grey.shade300), // Color según estado
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(5),
                       ),
@@ -217,7 +235,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                       style: TextStyle(
                         color: _getSeleccionadosCount() > 0
                             ? Colors.white
-                            : Colors.grey.shade600,
+                            : (isDark
+                                  ? const Color(0xFFB0B0B0)
+                                  : Colors.grey.shade600),
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -239,6 +259,17 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                 final isSelected = detallesSeleccionados[det.idInfDet] ?? false;
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: isSelected
+                          ? Colors.blue
+                          : (isDark
+                                ? const Color(0xFF424242)
+                                : Colors.grey.shade300),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   child: InkWell(
                     onTap: () => _toggleSeleccion(det.idInfDet),
                     borderRadius: BorderRadius.circular(8),
@@ -258,7 +289,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                               border: Border.all(
                                 color: isSelected
                                     ? Colors.blue
-                                    : Colors.grey.shade400,
+                                    : (isDark
+                                          ? const Color(0xFF757575)
+                                          : Colors.grey.shade400),
                                 width: 2,
                               ),
                             ),
@@ -277,12 +310,16 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                             width: 20,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade200,
+                              color: isDark
+                                  ? const Color(0xFF2A2A2A)
+                                  : Colors.grey.shade200,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               Icons.description,
-                              color: Colors.grey.shade600,
+                              color: isDark
+                                  ? const Color(0xFFB0B0B0)
+                                  : Colors.grey.shade600,
                               size: 24,
                             ),
                           ),
@@ -295,10 +332,12 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                               children: [
                                 Text(
                                   det.proveedor ?? det.ruc ?? 'SIN RUC',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
-                                    color: Colors.black,
+                                    color: isDark
+                                        ? const Color(0xFFE0E0E0)
+                                        : Colors.black,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -306,7 +345,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                   det.categoria ?? 'Sin estado',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey.shade600,
+                                    color: isDark
+                                        ? const Color(0xFFB0B0B0)
+                                        : Colors.grey.shade600,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -314,7 +355,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                                   formatDate(det.fecha),
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey.shade600,
+                                    color: isDark
+                                        ? const Color(0xFFB0B0B0)
+                                        : Colors.grey.shade600,
                                   ),
                                 ),
                               ],
@@ -327,10 +370,12 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                             children: [
                               Text(
                                 '${det.total} PEN',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                                  color: isDark
+                                      ? const Color(0xFFE0E0E0)
+                                      : Colors.black,
                                 ),
                               ),
                               const SizedBox(height: 4),
@@ -367,7 +412,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
               boxShadow: [
                 BoxShadow(
                   color: Colors.grey.withOpacity(0.2),
@@ -387,10 +432,12 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
                     children: [
                       Text(
                         'Seleccionados (${_getSeleccionadosCount()})',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                          color: isDark
+                              ? const Color(0xFFE0E0E0)
+                              : Colors.black,
                         ),
                       ),
                       Text(
@@ -415,9 +462,9 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
     );
   }
 
-
   void _mostrarDialogoComentario(BuildContext context) {
     // Controlador para el cuadro de texto();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
@@ -429,7 +476,7 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('MOTIVO DE RECHAZO'),
-              backgroundColor: Colors.white,
+              backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,9 +534,6 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
     final gastosSeleccionadosList = detallesFiltrados
         .where((g) => detallesSeleccionados[g.idInfDet] == true)
         .toList();
-    final gastosNoSeleccionadosList = detallesFiltrados
-        .where((g) => detallesSeleccionados[g.idInfDet] != true)
-        .toList();
 
     if (detallesFiltrados.isEmpty) return;
 
@@ -540,7 +584,6 @@ class _EditarAuditoriaModalState extends State<EditarAuditoriaModal> {
 
       // 6️⃣ Mostrar mensaje de éxito
       if (mounted) {
-        final total = gastosSeleccionadosList.length;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(

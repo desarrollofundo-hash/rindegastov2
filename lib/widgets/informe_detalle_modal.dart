@@ -451,12 +451,14 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                 ),
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: isDark ? Colors.blue[300] : Colors.blue,
+                  labelColor: Colors.indigo,
                   unselectedLabelColor: isDark
                       ? Colors.grey[400]
                       : Colors.grey[600],
-                  indicatorColor: isDark ? Colors.blue[300] : Colors.blue,
+                  indicatorColor: Colors.indigo,
                   indicatorWeight: 3,
+                  dividerColor: Colors.grey.withOpacity(0.4),
+                  dividerHeight: 0.5,
                   labelStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -887,6 +889,9 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
         decoration: BoxDecoration(
           color: isDark ? Theme.of(context).cardColor : Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: isDark
+              ? Border.all(color: Colors.blue[400]!.withOpacity(0.5), width: 1)
+              : Border.all(color: Colors.blue[100]!, width: 1),
           boxShadow: [
             BoxShadow(
               color: isDark

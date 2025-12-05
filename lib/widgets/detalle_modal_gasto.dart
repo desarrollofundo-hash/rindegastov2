@@ -73,7 +73,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
         debugPrint('✅ Reporte cargado correctamente: ${_reporte!.idrend}');
         // 🔹 Ahora que tenemos reporte, cargamos la evidencia
         _cargarImagenServidor();
-      } else {
+      } /*  else {
         debugPrint('⚠️ No se encontró reporte con id ${widget.id}');
         SchedulerBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +82,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
             ),
           );
         });
-      }
+      } */
     } catch (e) {
       debugPrint('🔥 Error al cargar reporte: $e');
 
