@@ -193,6 +193,8 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       insetPadding: const EdgeInsets.only(top: 10), // Solo margen superior
       clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -207,27 +209,37 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
         height: double
             .maxFinite, // Usa toda la altura disponible desde el margen superior
         child: Scaffold(
-          backgroundColor: Colors.grey[50],
+          backgroundColor: isDark
+              ? Theme.of(context).scaffoldBackgroundColor
+              : Colors.grey[50],
           appBar: AppBar(
-            backgroundColor: Colors.white,
-            elevation: 0.5,
+            backgroundColor: isDark
+                ? Theme.of(context).cardColor
+                : Colors.white,
+            elevation: isDark ? 1 : 0.5,
+            shadowColor: isDark ? Colors.blue.withOpacity(0.3) : null,
             /* leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
               onPressed: () => Navigator.of(context).pop(true),
             ), */
-            title: const Text(
+            title: Text(
               'INFORME DETALLE',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: isDark
+                    ? Theme.of(context).textTheme.headlineSmall?.color
+                    : Colors.black87,
                 fontFamily: 'CascadiaCode',
               ),
             ),
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.grey),
+                icon: Icon(
+                  Icons.close,
+                  color: isDark ? Colors.grey[300] : Colors.grey,
+                ),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
@@ -237,7 +249,16 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
               // Cabecera ultra compacta
               Container(
                 width: double.infinity,
-                color: const Color(0xFF1976D2),
+                decoration: BoxDecoration(
+                  gradient: isDark
+                      ? LinearGradient(
+                          colors: [const Color(0xFF1976D2), Colors.blue[800]!],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        )
+                      : null,
+                  color: isDark ? null : const Color(0xFF1976D2),
+                ),
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
@@ -416,13 +437,28 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
 
               // Tabs mejoradas
               Container(
-                color: Colors.white,
+                decoration: BoxDecoration(
+                  color: isDark ? Theme.of(context).cardColor : Colors.white,
+                  boxShadow: isDark
+                      ? [
+                          BoxShadow(
+                            color: Colors.blue.withOpacity(0.1),
+                            offset: const Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ]
+                      : null,
+                ),
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.blue,
-                  unselectedLabelColor: Colors.grey[600],
-                  indicatorColor: Colors.blue,
+                  labelColor: Colors.indigo,
+                  unselectedLabelColor: isDark
+                      ? Colors.grey[400]
+                      : Colors.grey[600],
+                  indicatorColor: Colors.indigo,
                   indicatorWeight: 3,
+                  dividerColor: Colors.grey.withOpacity(0.4),
+                  dividerHeight: 0.5,
                   labelStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -445,7 +481,9 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                   children: [
                     // Tab de Gastos
                     Container(
-                      color: Colors.grey[50],
+                      color: isDark
+                          ? Theme.of(context).scaffoldBackgroundColor
+                          : Colors.grey[50],
                       child: Builder(
                         builder: (context) {
                           print(
@@ -453,10 +491,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                           );
 
                           if (_isLoading) {
-                            return const Center(
+                            return Center(
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.blue,
+                                  isDark ? Colors.blue[300]! : Colors.blue,
                                 ),
                               ),
                             );
@@ -467,17 +505,21 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.receipt_long,
                                     size: 64,
-                                    color: Colors.grey,
+                                    color: isDark
+                                        ? Colors.grey[600]
+                                        : Colors.grey,
                                   ),
                                   const SizedBox(height: 16),
-                                  const Text(
+                                  Text(
                                     'No hay gastos en este informe',
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey,
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -492,7 +534,9 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                           }
 
                           return RefreshIndicator(
-                            backgroundColor: Colors.white,
+                            backgroundColor: isDark
+                                ? Theme.of(context).cardColor
+                                : Colors.white,
                             onRefresh: _loadDetalles,
                             child: ListView.separated(
                               padding: const EdgeInsets.all(16),
@@ -513,7 +557,9 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                     ),
                     // Tab de Detalle
                     Container(
-                      color: Colors.grey[50],
+                      color: isDark
+                          ? Theme.of(context).scaffoldBackgroundColor
+                          : Colors.grey[50],
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -582,7 +628,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
 
               // Botones de acción mejorados
               Container(
-                color: Colors.white,
+                color: isDark ? Theme.of(context).cardColor : Colors.white,
                 padding: const EdgeInsets.all(20),
                 child: SafeArea(
                   top: false,
@@ -612,8 +658,8 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                                 } // Si no está en 'EN INFORME', el botón queda deshabilitado
                               : null, // 🔒 Deshabilitado si no está en estado 'Informe'
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(
-                              color: Colors.blue,
+                            side: BorderSide(
+                              color: isDark ? Colors.blue[300]! : Colors.blue,
                               width: 2,
                             ),
                             shape: RoundedRectangleBorder(
@@ -625,8 +671,11 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                             'Editar informe',
                             style: TextStyle(
                               color: widget.informe.estadoActual == 'EN INFORME'
-                                  ? Colors.blue
-                                  : Colors.grey, // gris cuando está bloqueado
+                                  ? (isDark ? Colors.blue[300] : Colors.blue)
+                                  : (isDark
+                                        ? Colors.grey[600]
+                                        : Colors
+                                              .grey), // gris cuando está bloqueado
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
@@ -644,8 +693,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 widget.informe.estadoActual == 'EN INFORME'
-                                ? Colors.green
-                                : Colors.grey, // gris si bloqueado
+                                ? (isDark ? Colors.green[600] : Colors.green)
+                                : (isDark
+                                      ? Colors.grey[700]
+                                      : Colors.grey), // gris si bloqueado
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -710,34 +761,51 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
  */
 
   Future<void> _mostrarConfirmacionEnvio() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final confirmar = await showDialog<bool>(
       context: context,
       barrierDismissible: true, // Permitir cerrar tocando fuera
       barrierColor: Colors.black54, // Fondo semitransparente
       builder: (BuildContext context) {
         return AlertDialog(
-          icon: const Icon(
+          backgroundColor: isDark ? Theme.of(context).cardColor : null,
+          icon: Icon(
             Icons.rate_review_rounded,
             size: 32,
-            color: Colors.blue,
+            color: isDark ? Colors.blue[300] : Colors.blue,
           ),
-          title: const Text(
+          title: Text(
             'Enviar a auditoría',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: isDark
+                  ? Theme.of(context).textTheme.headlineSmall?.color
+                  : null,
+            ),
             textAlign: TextAlign.center,
           ),
-          content: const Column(
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 '¿Estás seguro que deseas enviar este informe a auditoría?',
-                style: TextStyle(fontSize: 16),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark
+                      ? Theme.of(context).textTheme.bodyMedium?.color
+                      : null,
+                ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 'Una vez enviado, no podrás realizar modificaciones.',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? Colors.grey[400] : Colors.grey,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -752,8 +820,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
             OutlinedButton(
               onPressed: () => Navigator.of(context).pop(false),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.grey,
-                side: const BorderSide(color: Colors.grey),
+                foregroundColor: isDark ? Colors.grey[300] : Colors.grey,
+                side: BorderSide(
+                  color: isDark ? Colors.grey[600]! : Colors.grey,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -769,7 +839,9 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
             ElevatedButton(
               onPressed: () => Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // Color más profesional
+                backgroundColor: isDark
+                    ? Colors.blue[600]
+                    : Colors.blue, // Color más profesional
                 foregroundColor: Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -799,6 +871,8 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
   }
 
   Widget _buildGastoCard(ReporteInformeDetalle detalle, BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () {
         // Abrir modal al hacer click
@@ -813,11 +887,16 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? Theme.of(context).cardColor : Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: isDark
+              ? Border.all(color: Colors.blue[400]!.withOpacity(0.5), width: 1)
+              : Border.all(color: Colors.blue[100]!, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isDark
+                  ? Colors.black.withOpacity(0.3)
+                  : Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 2),
@@ -831,13 +910,16 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: isDark ? Colors.blue[900] : Colors.blue[50],
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.blue[200]!, width: 1.5),
+                border: Border.all(
+                  color: isDark ? Colors.blue[400]! : Colors.blue[200]!,
+                  width: 1.5,
+                ),
               ),
               child: Icon(
                 Icons.receipt_long,
-                color: Colors.blue[600],
+                color: isDark ? Colors.blue[300] : Colors.blue[600],
                 size: 20,
               ),
             ),
@@ -853,10 +935,12 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                         detalle.ruc ??
                         'Proveedor no especificado',
                     maxLines: 1,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: isDark
+                          ? Theme.of(context).textTheme.bodyMedium?.color
+                          : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 0),
@@ -864,13 +948,19 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
                     detalle.categoria != null && detalle.categoria!.isNotEmpty
                         ? '${detalle.categoria}'
                         : 'Sin categoría',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
                   Row(
                     children: [
                       Text(
                         formatDate(detalle.fecha),
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
                       ),
                       SizedBox(width: 8), // Espacio entre los textos
                       Container(
@@ -906,10 +996,10 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
               children: [
                 Text(
                   '${detalle.total.toStringAsFixed(2)} ${detalle.moneda ?? 'PEN'}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: Colors.blue,
+                    color: isDark ? Colors.blue[300] : Colors.blue,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -940,15 +1030,19 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
   }
 
   Widget _buildDetailSection(String title, List<Widget> children) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Theme.of(context).cardColor : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -960,10 +1054,12 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark
+                  ? Theme.of(context).textTheme.headlineSmall?.color
+                  : Colors.black87,
             ),
           ),
           const SizedBox(height: 12),
@@ -978,6 +1074,8 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
     String value, {
     Color? valueColor, // 👈 parámetro opcional
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -989,7 +1087,7 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -999,7 +1097,11 @@ class _InformeDetalleModalState extends State<InformeDetalleModal>
               value,
               style: TextStyle(
                 fontSize: 14,
-                color: valueColor ?? Colors.black87, // 👈 usa el color dinámico
+                color:
+                    valueColor ??
+                    (isDark
+                        ? Theme.of(context).textTheme.bodyMedium?.color
+                        : Colors.black87), // 👈 usa el color dinámico
                 fontWeight: FontWeight.w600,
               ),
             ),

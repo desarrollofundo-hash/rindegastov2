@@ -196,11 +196,13 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.55,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: isDark ? Theme.of(context).cardColor : Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 50),
       child: Column(
@@ -212,7 +214,7 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
               width: 45,
               height: 5,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: isDark ? Colors.grey[600] : Colors.grey[300],
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
@@ -250,7 +252,12 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
 
           Text(
             'Elige la política aplicable para continuar.',
-            style: TextStyle(fontSize: 15, color: Colors.grey[600]),
+            style: TextStyle(
+              fontSize: 15,
+              color: isDark
+                  ? Theme.of(context).textTheme.bodyMedium?.color
+                  : Colors.grey[600],
+            ),
           ),
 
           const SizedBox(height: 24),
@@ -267,7 +274,12 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
                     style: TextStyle(color: Colors.red[700], fontSize: 16),
                   ),
                   const SizedBox(height: 8),
-                  Text(_error!, style: TextStyle(color: Colors.red[400])),
+                  Text(
+                    _error!,
+                    style: TextStyle(
+                      color: isDark ? Colors.red[300] : Colors.red[400],
+                    ),
+                  ),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: _loadPoliticas,
@@ -279,18 +291,39 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
 
           if (!_isLoading && _error == null)
             DropdownButtonFormField<String>(
-              dropdownColor: Colors.white,
+              dropdownColor: isDark
+                  ? Theme.of(context).cardColor
+                  : Colors.white,
               decoration: InputDecoration(
                 labelText: 'Seleccionar Política',
-                labelStyle: TextStyle(color: Colors.grey[700]),
+                labelStyle: TextStyle(
+                  color: isDark
+                      ? Theme.of(context).textTheme.bodyMedium?.color
+                      : Colors.grey[700],
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                prefixIcon: const Icon(Icons.policy_outlined),
+                prefixIcon: Icon(
+                  Icons.policy_outlined,
+                  color: isDark ? Theme.of(context).iconTheme.color : null,
+                ),
               ),
               value: _selectedPolitica,
               items: _politicas
-                  .map((p) => DropdownMenuItem(value: p, child: Text(p)))
+                  .map(
+                    (p) => DropdownMenuItem(
+                      value: p,
+                      child: Text(
+                        p,
+                        style: TextStyle(
+                          color: isDark
+                              ? Theme.of(context).textTheme.bodyMedium?.color
+                              : null,
+                        ),
+                      ),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 setState(() => _selectedPolitica = value);
@@ -310,13 +343,17 @@ class _PoliticaSelectionModalState extends State<PoliticaSelectionModal> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    side: BorderSide(color: Colors.grey[350]!),
+                    side: BorderSide(
+                      color: isDark ? Colors.grey[600]! : Colors.grey[350]!,
+                    ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Cancelar',
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.grey,
+                      color: isDark
+                          ? Theme.of(context).textTheme.bodyMedium?.color
+                          : Colors.grey,
                       fontWeight: FontWeight.w500,
                     ),
                   ),

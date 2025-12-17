@@ -1,13 +1,18 @@
+//factura_modal_peru.dart
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flu2/controllers/edit_reporte_controller.dart';
-import 'package:flu2/models/apiruc_model.dart';
+// import 'package:flu2/models/apiruc_model.dart'; // No utilizado actualmente
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:printing/printing.dart';
 import '../models/factura_data.dart';
 import '../models/categoria_model.dart';
 import '../models/dropdown_option.dart';
@@ -55,11 +60,11 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   late TextEditingController _rucClienteController;
   late TextEditingController _notaController;
 
-  // Campos específicos para movilidad
-  late TextEditingController _origenController;
-  late TextEditingController _destinoController;
-  late TextEditingController _motivoViajeController;
-  late TextEditingController _tipoTransporteController;
+  // Campos específicos para movilidad - comentados porque no se usan actualmente
+  // late TextEditingController _origenController;
+  // late TextEditingController _destinoController;
+  // late TextEditingController _motivoViajeController;
+  // late TextEditingController _tipoTransporteController;
   late TextEditingController _placaController;
 
   late final EditReporteController _controller;
@@ -74,17 +79,17 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   bool _isLoadingTiposGasto = false;
   List<CategoriaModel> _categoriasGeneral = [];
   List<DropdownOption> _tiposGasto = [];
-  List<DropdownOption> _tiposMovilidad = [];
+  // List<DropdownOption> _tiposMovilidad = []; // No utilizado actualmente
   String? _errorCategorias;
   String? _errorTiposGasto;
-  String? _errorTiposMovilidad;
+  // String? _errorTiposMovilidad; // No utilizado
 
-  ///ApiRuc
-  bool _isLoadingApiRuc = false;
-  String? _errorApiRuc;
-  ApiRuc? _apiRucData;
+  ///ApiRuc - campos comentados porque no se usan actualmente
+  // bool _isLoadingApiRuc = false;
+  // String? _errorApiRuc;
+  // ApiRuc? _apiRucData;
 
-  bool _isLoadingTipoMovilidad = false;
+  // bool _isLoadingTipoMovilidad = false; // No utilizado
 
   // Opciones para moneda
   String? _selectedMoneda;
@@ -244,24 +249,24 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   Future<void> _loadTipoMovilidad() async {
     if (mounted) {
       setState(() {
-        _isLoadingTipoMovilidad = true;
-        _errorTiposMovilidad = null;
+        // _isLoadingTipoMovilidad = true;
+        // _errorTiposMovilidad = null; // No utilizado
       });
     }
 
     try {
-      final tiposMovilidad = await _apiService.getTiposMovilidad();
+      // final tiposMovilidad = await _apiService.getTiposMovilidad(); // No utilizado
       if (mounted) {
         setState(() {
-          _tiposMovilidad = tiposMovilidad;
-          _isLoadingTipoMovilidad = false;
+          // _tiposMovilidad = tiposMovilidad; // No utilizado
+          // _isLoadingTipoMovilidad = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorTiposMovilidad = e.toString();
-          _isLoadingTipoMovilidad = false;
+          // _errorTiposMovilidad = e.toString(); // No utilizado
+          // _isLoadingTipoMovilidad = false;
         });
       }
     }
@@ -271,8 +276,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   Future<void> _loadApiRuc(String ruc) async {
     if (mounted) {
       setState(() {
-        _isLoadingApiRuc = true;
-        _errorApiRuc = null;
+        // _isLoadingApiRuc = true;
+        // _errorApiRuc = null;
       });
     }
 
@@ -282,8 +287,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
       if (mounted) {
         setState(() {
-          _apiRucData = apiRuc;
-          _isLoadingApiRuc = false;
+          // _apiRucData = apiRuc;
+          // _isLoadingApiRuc = false;
 
           // 👇 Aquí actualizas el TextEditingController después de obtener los datos
           _razonSocialController.text = apiRuc.nombreRazonSocial ?? 'S/N';
@@ -295,8 +300,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       debugPrint('❌ Error al cargar RUC: $e');
       if (mounted) {
         setState(() {
-          _errorApiRuc = e.toString();
-          _isLoadingApiRuc = false;
+          // _errorApiRuc = e.toString();
+          // _isLoadingApiRuc = false;
         });
       }
     }
@@ -338,7 +343,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       text: widget.facturaData.rucCliente ?? '',
     );
     _notaController = TextEditingController(text: '');
-    _tipoTransporteController = TextEditingController(text: 'TAXI');
+    // _tipoTransporteController = TextEditingController(text: 'TAXI');
     _placaController = TextEditingController(
       text: CompanyService().companyPlaca,
     );
@@ -397,6 +402,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       final selectedOption = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
+          final bool isDark = Theme.of(context).brightness == Brightness.dark;
           /*  return AlertDialog(
             title: const Text('Seleccionar evidencia'),
             content: const Text('¿Qué tipo de archivo desea agregar?'),
@@ -423,7 +429,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             ],
           ); */
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark
+                ? Theme.of(context).dialogBackgroundColor
+                : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
@@ -441,12 +449,14 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
               ],
             ),
 
-            content: const Text(
+            content: Text(
               '¿Qué tipo de archivo deseas agregar?',
               style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
-                color: Colors.black87,
+                color: isDark
+                    ? Theme.of(context).textTheme.bodyMedium?.color
+                    : Colors.black87,
               ),
             ),
 
@@ -522,7 +532,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
           );
         },
       );
-
       if (selectedOption != null) {
         if (selectedOption == 'camera' || selectedOption == 'gallery') {
           // Tomar foto con la cámara o galería
@@ -530,86 +539,14 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             source: selectedOption == 'camera'
                 ? ImageSource.camera
                 : ImageSource.gallery,
-            imageQuality: 85,
+            imageQuality: 85, // Calidad de la imagen
           );
+
           if (image != null) {
             File file = File(image.path);
-            int fileSize = await file.length();
-            const int maxSize = 1024 * 1024; // 1MB en bytes
-            const int compressThreshold = 2 * 1024 * 1024; // 2MB en bytes
-            int quality = 85;
-            // Solo comprimir si la imagen pesa más de 2MB
-            if (fileSize > compressThreshold) {
-              try {
-                // Usar flutter_image_compress para comprimir
-                final targetPath = image.path
-                    .replaceFirst('.jpg', '_compressed.jpg')
-                    .replaceFirst('.jpeg', '_compressed.jpeg');
-                List<int> compressedBytes = await file.readAsBytes();
-                while (fileSize > maxSize && quality > 10) {
-                  final result = await FlutterImageCompress.compressWithFile(
-                    file.absolute.path,
-                    quality: quality,
-                    format: CompressFormat.jpeg,
-                    minWidth: 800,
-                    minHeight: 800,
-                  );
-                  if (result != null) {
-                    compressedBytes = result;
-                    fileSize = compressedBytes.length;
-                  }
-                  quality -= 10;
-                }
-                if (fileSize > maxSize) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'No se pudo comprimir la imagen a menos de 1MB. Por favor, seleccione una imagen más liviana.',
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                  if (mounted) {
-                    setState(() {
-                      _selectedFile = null;
-                      _selectedFileType = null;
-                      _selectedFileName = null;
-                    });
-                  }
-                  return;
-                }
-                // Guardar la imagen comprimida en un archivo temporal
-                final compressedFile = await File(
-                  targetPath,
-                ).writeAsBytes(compressedBytes);
-                file = compressedFile;
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error al comprimir la imagen: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-                setState(() {
-                  _selectedFile = null;
-                  _selectedFileType = null;
-                  _selectedFileName = null;
-                });
-                return;
-              }
-            }
-            if (mounted) {
-              setState(() {
-                _selectedFile = file;
-                _selectedFileType = 'image';
-                _selectedFileName = image.name;
-              });
-            }
-            _validateForm();
+
+            // Aquí recortamos la imagen
+            _cropImage(file);
           }
         } else if (selectedOption == 'pdf') {
           // Seleccionar archivo PDF
@@ -628,7 +565,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                 _selectedFileName = result.files.first.name;
               });
             }
-            _validateForm();
           }
         }
       }
@@ -643,8 +579,107 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isLoading = false); // Ocultar indicador de carga
       }
+    }
+  }
+
+  /// Recortar imagen seleccionada
+  Future<void> _cropImage(File imageFile) async {
+    try {
+      // Usamos el paquete image_cropper para permitir recortar la imagen
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        aspectRatio: CropAspectRatio(
+          ratioX: 1.0,
+          ratioY: 1.0,
+        ), // Relación de aspecto cuadrada (1:1)
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Recortar Comprobante',
+            toolbarColor: Colors.green,
+            toolbarWidgetColor: Colors.white,
+            initAspectRatio:
+                CropAspectRatioPreset.square, // Relación cuadrada inicial
+            lockAspectRatio: false, // No bloquear la relación de aspecto
+          ),
+          IOSUiSettings(
+            minimumAspectRatio: 1.0, // Relación mínima de aspecto
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        if (mounted) {
+          setState(() {
+            _selectedFile = File(
+              croppedFile.path,
+            ); // Convertimos CroppedFile a File
+            _selectedFileType = 'image'; // Indicamos que es una imagen
+            _selectedFileName = croppedFile.path
+                .split('/')
+                .last; // Nombre del archivo
+          });
+        }
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al recortar la imagen: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Convertir PDF a imagen (primera página)
+  /// Retorna un archivo de imagen PNG o null si falla
+  Future<File?> _convertirPdfAImagen(File pdfFile) async {
+    try {
+      debugPrint('🔄 Iniciando conversión de PDF a imagen...');
+
+      // Leer los bytes del PDF
+      final pdfBytes = await pdfFile.readAsBytes();
+
+      // Verificar tamaño del PDF (limitar a 5MB para evitar problemas de memoria)
+      const int maxSizeForConversion = 5 * 1024 * 1024; // 5 MB
+      if (pdfBytes.lengthInBytes > maxSizeForConversion) {
+        debugPrint(
+          '⚠️ PDF demasiado grande (${pdfBytes.lengthInBytes} bytes), omitiendo conversión',
+        );
+        return null;
+      }
+
+      // Rasterizar la primera página del PDF con calidad media
+      debugPrint('📄 Rasterizando primera página del PDF...');
+      final stream = Printing.raster(pdfBytes, pages: [0], dpi: 150);
+      final raster = await stream.first.timeout(const Duration(seconds: 15));
+      final uiImage = await raster.toImage();
+
+      // Convertir la imagen UI a bytes PNG
+      final byteData = await uiImage.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        debugPrint('❌ No se pudo convertir la imagen a bytes');
+        return null;
+      }
+
+      // Guardar la imagen como archivo temporal
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${tempDir.path}/pdf_converted_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(byteData.buffer.asUint8List());
+
+      debugPrint('✅ Imagen guardada en: $imagePath');
+      debugPrint('📊 Tamaño de la imagen: ${await imageFile.length()} bytes');
+
+      return imageFile;
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error al convertir PDF a imagen: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return null;
     }
   }
 
@@ -797,19 +832,67 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       if (_fechaEmisionController.text.isNotEmpty) {
         try {
           // Intentar parsear la fecha del QR
-          final fecha = DateTime.parse(_fechaEmisionController.text);
+          final fechaTexto = _fechaEmisionController.text.trim();
+          debugPrint('📅 Fecha del QR: "$fechaTexto"');
+
+          DateTime fecha;
+
+          // Intentar diferentes formatos de fecha
+          if (fechaTexto.contains('-')) {
+            // Formato: YYYY-MM-DD o variantes
+            fecha = DateTime.parse(fechaTexto);
+          } else if (fechaTexto.contains('/')) {
+            // Formato: DD/MM/YYYY
+            final parts = fechaTexto.split('/');
+            if (parts.length == 3) {
+              fecha = DateTime(
+                int.parse(parts[2]), // año
+                int.parse(parts[1]), // mes
+                int.parse(parts[0]), // día
+              );
+            } else {
+              throw FormatException('Formato de fecha inválido: $fechaTexto');
+            }
+          } else {
+            // Si no tiene separadores, intentar parsear directamente
+            fecha = DateTime.parse(fechaTexto);
+          }
+
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+          debugPrint('✅ Fecha parseada correctamente: $fechaSQL');
         } catch (e) {
-          // Si falla, usar fecha actual
-          final fecha = DateTime.now();
-          fechaSQL =
-              "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+          // ⚠️ Si falla el parsing, mostrar error y no continuar
+          debugPrint('⚠️ Error parseando fecha: $e');
+          debugPrint('❌ Fecha recibida: "${_fechaEmisionController.text}"');
+
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '❌ Error: Formato de fecha inválido. Fecha recibida: "${_fechaEmisionController.text}"',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+          return;
         }
       } else {
-        final fecha = DateTime.now();
-        fechaSQL =
-            "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+        // Si no hay fecha, dejar vacío y mostrar error
+        debugPrint('❌ No hay fecha de emisión');
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Error: La fecha de emisión es obligatoria'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
       }
 
       // 📋 DATOS PRINCIPALES DE LA FACTURA
@@ -909,11 +992,32 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         _selectedFile!.path,
       ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
 
+      // 🔄 Si es un PDF, convertirlo a imagen
+      File archivoASubir = _selectedFile!;
+      String extensionFinal = extension;
+
+      if (_isPdfFile(_selectedFile!.path)) {
+        debugPrint('📄 Detectado PDF, convirtiendo a imagen...');
+        try {
+          final imagenConvertida = await _convertirPdfAImagen(_selectedFile!);
+          if (imagenConvertida != null) {
+            archivoASubir = imagenConvertida;
+            extensionFinal = '.png';
+            debugPrint('✅ PDF convertido a imagen exitosamente');
+          } else {
+            debugPrint('⚠️ No se pudo convertir PDF, subiendo PDF original');
+          }
+        } catch (e) {
+          debugPrint('❌ Error al convertir PDF: $e');
+          debugPrint('⚠️ Subiendo PDF original');
+        }
+      }
+
       String nombreArchivo =
-          '${idRend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extension';
+          '${idRend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extensionFinal';
 
       final driveId = await _apiService.subirArchivo(
-        _selectedFile!.path,
+        archivoASubir.path,
         nombreArchivo: nombreArchivo,
       );
       // ✅ SEGUNDO API: Guardar evidencia/archivo usando el idRend del primer API
@@ -1078,12 +1182,15 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   Widget build(BuildContext context) {
     final double maxHeight = MediaQuery.of(context).size.height * 0.93;
     final double minHeight = MediaQuery.of(context).size.height * 0.55;
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: isDark
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.white,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(22),
           topRight: Radius.circular(22),
         ),
@@ -1149,11 +1256,14 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
   /// Construir el header del modal
   Widget _buildHeader() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.red.shade700, Colors.red.shade400],
+          colors: isDark
+              ? [Colors.red.shade800, Colors.red.shade600]
+              : [Colors.red.shade700, Colors.red.shade400],
         ),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
@@ -1194,8 +1304,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
   /// Construir la sección de imagen
   Widget _buildImageSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Card(
-      color: Colors.white,
+      color: isDark ? Theme.of(context).cardColor : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -1711,15 +1822,16 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
   /// Construir la sección de política
   Widget _buildPolicySection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Datos Generales',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.red,
+            color: isDark ? Colors.red.shade400 : Colors.red,
           ),
         ),
         const SizedBox(height: 6),
@@ -1753,6 +1865,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
   /// Construir la sección de categoría
   Widget _buildCategorySection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     // Determinar las categorías disponibles según la política
     List<DropdownMenuItem<String>> items = [];
 
@@ -1867,7 +1980,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     }
 
     return DropdownButtonFormField<String>(
-      dropdownColor: Colors.white,
+      dropdownColor: isDark ? Theme.of(context).cardColor : Colors.white,
       decoration: InputDecoration(
         labelText: 'Categoría *',
         prefixIcon: const Icon(Icons.category),
@@ -1926,6 +2039,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
   /// Construir la sección de tipo de gasto
   Widget _buildTipoGastoSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1973,7 +2087,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         // Dropdown normal
         else
           DropdownButtonFormField<String>(
-            dropdownColor: Colors.white,
+            dropdownColor: isDark ? Theme.of(context).cardColor : Colors.white,
             decoration: InputDecoration(
               labelText: 'Tipo de Gasto *',
               prefixIcon: const Icon(Icons.payment),
@@ -2036,15 +2150,16 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   /// Construir la sección de datos de la factura
 
   Widget _buildFacturaDataSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Datos de la Factura',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Colors.red,
+            color: isDark ? Colors.red.shade400 : Colors.red,
           ),
         ),
         const SizedBox(height: 16),
@@ -2186,7 +2301,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             const SizedBox(width: 6),
             Expanded(
               child: DropdownButtonFormField<String>(
-                dropdownColor: Colors.white,
+                dropdownColor: isDark
+                    ? Theme.of(context).cardColor
+                    : Colors.white,
                 value: _selectedMoneda,
                 decoration: InputDecoration(
                   labelText: 'Moneda',
@@ -2316,33 +2433,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     );
   }
 
-  Widget _buildNotasSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        TextFormField(
-          controller: _notaController,
-          decoration: const InputDecoration(
-            labelText: 'Nota o Glosa:',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.note),
-          ),
-          maxLines: 2,
-          maxLength: 500,
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'La nota es obligatoria';
-            }
-            if (value.trim().length < 5) {
-              return 'La nota debe tener al menos 5 caracteres';
-            }
-            return null;
-          },
-        ),
-      ],
-    );
-  }
-
   /// Construir la sección de notas
   Widget _buildNotesSection() {
     return Column(
@@ -2370,139 +2460,22 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
 
   /// Construir la sección de notas
 
-  /// Construir la sección específica de movilidad
-  Widget _buildMovilidadSection() {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.directions_car, color: Colors.red),
-                const SizedBox(width: 8),
-                const Text(
-                  'Detalles de Movilidad',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _origenController,
-                    decoration: const InputDecoration(
-                      labelText: 'Origen *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.my_location),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Origen es obligatorio';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _destinoController,
-                    decoration: const InputDecoration(
-                      labelText: 'Destino *',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.location_on),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Destino es obligatorio';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _motivoViajeController,
-              decoration: const InputDecoration(
-                labelText: 'Motivo del Viaje *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Motivo del Viaje es obligatorio';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _tipoTransporteController.text.isNotEmpty
-                  ? _tipoTransporteController.text
-                  : 'Taxi',
-              decoration: const InputDecoration(
-                labelText: 'Tipo de Transporte',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.directions_car),
-              ),
-              items: const [
-                DropdownMenuItem(value: 'Taxi', child: Text('Taxi')),
-                DropdownMenuItem(value: 'Uber', child: Text('Uber')),
-                DropdownMenuItem(value: 'Bus', child: Text('Bus')),
-                DropdownMenuItem(value: 'Metro', child: Text('Metro')),
-                DropdownMenuItem(value: 'Avión', child: Text('Avión')),
-                DropdownMenuItem(value: 'Otro', child: Text('Otro')),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  _tipoTransporteController.text = value ?? 'Taxi';
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Construir la sección de datos raw
-  Widget _buildRawDataSection() {
-    return ExpansionTile(
-      title: const Text('Datos Originales del QR'),
-      leading: const Icon(Icons.qr_code),
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: SelectableText(
-            widget.facturaData.rawData,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 10),
-          ),
-        ),
-      ],
-    );
-  }
-
   /// Construir los botones de acción
   Widget _buildActionButtons() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        border: Border(top: BorderSide(color: Colors.grey.shade300)),
+        color: isDark
+            ? Theme.of(context).cardColor.withOpacity(0.5)
+            : Colors.grey.shade50,
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Theme.of(context).dividerColor
+                : Colors.grey.shade300,
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -2512,19 +2485,30 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
               padding: const EdgeInsets.all(2),
               margin: const EdgeInsets.only(bottom: 4),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isDark
+                    ? Colors.orange.shade900.withOpacity(0.2)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.orange.shade700
+                      : Colors.orange.shade200,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange.shade600),
+                  Icon(
+                    Icons.warning,
+                    color: isDark
+                        ? Colors.orange.shade400
+                        : Colors.orange.shade600,
+                  ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Por favor complete todos los campos ',
                       style: TextStyle(
-                        color: Colors.orange,
+                        color: isDark ? Colors.orange.shade400 : Colors.orange,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2540,7 +2524,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   icon: const Icon(Icons.cancel),
                   label: const Text('Cancelar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 244, 54, 54),
+                    backgroundColor: isDark
+                        ? Colors.red.shade700
+                        : const Color.fromARGB(255, 244, 54, 54),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -2573,11 +2559,17 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isFormValid
-                        ? const Color.fromARGB(255, 19, 126, 32)
-                        : Colors.grey,
+                        ? (isDark
+                              ? const Color.fromARGB(255, 34, 155, 54)
+                              : const Color.fromARGB(255, 19, 126, 32))
+                        : (isDark ? Colors.grey.shade700 : Colors.grey),
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey[300],
-                    disabledForegroundColor: Colors.grey[600],
+                    disabledBackgroundColor: isDark
+                        ? Colors.grey[700]
+                        : Colors.grey[300],
+                    disabledForegroundColor: isDark
+                        ? Colors.grey[400]
+                        : Colors.grey[600],
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
@@ -2598,6 +2590,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     bool isRequired = false,
     bool readOnly = false,
   }) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -2611,18 +2604,31 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         ),
         enabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Theme.of(context).dividerColor : Colors.grey,
+            width: 1,
+          ),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.red, width: 2),
+        focusedBorder: UnderlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(
+            color: isDark ? Colors.red.shade400 : Colors.red,
+            width: 2,
+          ),
         ),
         disabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Theme.of(context).disabledColor : Colors.grey,
+            width: 1,
+          ),
         ),
         filled: true,
-        fillColor: readOnly ? Colors.white : Colors.white,
+        fillColor: readOnly
+            ? (isDark
+                  ? Theme.of(context).disabledColor.withOpacity(0.1)
+                  : Colors.grey.shade100)
+            : (isDark ? Theme.of(context).cardColor : Colors.white),
       ),
       validator: isRequired
           ? (value) {

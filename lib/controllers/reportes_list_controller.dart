@@ -86,10 +86,11 @@ class ReportesListController {
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (ctx) {
+          final isDark = Theme.of(ctx).brightness == Brightness.dark;
           return Container(
             height: MediaQuery.of(ctx).size.height * 0.28,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[900] : Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Column(
@@ -104,17 +105,26 @@ class ReportesListController {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
                     'Agregar documento IA',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   leading: const Icon(Icons.camera_alt, color: Colors.indigo),
-                  title: const Text('Tomar foto'),
+                  title: Text(
+                    'Tomar foto',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
                   onTap: () => Navigator.of(ctx).pop('camera'),
                 ),
                 ListTile(
@@ -216,10 +226,37 @@ class ReportesListController {
               );
             } else {
               if (mounted()) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                /*  ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('CODIGO QR NO ENCONTRADO EN IMAGEN'),
                     backgroundColor: Colors.red,
+                  ),
+                ); */
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.red.shade700,
+                    content: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Código QR no encontrado en la imagen',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 3),
                   ),
                 );
               }
@@ -302,10 +339,37 @@ class ReportesListController {
               );
             } else {
               if (mounted()) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                /* ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('CODIGO QR NO ENCONTRADO EN DOCUMENTO'),
                     backgroundColor: Colors.red,
+                  ),
+                ); */
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    margin: const EdgeInsets.all(16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: Colors.red.shade700,
+                    content: Row(
+                      children: [
+                        const Icon(Icons.error_outline, color: Colors.white),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Código QR no encontrado en el documento',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 3),
                   ),
                 );
               }
@@ -453,10 +517,11 @@ class ReportesListController {
         isScrollControlled: true,
         backgroundColor: Colors.transparent,
         builder: (ctx) {
+          final isDark = Theme.of(ctx).brightness == Brightness.dark;
           return Container(
             height: MediaQuery.of(ctx).size.height * 0.28,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: isDark ? Colors.grey[900] : Colors.white,
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
             child: Column(
@@ -471,22 +536,36 @@ class ReportesListController {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.0),
                   child: Text(
                     'Agregar documento',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   leading: const Icon(Icons.camera_alt, color: Colors.indigo),
-                  title: const Text('Tomar foto'),
+                  title: Text(
+                    'Tomar foto',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
                   onTap: () => Navigator.of(ctx).pop('camera'),
                 ),
                 ListTile(
                   leading: const Icon(Icons.photo, color: Colors.indigo),
-                  title: const Text('Elegir foto'),
+                  title: Text(
+                    'Elegir foto',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
                   onTap: () => Navigator.of(ctx).pop('gallery'),
                 ),
                 ListTile(
@@ -494,7 +573,12 @@ class ReportesListController {
                     Icons.insert_drive_file,
                     color: Colors.indigo,
                   ),
-                  title: const Text('Seleccionar documento (PDF)'),
+                  title: Text(
+                    'Seleccionar documento (PDF)',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
                   onTap: () => Navigator.of(ctx).pop('document'),
                 ),
               ],
@@ -744,17 +828,23 @@ class ReportesListController {
                   });
             }
 
+            final isDark = Theme.of(ctx2).brightness == Brightness.dark;
             return AlertDialog(
+              backgroundColor: isDark ? Colors.grey[900] : Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
               title: Container(
                 width: double.maxFinite,
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: const Text(
+                child: Text(
                   'Previsualización DOC IA',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
               ),
               content: SizedBox(
@@ -764,11 +854,14 @@ class ReportesListController {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (analisis.isNotEmpty) ...[
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(bottom: 8.0),
                           child: Text(
                             'Análisis QR:',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
                           ),
                         ),
                         /*Padding(
@@ -797,9 +890,18 @@ class ReportesListController {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(ctx2).pop(null),
-                  child: const Text('Cancelar'),
+                  child: Text(
+                    'Cancelar',
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () =>
                       Navigator.of(ctx2).pop({'image': uiImage, 'qr': qrText}),
                   child: const Text('Confirmar'),
@@ -866,23 +968,33 @@ class ReportesListController {
         final img = map?['image'] as ui.Image?;
         final qr = map?['qr'] as String?;
 
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
         return AlertDialog(
+          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'Previsualización Doc IA PDF',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : Colors.black,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (qr != null && qr.trim().isNotEmpty) ...[
-                const Text(
+                Text(
                   'Datos PDF',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 /*const SizedBox(height: 4),
                 SelectableText(qr, style: const TextStyle(fontSize: 13)),*/
@@ -908,7 +1020,12 @@ class ReportesListController {
                             color: Colors.indigo,
                           ),
                           const SizedBox(height: 8),
-                          Text(file.path.split(Platform.pathSeparator).last),
+                          Text(
+                            file.path.split(Platform.pathSeparator).last,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black,
+                            ),
+                          ),
                         ],
                       ),
               ),
@@ -917,9 +1034,18 @@ class ReportesListController {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(null),
-              child: const Text('Cancelar'),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
               onPressed: () {
                 Navigator.of(ctx).pop({
                   'image': img,
@@ -1324,12 +1450,17 @@ class ReportesListController {
     showDialog(
       context: context,
       builder: (BuildContext context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
-          title: const Row(
+          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+          title: Row(
             children: [
-              Icon(Icons.psychology, color: Colors.green),
-              SizedBox(width: 8),
-              Text('🤖 Datos Extraídos por IA'),
+              const Icon(Icons.psychology, color: Colors.green),
+              const SizedBox(width: 8),
+              Text(
+                '🤖 Datos Extraídos por IA',
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -1337,9 +1468,13 @@ class ReportesListController {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'Campos detectados para el modal peruano:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 ...datos.entries
@@ -1348,9 +1483,13 @@ class ReportesListController {
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.grey[50],
+                          color: isDark ? Colors.grey[800] : Colors.grey[50],
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: Colors.grey[300]!),
+                          border: Border.all(
+                            color: isDark
+                                ? Colors.grey[600]!
+                                : Colors.grey[300]!,
+                          ),
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1369,7 +1508,10 @@ class ReportesListController {
                             Expanded(
                               child: Text(
                                 entry.value,
-                                style: const TextStyle(fontSize: 12),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark ? Colors.white : Colors.black,
+                                ),
                               ),
                             ),
                           ],
@@ -1381,7 +1523,9 @@ class ReportesListController {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: isDark
+                        ? Colors.blue[900]?.withOpacity(0.3)
+                        : Colors.blue[50],
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Row(
@@ -1406,7 +1550,12 @@ class ReportesListController {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cerrar'),
+              child: Text(
+                'Cerrar',
+                style: TextStyle(
+                  color: isDark ? Colors.white70 : Colors.black87,
+                ),
+              ),
             ),
             ElevatedButton.icon(
               onPressed: () {

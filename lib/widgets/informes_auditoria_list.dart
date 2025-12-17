@@ -59,12 +59,13 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (widget.auditorias.isEmpty) {
       return RefreshIndicator(
-        
         // Personalizar indicador para que coincida con la apariencia de Auditoría
         color: Colors.green,
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? Colors.grey[800] : Colors.white,
         strokeWidth: 2.5,
         displacement: 40,
         onRefresh: widget.onRefresh ?? () async {},
@@ -110,7 +111,7 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
     return RefreshIndicator(
       // Personalizar indicador para que coincida con la apariencia de Auditoría
       color: Colors.green,
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? Colors.grey[800] : Colors.white,
       strokeWidth: 2.5,
       displacement: 40,
       onRefresh: widget.onRefresh ?? () async {},
@@ -129,7 +130,7 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
               child: Card(
-                color: Colors.white,
+                color: isDark ? Colors.grey[800] : Colors.white,
                 elevation: 2,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -157,12 +158,12 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
                           width: 36,
                           height: 36,
                           decoration: BoxDecoration(
-                            color: Colors.grey[100],
+                            color: isDark ? Colors.grey[700] : Colors.grey[100],
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Icon(
                             Icons.description,
-                            color: Colors.grey[600],
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
                             size: 20,
                           ),
                         ),
@@ -181,10 +182,12 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
                                     // Título de la auditoría (más compacto)
                                     Text(
                                       auditoria.titulo ?? 'Sin título',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -195,16 +198,21 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
                                       'Creación: ${formatDate(auditoria.fecCre?.toIso8601String())}',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Colors.grey[600],
+                                        color: isDark
+                                            ? Colors.grey[400]
+                                            : Colors.grey[600],
                                       ),
                                     ),
                                     const SizedBox(height: 4),
                                     // Cantidad de detalles
                                     Text(
                                       '${auditoria.cantidad} detalles',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black,
                                       ),
                                     ),
                                   ],
@@ -217,10 +225,12 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
                                   // Total en PEN (más compacto)
                                   Text(
                                     '${_getTotal(auditoria)} PEN',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
-                                      color: Colors.blue,
+                                      color: isDark
+                                          ? Colors.lightBlue[300]
+                                          : Colors.blue,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -300,10 +310,18 @@ class _InformesAuditoriaListState extends State<InformesAuditoriaList>
           } catch (e, st) {
             debugPrint('Error building auditoria item: $e\n$st');
             return Card(
-              color: Colors.red.shade50,
+              color: isDark ? Colors.red.shade900 : Colors.red.shade50,
               child: ListTile(
-                title: const Text('Error al mostrar auditoría'),
-                subtitle: Text(e.toString()),
+                title: Text(
+                  'Error al mostrar auditoría',
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                ),
+                subtitle: Text(
+                  e.toString(),
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[300] : Colors.black54,
+                  ),
+                ),
               ),
             );
           }

@@ -180,11 +180,14 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
   }
 
   Future<void> _mostrarConfirmacionHabilitar() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final confirmar = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: isDark ? Colors.grey[800] : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
@@ -192,19 +195,27 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
 
           title: Row(
-            children: const [
+            children: [
               Icon(Icons.info_outline, color: Colors.blue, size: 26),
               SizedBox(width: 10),
               Text(
                 'Habilitar informe',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: isDark ? Colors.white : Colors.black,
+                ),
               ),
             ],
           ),
 
-          content: const Text(
+          content: Text(
             '¿Estás seguro de que deseas habilitar el informe?',
-            style: TextStyle(fontSize: 15, height: 1.4),
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.4,
+              color: isDark ? Colors.grey[300] : Colors.black87,
+            ),
           ),
 
           actionsPadding: const EdgeInsets.symmetric(
@@ -214,10 +225,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text(
+              child: Text(
                 'Cancelar',
                 style: TextStyle(
-                  color: Colors.grey,
+                  color: isDark ? Colors.grey[400] : Colors.grey,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -380,12 +391,15 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
   } */
 
   Future<void> _mostrarConfirmacionEnvio() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final confirmar = await showDialog<bool>(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black54,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: isDark ? Colors.grey[800] : null,
           icon: TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.0, end: 1.0),
             duration: const Duration(milliseconds: 1800),
@@ -707,6 +721,8 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Dialog(
       insetPadding: const EdgeInsets.only(top: 10), // Solo margen superior
       clipBehavior: Clip.antiAliasWithSaveLayer,
@@ -721,10 +737,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         height: double
             .maxFinite, // Usa toda la altura disponible desde el margen superior
         child: Scaffold(
-          backgroundColor: Colors.grey[50],
+          backgroundColor: isDark ? Colors.grey[900] : Colors.grey[50],
 
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark ? Colors.grey[850] : Colors.white,
             elevation: 0.1,
             /* leading: IconButton(
               icon: const Icon(Icons.more_horiz, color: Colors.grey),
@@ -734,12 +750,12 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'DETALLE AUDITORIA',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+                    color: isDark ? Colors.white : Colors.black87,
                   ),
                 ),
 
@@ -758,10 +774,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                     ),
                     Text(
                       widget.auditoria.usuario.toString(), // ← valor dinámico
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Colors.black87,
+                        color: isDark ? Colors.white : Colors.black87,
                       ),
                     ),
                   ],
@@ -772,7 +788,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
             centerTitle: true,
             actions: [
               IconButton(
-                icon: const Icon(Icons.close, color: Colors.grey),
+                icon: Icon(
+                  Icons.close,
+                  color: isDark ? Colors.white70 : Colors.grey,
+                ),
                 onPressed: () => Navigator.of(context).pop(true),
               ),
             ],
@@ -964,13 +983,17 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
 
               // Tabs mejoradas
               Container(
-                color: Colors.white,
+                color: isDark ? Colors.grey[850] : Colors.white,
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.blue,
-                  unselectedLabelColor: Colors.grey[600],
-                  indicatorColor: Colors.blue,
+                  labelColor: Colors.indigo,
+                  unselectedLabelColor: isDark
+                      ? Colors.grey[400]
+                      : Colors.grey[600],
+                  indicatorColor: Colors.indigo,
                   indicatorWeight: 3,
+                  dividerColor: Colors.grey.withOpacity(0.4),
+                  dividerHeight: 0.5,
                   labelStyle: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -993,7 +1016,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                   children: [
                     // Tab de Gastos
                     Container(
-                      color: Colors.grey[50],
+                      color: isDark ? Colors.grey[900] : Colors.grey[50],
                       child: Builder(
                         builder: (context) {
                           print(
@@ -1001,11 +1024,14 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                           );
 
                           if (_isLoading) {
-                            return const Center(
+                            return Center(
                               child: CircularProgressIndicator(
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   Colors.blue,
                                 ),
+                                backgroundColor: isDark
+                                    ? Colors.grey[700]
+                                    : null,
                               ),
                             );
                           }
@@ -1015,17 +1041,21 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.receipt_long,
                                     size: 64,
-                                    color: Colors.grey,
+                                    color: isDark
+                                        ? Colors.grey[400]
+                                        : Colors.grey,
                                   ),
                                   const SizedBox(height: 16),
-                                  const Text(
+                                  Text(
                                     'No hay gastos en este auditoria',
                                     style: TextStyle(
                                       fontSize: 16,
-                                      color: Colors.grey,
+                                      color: isDark
+                                          ? Colors.grey[400]
+                                          : Colors.grey,
                                       fontWeight: FontWeight.w500,
                                     ),
                                   ),
@@ -1040,7 +1070,9 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                           }
 
                           return RefreshIndicator(
-                            backgroundColor: Colors.white,
+                            backgroundColor: isDark
+                                ? Colors.grey[800]
+                                : Colors.white,
                             color: Colors.blue,
                             onRefresh: _loadDetalles,
                             child: ListView.separated(
@@ -1059,7 +1091,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                     ),
                     // Tab de Detalle
                     Container(
-                      color: Colors.grey[50],
+                      color: isDark ? Colors.grey[900] : Colors.grey[50],
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.all(16),
                         child: Column(
@@ -1125,7 +1157,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
 
               // Botones de acción mejorados
               Container(
-                color: Colors.white,
+                color: isDark ? Colors.grey[850] : Colors.white,
                 padding: const EdgeInsets.all(20),
                 child: SafeArea(
                   top: false,
@@ -1257,6 +1289,8 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     ReporteAuditoriaDetalle detalle,
     BuildContext context,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return GestureDetector(
       onTap: () {
         // Abrir modal al hacer click
@@ -1271,11 +1305,15 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDark ? Colors.grey[860] : Colors.white,
           borderRadius: BorderRadius.circular(12),
+          border: isDark
+              ? Border.all(color: Colors.white, width: 1.0)
+              : Border.all(color: Colors.grey[300]!, width: 1.0),
+
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.1),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 2),
@@ -1295,12 +1333,15 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Colors.grey[700] : Colors.white,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
                     color: widget.auditoria.estadoActual == 'EN AUDITORIA'
                         ? Colors.green
-                        : Colors.grey, // cambia color si está deshabilitado
+                        : (isDark
+                              ? Colors.grey[600]!
+                              : Colors
+                                    .grey), // cambia color si está deshabilitado
                   ),
                 ),
                 child: Icon(
@@ -1326,10 +1367,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                         detalle.ruc ??
                         'Proveedor no especificado',
                     maxLines: 1,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 0),
@@ -1337,14 +1378,20 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                     detalle.categoria != null && detalle.categoria!.isNotEmpty
                         ? '${detalle.categoria}'
                         : 'Sin categoría',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
+                    ),
                   ),
 
                   Row(
                     children: [
                       Text(
                         formatDate(detalle.fecha),
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: isDark ? Colors.grey[400] : Colors.grey[600],
+                        ),
                       ),
                       SizedBox(width: 8), // Espacio entre los textos
                       Container(
@@ -1426,15 +1473,17 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
   }
 
   Widget _buildDetailSection(String title, List<Widget> children) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? Colors.grey[800] : Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: isDark ? Colors.black26 : Colors.grey.withOpacity(0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -1446,10 +1495,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           const SizedBox(height: 12),
@@ -1464,6 +1513,8 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
     String value, {
     Color? valueColor, // 👈 parámetro opcional
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -1475,7 +1526,7 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -1485,7 +1536,11 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
               value,
               style: TextStyle(
                 fontSize: 14,
-                color: valueColor ?? Colors.black87, // 👈 usa el color dinámico
+                color:
+                    valueColor ??
+                    (isDark
+                        ? Colors.white
+                        : Colors.black87), // 👈 usa el color dinámico
                 fontWeight: FontWeight.w600,
               ),
             ),

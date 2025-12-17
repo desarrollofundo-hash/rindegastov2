@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flu2/controllers/edit_reporte_controller.dart';
 import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/user_company.dart';
@@ -14,13 +15,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:open_filex/open_filex.dart';
+import 'package:printing/printing.dart';
 import '../models/dropdown_option.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
 import '../screens/home_screen.dart';
 import 'nuevo_gasto_logic.dart';
-import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// Modal para crear un nuevo gasto con todos los campos personalizados
@@ -116,9 +117,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     'GUÍA DE REMISION',
   ];
 
-  String get fechaSQL =>
+  /*   String get fechaSQL =>
       DateFormat('yyyy-MM-dd').format(DateTime.parse(_fechaController.text));
-
+ */
   /// Validar si el RUC del cliente (escaneado) coincide con la empresa seleccionada
   bool _isRucValid() {
     final rucClienteEscaneado = _rucClienteController.text.trim();
@@ -184,9 +185,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _razonSocialController = TextEditingController();
     _rucClienteController = TextEditingController();
     _tipoComprobanteController = TextEditingController();
-    _fechaController = TextEditingController(
-      text: DateTime.now().toString().split(' ')[0], // Fecha actual por defecto
-    );
+    _fechaController = TextEditingController();
     _serieFacturaController = TextEditingController();
     _numeroFacturaController = TextEditingController();
     _igvController = TextEditingController();
@@ -437,8 +436,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       final selectedOption = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark ? Colors.grey[900] : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
@@ -446,22 +447,26 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
 
             title: Row(
-              children: const [
-                Icon(Icons.attach_file, color: Colors.blue, size: 26),
-                SizedBox(width: 10),
+              children: [
+                const Icon(Icons.attach_file, color: Colors.blue, size: 26),
+                const SizedBox(width: 10),
                 Text(
                   'Seleccionar evidencia',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
               ],
             ),
 
-            content: const Text(
+            content: Text(
               '¿Qué tipo de archivo deseas agregar?',
               style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
-                color: Colors.black87,
+                color: isDark ? Colors.grey[300] : Colors.black87,
               ),
             ),
 
@@ -480,9 +485,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                     ),
                     onPressed: () => Navigator.pop(context, 'camera'),
                     icon: const Icon(Icons.camera_alt_rounded),
-                    label: const Text(
+                    label: Text(
                       'Tomar Foto',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.blue[300] : Colors.blue,
+                      ),
                     ),
                   ),
 
@@ -494,9 +502,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                     ),
                     onPressed: () => Navigator.pop(context, 'gallery'),
                     icon: const Icon(Icons.photo_library_rounded),
-                    label: const Text(
+                    label: Text(
                       'Galería',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.purple[300] : Colors.purple,
+                      ),
                     ),
                   ),
 
@@ -508,9 +519,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                     ),
                     onPressed: () => Navigator.pop(context, 'pdf'),
                     icon: const Icon(Icons.picture_as_pdf_rounded),
-                    label: const Text(
+                    label: Text(
                       'Archivo PDF',
-                      style: TextStyle(fontSize: 16),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? Colors.red[300] : Colors.red,
+                      ),
                     ),
                   ),
 
@@ -519,15 +533,18 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   // Cancelar
                   TextButton(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
+                      foregroundColor: isDark
+                          ? Colors.grey[400]
+                          : Colors.grey[700],
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
+                    child: Text(
                       'Cancelar',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
+                        color: isDark ? Colors.grey[400] : Colors.grey[700],
                       ),
                     ),
                   ),
@@ -759,7 +776,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         serie: _serieFacturaController.text,
         numero: _numeroFacturaController.text,
         igv: _igvController.text,
-        fecha: fechaSQL,
+        fecha: _fechaController.text,
         total: _totalController.text,
         moneda: _monedaController.text,
         nota: _notaController.text,
@@ -1368,14 +1385,15 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final double maxHeight = MediaQuery.of(context).size.height * 0.93;
     final double minHeight = MediaQuery.of(context).size.height * 0.55;
 
     return Container(
       constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: isDark ? Colors.grey[900] : Colors.white,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(22),
           topRight: Radius.circular(22),
         ),
@@ -1502,10 +1520,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     );
   }
 
-  /// Construir la sección de imagen
+  /// Construir la seción de imagen
   Widget _buildImageSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
-      color: Colors.white,
+      color: isDark ? Colors.grey[800] : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(1),
         child: Column(
@@ -1515,9 +1535,13 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               children: [
                 const Icon(Icons.attach_file, color: Colors.red),
                 const SizedBox(width: 1),
-                const Text(
+                Text(
                   'Adjuntar Evidencia',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 const Text(
                   ' *',
@@ -1629,14 +1653,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 height: 100,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
+                  color: isDark ? Colors.grey[700] : Colors.grey.shade100,
                   border: Border.all(
                     color:
                         (widget.politicaSeleccionada.value !=
                                 "GASTOS DE MOVILIDAD" &&
                             _selectedFile == null)
                         ? Colors.red.shade300
-                        : Colors.grey.shade300,
+                        : (isDark ? Colors.grey[600]! : Colors.grey.shade300),
                     width:
                         (widget.politicaSeleccionada.value !=
                                 "GASTOS DE MOVILIDAD" &&
@@ -1656,7 +1680,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                                   "GASTOS DE MOVILIDAD" &&
                               _selectedFile == null)
                           ? Colors.red
-                          : Colors.grey,
+                          : (isDark ? Colors.grey[400] : Colors.grey),
                       size: 40,
                     ),
                     const SizedBox(height: 8),
@@ -1671,7 +1695,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                                     "GASTOS DE MOVILIDAD" &&
                                 _selectedFile == null)
                             ? Colors.red
-                            : Colors.grey,
+                            : (isDark ? Colors.grey[400] : Colors.grey),
                         fontWeight:
                             (widget.politicaSeleccionada.value !=
                                     "GASTOS DE MOVILIDAD" &&
@@ -1684,7 +1708,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                     Text(
                       'Imagen o PDF',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: isDark ? Colors.grey[400] : Colors.grey.shade600,
                         fontSize: 12,
                       ),
                     ),
@@ -1894,6 +1918,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección de datos generales
   Widget _buildDatosGeneralesSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1951,6 +1977,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección de datos personalizados
   Widget _buildDatosFacturaSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final bool esPlanillaMovilidad =
         _selectedCategoria == 'PLANILLA DE MOVILIDAD';
 
@@ -1985,10 +2012,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _rucProveedorController,
-              readOnly:
-                  _hasScannedData ||
-                  _categoriaController.text ==
-                      "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear o si es VIAJES CON COMPROBANTE
+              readOnly: _hasScannedData,
+              /* _hasScannedData ||
+                  _categoriaController.text !=
+                      "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear o si es VIAJES CON COMPROBANTE */
               decoration: InputDecoration(
                 labelText: 'RUC Emisor',
                 border: UnderlineInputBorder(
@@ -2033,10 +2060,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
               controller: _razonSocialController,
-              readOnly:
-                  _hasScannedData ||
-                  _categoriaController.text ==
-                      "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear o si es VIAJES CON COMPROBANTE
+              readOnly: _hasScannedData,
+              /* _hasScannedData ||
+                  _categoriaController.text !=
+                      "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear o si es VIAJES CON COMPROBANTE */
               decoration: InputDecoration(
                 labelText: 'Razón Social',
                 hintText: 'Ingresa Razón Social',
@@ -2206,7 +2233,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               ),
               enabledBorder: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.grey, width: 1),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey[600]! : Colors.grey,
+                  width: 1,
+                ),
               ),
               focusedBorder: const UnderlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2214,38 +2244,63 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               ),
               disabledBorder: UnderlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.white, width: 1),
+                borderSide: BorderSide(
+                  color: isDark ? Colors.grey[700]! : Colors.white,
+                  width: 1,
+                ),
               ),
               prefixIcon: Container(
                 margin: const EdgeInsets.only(right: 8),
                 child: const Icon(Icons.calendar_month, color: Colors.green),
               ),
-              suffixIcon: _validar
+              /* suffixIcon: _validar
                   ? IconButton(
                       icon: const Icon(Icons.expand_more, color: Colors.green),
                       onPressed: _selectDate,
                       tooltip: 'Seleccionar fecha',
                     )
                   : null,
-              filled: true,
+              filled: true, */
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.expand_more, color: Colors.green),
+                onPressed: () {
+                  // Solo abrir calendario si NO ha escaneado QR
+                  if (!_hasScannedData) {
+                    _selectDate();
+                  }
+                },
+                tooltip: 'Seleccionar fecha',
+              ),
+
               fillColor: _fechaController.text.isEmpty
-                  ? Colors.white
-                  : Colors.white,
+                  ? (isDark ? Colors.grey[800] : Colors.white)
+                  : (isDark ? Colors.grey[800] : Colors.white),
             ),
             readOnly:
                 true, // ✅ Siempre true para evitar teclado, solo se usa el calendario
-            onTap:
+            /*  onTap:
                 (_validar &&
                     _categoriaController.text != "VIAJES CON COMPROBANTE")
                 ? _selectDate
-                : null, // ✅ Permite seleccionar fecha excepto en VIAJES CON COMPROBANTE
-
+                : null, // ✅ Permite seleccionar fecha excepto en VIAJES CON COMPROBANTE */
+            /*  onTap: () {
+              // Abrir calendario al tocar el campo (excepto en VIAJES CON COMPROBANTE)
+              if (_categoriaController.text == "VIAJES CON COMPROBANTE") {
+                _selectDate();
+              }
+            }, */
+            onTap: () {
+              // ✅ Permitir abrir calendario solo si NO ha escaneado QR
+              if (!_hasScannedData) {
+                _selectDate();
+              }
+            },
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: _fechaController.text.isEmpty
-                  ? Colors.grey.shade600
-                  : Colors.black87,
+                  ? (isDark ? Colors.grey[400] : Colors.grey.shade600)
+                  : (isDark ? Colors.white : Colors.black87),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -2263,10 +2318,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _serieFacturaController,
-                    readOnly:
-                        !_validar ||
-                        _categoriaController.text ==
-                            "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear QR o si es VIAJES CON COMPROBANTE
+                    readOnly: _hasScannedData,
+                    /* !_validar ||
+                        _categoriaController.text !=
+                            "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear QR o si es VIAJES CON COMPROBANTE */
                     decoration: InputDecoration(
                       labelText: 'Serie *',
                       border: UnderlineInputBorder(
@@ -2302,11 +2357,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 Expanded(
                   child: TextFormField(
                     controller: _numeroFacturaController,
-                    readOnly:
-                        !_validar ||
-                        _categoriaController.text ==
-                            "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear QR o si es VIAJES CON COMPROBANTE
+                    readOnly: _hasScannedData,
 
+                    /*                         !_validar ||
+                        _categoriaController.text !=
+                            "VIAJES CON COMPROBANTE", // 🔒 Bloqueado después de escanear QR o si es VIAJES CON COMPROBANTE */
                     decoration: InputDecoration(
                       labelText: 'Número *',
                       border: UnderlineInputBorder(
@@ -2350,10 +2405,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                   child: TextFormField(
                     controller: _igvController,
                     /*  readOnly: true, // 🔒 Bloqueado solo después de escanear QR */
-                    readOnly:
-                        _categoriaController.text == "VIAJES CON COMPROBANTE" ||
-                        _hasScannedData, // ✅ Solo bloqueado en VIAJES CON COMPROBANTE
+                    readOnly: _hasScannedData,
 
+                    /*   _categoriaController.text != "VIAJES CON COMPROBANTE" ||
+                        _hasScannedData, // ✅ Solo bloqueado en VIAJES CON COMPROBANTE */
                     decoration: InputDecoration(
                       labelText: 'Igv *',
                       border: UnderlineInputBorder(
@@ -2402,10 +2457,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                     (_categoriaController.text !=
                     "PLANILLA DE MOVILIDAD"), // ✅ Solo editable en planilla de movilidad
  */
-                readOnly:
-                    _categoriaController.text == "VIAJES CON COMPROBANTE" ||
-                    _hasScannedData, // ✅ Solo bloqueado en VIAJES CON COMPROBANTE
-
+                /*   readOnly:
+                    _categoriaController.text != "VIAJES CON COMPROBANTE" ||
+                    _hasScannedData, // ✅ Solo bloqueado en VIAJES CON COMPROBANTE */
+                /*   readOnly: (_categoriaController.text == "PLANILLA DE MOVILIDAD")
+                    ? false
+                    : (_hasScannedData ||
+                          _categoriaController.text !=
+                              "VIAJES CON COMPROBANTE"), */
+                /* readOnly: (_categoriaController.text == "PLANILLA DE MOVILIDAD")
+                    ? _hasScannedData // Si escaneó QR, bloquear también en planilla
+                    : (_hasScannedData ||
+                          _categoriaController.text !=
+                              "VIAJES CON COMPROBANTE"), */
+                readOnly: _hasScannedData,
                 decoration: InputDecoration(
                   labelText: 'Total',
                   border: UnderlineInputBorder(
@@ -2488,6 +2553,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección de categoría
   Widget _buildCategoriaSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoadingCategorias) {
       return const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2514,18 +2581,27 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              border: Border.all(color: Colors.red.shade300),
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade300,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.error, color: Colors.red.shade700),
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Error cargando categorías: $_error',
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
                   ),
                 ),
               ],
@@ -2537,16 +2613,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
     return DropdownButtonFormField<DropdownOption>(
       value: _selectedCategoria,
-      dropdownColor: Colors.white, // 👈 Cambia aquí el color de fondo del menú
+      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
       decoration: InputDecoration(
         labelText: 'Categoría',
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
         border: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.transparent, width: 0),
         ),
         enabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[600]! : Colors.grey,
+            width: 1,
+          ),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2556,13 +2636,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white, width: 1),
         ),
-        prefixIcon: const Icon(Icons.category),
+        prefixIcon: Icon(
+          Icons.category,
+          color: isDark ? Colors.grey[400] : Colors.grey,
+        ),
       ),
       isExpanded: true,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
       items: _categorias.map((categoria) {
         return DropdownMenuItem<DropdownOption>(
           value: categoria,
-          child: Text(categoria.value),
+          child: Text(
+            categoria.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
         );
       }).toList(),
       onChanged: (value) {
@@ -2583,6 +2670,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección de tipo de gasto
   Widget _buildTipoGastoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoadingTiposGasto) {
       return const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2609,18 +2698,27 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              border: Border.all(color: Colors.red.shade300),
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade300,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.error, color: Colors.red.shade700),
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Error cargando tipos de gasto: $_error',
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
                   ),
                 ),
               ],
@@ -2631,17 +2729,21 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     }
 
     return DropdownButtonFormField<DropdownOption>(
-      dropdownColor: Colors.white,
+      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
       value: _selectedTipoGasto,
       decoration: InputDecoration(
         labelText: 'Tipo de Gasto',
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
         border: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.transparent, width: 0),
         ),
         enabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[600]! : Colors.grey,
+            width: 1,
+          ),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2651,13 +2753,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white, width: 1),
         ),
-        prefixIcon: const Icon(Icons.account_balance_wallet),
+        prefixIcon: Icon(
+          Icons.account_balance_wallet,
+          color: isDark ? Colors.grey[400] : Colors.grey,
+        ),
       ),
       isExpanded: true,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
       items: _tiposGasto.map((tipoGasto) {
         return DropdownMenuItem<DropdownOption>(
           value: tipoGasto,
-          child: Text(tipoGasto.value),
+          child: Text(
+            tipoGasto.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
         );
       }).toList(),
       onChanged: (value) {
@@ -2677,6 +2786,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección de tipo de gasto
   Widget _buildTipoMovilidadSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (_isLoadingTipoMovilidad) {
       return const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2703,18 +2814,27 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              border: Border.all(color: Colors.red.shade300),
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade300,
+              ),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(Icons.error, color: Colors.red.shade700),
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Error cargando: $_error',
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
                   ),
                 ),
               ],
@@ -2726,15 +2846,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
     return DropdownButtonFormField<DropdownOption>(
       value: _selectedTipoMovilidad,
+      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
       decoration: InputDecoration(
         labelText: 'Tipo de Movilidad',
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
         border: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.transparent, width: 0),
         ),
         enabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[600]! : Colors.grey,
+            width: 1,
+          ),
         ),
         focusedBorder: const UnderlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2744,13 +2869,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.white, width: 1),
         ),
-        prefixIcon: const Icon(Icons.account_balance_wallet),
+        prefixIcon: Icon(
+          Icons.account_balance_wallet,
+          color: isDark ? Colors.grey[400] : Colors.grey,
+        ),
       ),
       isExpanded: true,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
       items: _tiposMovilidad.map((tiposMovilidad) {
         return DropdownMenuItem<DropdownOption>(
           value: tiposMovilidad,
-          child: Text(tiposMovilidad.value),
+          child: Text(
+            tiposMovilidad.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
         );
       }).toList(),
       onChanged: (value) {
@@ -2770,6 +2902,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección de datos personalizados
   Widget _buildDatosMovilidadSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2786,15 +2920,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // ORIGEN VIAJE
         TextFormField(
           controller: _origenController,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
             labelText: 'Origen',
+            labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
             border: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.transparent, width: 0),
             ),
             enabledBorder: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[600]! : Colors.grey,
+                width: 1,
+              ),
             ),
             focusedBorder: const UnderlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2804,7 +2943,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.white, width: 1),
             ),
-            prefixIcon: const Icon(Icons.badge),
+            prefixIcon: Icon(
+              Icons.badge,
+              color: isDark ? Colors.grey[400] : Colors.grey,
+            ),
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
@@ -2820,15 +2962,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // DESTINO VIAJE
         TextFormField(
           controller: _destinoController,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
             labelText: 'Destino',
+            labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
             border: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.transparent, width: 0),
             ),
             enabledBorder: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[600]! : Colors.grey,
+                width: 1,
+              ),
             ),
             focusedBorder: const UnderlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2838,7 +2985,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.white, width: 1),
             ),
-            prefixIcon: const Icon(Icons.badge),
+            prefixIcon: Icon(
+              Icons.badge,
+              color: isDark ? Colors.grey[400] : Colors.grey,
+            ),
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
@@ -2853,15 +3003,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // MOTIVo VIAJE
         TextFormField(
           controller: _motivoViajeController,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
             labelText: 'Motivo Viaje',
+            labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
             border: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.transparent, width: 0),
             ),
             enabledBorder: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[600]! : Colors.grey,
+                width: 1,
+              ),
             ),
             focusedBorder: const UnderlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2871,7 +3026,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.white, width: 1),
             ),
-            prefixIcon: const Icon(Icons.badge),
+            prefixIcon: Icon(
+              Icons.badge,
+              color: isDark ? Colors.grey[400] : Colors.grey,
+            ),
           ),
           keyboardType: TextInputType.text,
           validator: (value) {
@@ -2892,15 +3050,20 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // PLACA
         TextFormField(
           controller: _placaController,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
             labelText: 'Placa',
+            labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
             border: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.transparent, width: 0),
             ),
             enabledBorder: UnderlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.grey, width: 1),
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[600]! : Colors.grey,
+                width: 1,
+              ),
             ),
             focusedBorder: const UnderlineInputBorder(
               borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -2910,7 +3073,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: Colors.white, width: 1),
             ),
-            prefixIcon: const Icon(Icons.badge),
+            prefixIcon: Icon(
+              Icons.badge,
+              color: isDark ? Colors.grey[400] : Colors.grey,
+            ),
           ),
           keyboardType: TextInputType.text,
         ),
@@ -2921,15 +3087,34 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección de notas
   Widget _buildNotasSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
           controller: _notaController,
-          decoration: const InputDecoration(
+          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          decoration: InputDecoration(
             labelText: 'Nota o Glosa:',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.note),
+            labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
+            border: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[600]! : Colors.grey,
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: isDark ? Colors.grey[600]! : Colors.grey,
+              ),
+            ),
+            focusedBorder: const OutlineInputBorder(
+              borderSide: BorderSide(color: Colors.green, width: 2),
+            ),
+            prefixIcon: Icon(
+              Icons.note,
+              color: isDark ? Colors.grey[400] : Colors.grey,
+            ),
           ),
           maxLines: 2,
           maxLength: 500,
@@ -2946,9 +3131,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir los botones de acción
   Widget _buildActionButtons() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(8),
-
       child: Row(
         children: [
           Expanded(
@@ -2956,11 +3142,17 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               onPressed: widget.onCancel,
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                side: const BorderSide(color: Colors.grey),
+                side: BorderSide(
+                  color: isDark ? Colors.grey[600]! : Colors.grey,
+                ),
+                foregroundColor: isDark ? Colors.grey[400] : Colors.grey,
               ),
-              child: const Text(
+              child: Text(
                 'Cancelar',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark ? Colors.grey[400] : Colors.grey,
+                ),
               ),
             ),
           ),
@@ -2986,8 +3178,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   /// Construir la sección del lector de código SUNAT
   Widget _buildLectorSunatSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
-      color: Colors.white,
+      color: isDark ? Colors.grey[800] : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Column(
@@ -2997,10 +3191,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               children: [
                 const Icon(Icons.qr_code_scanner, color: Colors.green),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Lector de Código QR',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                   ),
                 ),
                 ElevatedButton.icon(
@@ -3028,13 +3226,15 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: _hasScannedData
-                    ? Colors.green.shade50
-                    : Colors.grey.shade50,
+                    ? (isDark
+                          ? Colors.green.shade800.withOpacity(0.3)
+                          : Colors.green.shade50)
+                    : (isDark ? Colors.grey.shade800 : Colors.grey.shade50),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: _hasScannedData
-                      ? Colors.green.shade200
-                      : Colors.grey.shade300,
+                      ? (isDark ? Colors.green.shade600 : Colors.green.shade200)
+                      : (isDark ? Colors.grey.shade600 : Colors.grey.shade300),
                 ),
               ),
               child: _hasScannedData
@@ -3082,7 +3282,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                           child: Text(
                             'Escanee el código QR de la factura',
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: isDark
+                                  ? Colors.grey[400]
+                                  : Colors.grey.shade600,
                               fontSize: 12,
                             ),
                           ),
@@ -3334,6 +3536,8 @@ class _QRScannerScreenState extends State<_QRScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       resizeToAvoidBottomInset:
           true, //Esto hace que la pantalla se ajuste al teclado

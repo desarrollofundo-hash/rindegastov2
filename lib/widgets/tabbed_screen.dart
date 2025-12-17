@@ -20,6 +20,9 @@ class TabbedScreen extends StatelessWidget {
         children: [
           TabBar(
             labelColor: tabColors.isNotEmpty ? tabColors[0] : Colors.indigo,
+            indicatorColor: tabColors.isNotEmpty ? tabColors[0] : Colors.indigo,
+            dividerColor: Colors.grey.withOpacity(0.4),
+            dividerHeight: 0.5,
             tabs: tabLabels.map((label) => Tab(text: label)).toList(),
           ),
           Expanded(child: TabBarView(children: tabViews)),

@@ -73,10 +73,14 @@ class _LoginViewState extends State<LoginView>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
       resizeToAvoidBottomInset:
           true, // ✅ Evita que el teclado tape el contenido
-      backgroundColor: const Color(0xFFF2F6FC),
+      backgroundColor: colorScheme.background,
       body: SafeArea(
         child: GestureDetector(
           onTap: () => FocusScope.of(context).unfocus(),
@@ -116,10 +120,13 @@ class _LoginViewState extends State<LoginView>
   }
 
   Widget _buildHeader() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Column(
       children: [
         // Círculo con efecto de profundidad y gradiente moderno
-        
 
         // Título principal
         ShaderMask(
@@ -148,7 +155,9 @@ class _LoginViewState extends State<LoginView>
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 15,
-            color: Colors.grey.shade700,
+            color: isDark
+                ? colorScheme.onBackground.withOpacity(0.7)
+                : Colors.grey.shade700,
             fontWeight: FontWeight.w500,
             letterSpacing: 0.1,
           ),
@@ -180,14 +189,20 @@ class _LoginViewState extends State<LoginView>
   }
 
   Widget _buildLoginForm() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.blueGrey.withOpacity(0.15),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.blueGrey.withOpacity(0.15),
             blurRadius: 15,
             offset: const Offset(0, 6),
           ),
@@ -209,34 +224,40 @@ class _LoginViewState extends State<LoginView>
   }
 
   Widget _buildUserField() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return TextFormField(
       controller: widget.controller.userController,
       focusNode: _userFocusNode,
       keyboardType: TextInputType.number,
-      style: const TextStyle(fontSize: 16),
+      style: TextStyle(fontSize: 16, color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: "Dni",
         labelStyle: TextStyle(
           color: _isUserFocused
-              ? const Color(0xFF0066FF)
-              : Colors.grey.shade700,
+              ? colorScheme.primary
+              : colorScheme.onSurface.withOpacity(0.6),
         ),
         prefixIcon: Icon(
           Icons.person_outline_rounded,
           color: _isUserFocused
-              ? const Color(0xFF0066FF)
-              : Colors.grey.shade600,
+              ? colorScheme.primary
+              : colorScheme.onSurface.withOpacity(0.6),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0066FF), width: 2),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: isDark ? colorScheme.surface : Colors.grey.shade50,
       ),
       validator: widget.controller.validateUser,
       textInputAction: TextInputAction.next,
@@ -246,23 +267,27 @@ class _LoginViewState extends State<LoginView>
   }
 
   Widget _buildPasswordField() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return TextFormField(
       controller: widget.controller.passwordController,
       focusNode: _passwordFocusNode,
       obscureText: widget.controller.obscurePassword,
-      style: const TextStyle(fontSize: 16),
+      style: TextStyle(fontSize: 16, color: colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: "Contraseña",
         labelStyle: TextStyle(
           color: _isPasswordFocused
-              ? const Color(0xFF0066FF)
-              : Colors.grey.shade700,
+              ? colorScheme.primary
+              : colorScheme.onSurface.withOpacity(0.6),
         ),
         prefixIcon: Icon(
           Icons.lock_outline_rounded,
           color: _isPasswordFocused
-              ? const Color(0xFF0066FF)
-              : Colors.grey.shade600,
+              ? colorScheme.primary
+              : colorScheme.onSurface.withOpacity(0.6),
         ),
         suffixIcon: IconButton(
           icon: Icon(
@@ -270,8 +295,8 @@ class _LoginViewState extends State<LoginView>
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
             color: _isPasswordFocused
-                ? const Color(0xFF0066FF)
-                : Colors.grey.shade600,
+                ? colorScheme.primary
+                : colorScheme.onSurface.withOpacity(0.6),
           ),
           onPressed: () => setState(() {
             widget.controller.togglePasswordVisibility();
@@ -279,14 +304,16 @@ class _LoginViewState extends State<LoginView>
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF0066FF), width: 2),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: isDark ? colorScheme.surface : Colors.grey.shade50,
       ),
       validator: widget.controller.validatePassword,
       textInputAction: TextInputAction.done,
@@ -295,6 +322,9 @@ class _LoginViewState extends State<LoginView>
   }
 
   Widget _buildLoginButton() {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final isValid =
         widget.controller.userController.text.isNotEmpty &&
         widget.controller.passwordController.text.isNotEmpty;
@@ -305,8 +335,9 @@ class _LoginViewState extends State<LoginView>
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: isValid
-              ? const Color(0xFF0066FF)
-              : Colors.grey.shade400,
+              ? (isDark ? const Color(0xFF0066FF) : const Color(0xFF0066FF))
+              : (isDark ? Colors.grey.shade700 : Colors.grey.shade400),
+          foregroundColor: Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -326,7 +357,11 @@ class _LoginViewState extends State<LoginView>
               )
             : const Text(
                 "Iniciar sesión",
-                style: TextStyle(fontSize: 18, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
       ),
     );

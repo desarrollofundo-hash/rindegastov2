@@ -26,8 +26,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? colorScheme.surface : Colors.white,
       elevation: 2,
       titleSpacing: 0,
       title: Row(
@@ -38,28 +42,43 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
               child: Material(
                 elevation: 2,
-                shadowColor: Colors.black.withOpacity(0.08),
+                shadowColor: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
                   height: 46,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? colorScheme.background : Colors.white,
                     borderRadius: BorderRadius.circular(28),
                   ),
                   child: Row(
                     children: [
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Icon(Icons.search, color: Colors.grey),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Icon(
+                          Icons.search,
+                          color: isDark
+                              ? colorScheme.onSurface.withOpacity(0.6)
+                              : Colors.grey,
+                        ),
                       ),
                       Expanded(
                         child: TextField(
                           controller: controller,
                           focusNode: focusNode,
                           onChanged: (value) => onSearch?.call(value),
+                          style: TextStyle(
+                            color: isDark
+                                ? colorScheme.onSurface
+                                : Colors.black87,
+                          ),
                           decoration: InputDecoration(
                             hintText: hintText,
+                            hintStyle: TextStyle(
+                              color: isDark
+                                  ? colorScheme.onSurface.withOpacity(0.5)
+                                  : Colors.grey.shade600,
+                            ),
                             border: InputBorder.none,
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
@@ -112,12 +131,18 @@ class _UserInitialsAvatar extends StatelessWidget {
     // Obtener nombre desde el servicio de usuario
     final userName = UserService().currentUserName;
     final initials = _computeInitials(userName);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     if (!modern) {
       return Container(
         margin: const EdgeInsets.only(left: 10, right: 16),
         child: CircleAvatar(
           radius: 16,
-          backgroundColor: Colors.indigo.shade700,
+          backgroundColor: isDark
+              ? colorScheme.primary
+              : Colors.indigo.shade700,
           child: Text(
             initials.isNotEmpty ? initials : '?',
             style: const TextStyle(

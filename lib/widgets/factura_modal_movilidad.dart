@@ -1,11 +1,14 @@
+//factura_modal_movilidad.dart
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flu2/controllers/edit_reporte_controller.dart';
-import 'package:flu2/models/apiruc_model.dart';
+// import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/dropdown_option.dart';
 import 'package:flu2/services/user_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
@@ -15,6 +18,7 @@ import '../services/categoria_service.dart';
 import '../services/company_service.dart';
 import '../services/api_service.dart';
 import '../screens/home_screen.dart';
+import '../themes/app_theme.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Widget modal personalizado para gastos de movilidad
@@ -40,6 +44,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   // Para tipos de gasto
   bool _isLoadingTiposGasto = false;
   bool _isEditMode = true;
+  bool _isDisposed =
+      false; // Variable para trackear si el widget ha sido disposed
 
   String? _errorTiposGasto;
   List<String> _tiposGasto = [];
@@ -81,9 +87,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   String? _errorTiposMovilidad;
 
   ///ApiRuc
-  bool _isLoadingApiRuc = false;
-  String? _errorApiRuc;
-  ApiRuc? _apiRucData;
+  // bool _isLoadingApiRuc = false;
+  // String? _errorApiRuc;
+  // ApiRuc? _apiRucData;
 
   bool _isLoadingTipoMovilidad = false;
 
@@ -99,29 +105,38 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   void initState() {
     super.initState();
     _initializeControllers();
-    _loadCategorias();
-    _loadTiposGasto();
-    _loadTipoMovilidad();
-    _loadApiRuc(
-      widget.facturaData.ruc.toString(),
-    ); //widget.facturaData.rucEmisor
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!_canSetState) return;
 
+      await Future.wait([
+        _loadCategorias(),
+        _loadTiposGasto(),
+        _loadTipoMovilidad(),
+        _loadApiRuc(widget.facturaData.ruc.toString()),
+      ]);
+    });
     _addValidationListeners();
   }
 
+  /// Helper method para verificar si es seguro hacer setState
+  bool get _canSetState => mounted && !_isDisposed;
+
   /// Cargar tipos de gasto desde la API
   Future<void> _loadTiposGasto() async {
+    if (!mounted) return;
     setState(() {
       _isLoadingTiposGasto = true;
       _errorTiposGasto = null;
     });
     try {
       final tipos = await _apiService.getTiposGasto();
+      if (!mounted) return;
       setState(() {
         _tiposGasto = tipos.map((e) => e.toString()).toList();
         _isLoadingTiposGasto = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorTiposGasto = e.toString();
         _isLoadingTiposGasto = false;
@@ -158,7 +173,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Cargar información del RUC desde la API
   Future<void> _loadApiRuc(String ruc) async {
-    if (mounted) {
+    /* if (mounted) {
       setState(() {
         _isLoadingApiRuc = true;
         _errorApiRuc = null;
@@ -188,6 +203,13 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           _isLoadingApiRuc = false;
         });
       }
+    } */
+
+    // Simulación para completar el campo de razón social
+    if (mounted) {
+      setState(() {
+        _razonSocialController.text = 'Razón Social Simulada';
+      });
     }
   }
 
@@ -262,7 +284,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             null) && // ✅ Actualizado para aceptar archivos o imágenes
         _isRucValid(); // ✅ Añadida validación de RUC
 
-    if (_isFormValid != isValid) {
+    if (_isFormValid != isValid && _canSetState) {
       setState(() {
         _isFormValid = isValid;
       });
@@ -271,6 +293,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Cargar categorías desde la API para GASTOS DE MOVILIDAD
   Future<void> _loadCategorias() async {
+    if (!mounted) return;
     setState(() {
       _isLoadingCategorias = true;
       _errorCategorias = null;
@@ -287,11 +310,13 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           )
           .toList();
 
+      if (!mounted) return;
       setState(() {
         _categoriasMovilidad = categoriasFiltradas;
         _isLoadingCategorias = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorCategorias = e.toString();
         _isLoadingCategorias = false;
@@ -352,6 +377,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   @override
   void dispose() {
+    _isDisposed = true;
     _disposeControllers();
     _apiService.dispose();
     super.dispose();
@@ -396,13 +422,18 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Seleccionar archivo (imagen o PDF)
   Future<void> _pickImage() async {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     try {
+      if (!mounted) return;
       setState(() => _isLoading = true);
 
       // Mostrar opciones para seleccionar tipo de archivo
       final selectedOption = await showDialog<String>(
         context: context,
         builder: (BuildContext context) {
+          final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
           /*   return AlertDialog(
             title: const Text('Seleccionar evidencia'),
             content: const Text('¿Qué tipo de archivo desea agregar?'),
@@ -430,7 +461,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             ],
           ); */
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: isDark ? AppTheme.surfaceDark : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(18),
             ),
@@ -438,22 +469,30 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             contentPadding: const EdgeInsets.fromLTRB(24, 16, 24, 10),
 
             title: Row(
-              children: const [
-                Icon(Icons.attach_file, color: Colors.blue, size: 26),
-                SizedBox(width: 10),
+              children: [
+                Icon(
+                  Icons.attach_file,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                  size: 26,
+                ),
+                const SizedBox(width: 10),
                 Text(
                   'Seleccionar evidencia',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
               ],
             ),
 
-            content: const Text(
+            content: Text(
               '¿Qué tipo de archivo deseas agregar?',
               style: TextStyle(
                 fontSize: 15,
                 height: 1.4,
-                color: Colors.black87,
+                color: isDark ? AppTheme.textSecondaryDark : Colors.black87,
               ),
             ),
 
@@ -467,7 +506,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   // Tomar foto
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.blue,
+                      foregroundColor: isDark
+                          ? AppTheme.primaryDark
+                          : Colors.blue,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context, 'camera'),
@@ -481,7 +522,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   // Galería
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.purple,
+                      foregroundColor: isDark
+                          ? Colors.purple.shade300
+                          : Colors.purple,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context, 'gallery'),
@@ -495,7 +538,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   // PDF
                   TextButton.icon(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
+                      foregroundColor: isDark
+                          ? Colors.red.shade300
+                          : Colors.red,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context, 'pdf'),
@@ -511,7 +556,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   // Cancelar
                   TextButton(
                     style: TextButton.styleFrom(
-                      foregroundColor: Colors.grey[700],
+                      foregroundColor: Colors.red,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () => Navigator.pop(context),
@@ -531,33 +576,20 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       );
 
       if (selectedOption != null) {
-        if (selectedOption == 'camera') {
-          // Tomar foto con la cámara
+        if (selectedOption == 'camera' || selectedOption == 'gallery') {
+          // Tomar foto con la cámara o galería
           final XFile? image = await _picker.pickImage(
-            source: ImageSource.camera,
-            imageQuality: 85,
+            source: selectedOption == 'camera'
+                ? ImageSource.camera
+                : ImageSource.gallery,
+            imageQuality: 85, // Calidad de la imagen
           );
+
           if (image != null) {
-            setState(() {
-              _selectedFile = File(image.path);
-              _selectedFileType = 'image';
-              _selectedFileName = image.name;
-            });
-            _validateForm();
-          }
-        } else if (selectedOption == 'gallery') {
-          // Seleccionar imagen de la galería
-          final XFile? image = await _picker.pickImage(
-            source: ImageSource.gallery,
-            imageQuality: 85,
-          );
-          if (image != null) {
-            setState(() {
-              _selectedFile = File(image.path);
-              _selectedFileType = 'image';
-              _selectedFileName = image.name;
-            });
-            _validateForm();
+            File file = File(image.path);
+
+            // Aquí recortamos la imagen
+            _cropImage(file);
           }
         } else if (selectedOption == 'pdf') {
           // Seleccionar archivo PDF
@@ -569,12 +601,13 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
           if (result != null && result.files.isNotEmpty) {
             final file = File(result.files.first.path!);
-            setState(() {
-              _selectedFile = file;
-              _selectedFileType = 'pdf';
-              _selectedFileName = result.files.first.name;
-            });
-            _validateForm();
+            if (mounted) {
+              setState(() {
+                _selectedFile = file;
+                _selectedFileType = 'pdf';
+                _selectedFileName = result.files.first.name;
+              });
+            }
           }
         }
       }
@@ -583,12 +616,64 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error al seleccionar archivo: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: isDark ? Colors.red.shade400 : Colors.red,
           ),
         );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false); // Ocultar indicador de carga
+      }
+    }
+  }
+
+  /// Recortar imagen seleccionada
+  Future<void> _cropImage(File imageFile) async {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    try {
+      // Usamos el paquete image_cropper para permitir recortar la imagen
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: imageFile.path,
+        aspectRatio: CropAspectRatio(
+          ratioX: 1.0,
+          ratioY: 1.0,
+        ), // Relación de aspecto cuadrada (1:1)
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Recortar Imagen',
+            toolbarColor: isDark ? AppTheme.primaryDark : Colors.green,
+            toolbarWidgetColor: isDark ? AppTheme.backgroundDark : Colors.white,
+            initAspectRatio:
+                CropAspectRatioPreset.square, // Relación cuadrada inicial
+            lockAspectRatio: false, // No bloquear la relación de aspecto
+          ),
+          IOSUiSettings(
+            minimumAspectRatio: 1.0, // Relación mínima de aspecto
+          ),
+        ],
+      );
+
+      if (croppedFile != null && mounted) {
+        setState(() {
+          _selectedFile = File(
+            croppedFile.path,
+          ); // Convertimos CroppedFile a File
+          _selectedFileType = 'image'; // Indicamos que es una imagen
+          _selectedFileName = croppedFile.path
+              .split('/')
+              .last; // Nombre del archivo
+        });
+      }
+    } on PlatformException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al recortar la imagen: $e'),
+            backgroundColor: isDark ? Colors.red.shade400 : Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -598,17 +683,21 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
+        final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
         return Dialog(
           backgroundColor: Colors.transparent,
           child: Container(
             padding: const EdgeInsets.all(20),
             margin: const EdgeInsets.symmetric(horizontal: 40),
             decoration: BoxDecoration(
-              color: Colors.red,
+              color: isDark ? Colors.red.shade400 : Colors.red,
               borderRadius: BorderRadius.circular(15),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: isDark
+                      ? Colors.black.withOpacity(0.5)
+                      : Colors.black.withOpacity(0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -617,16 +706,16 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.warning_rounded,
-                  color: Colors.white,
+                  color: isDark ? Colors.white : Colors.white,
                   size: 50,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Mensaje del Servidor',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: isDark ? Colors.white : Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -635,15 +724,22 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 const SizedBox(height: 12),
                 Text(
                   message,
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.white,
+                    fontSize: 16,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.red,
+                    backgroundColor: isDark
+                        ? AppTheme.backgroundDark
+                        : Colors.white,
+                    foregroundColor: isDark
+                        ? AppTheme.textPrimaryDark
+                        : Colors.red,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 30,
                       vertical: 12,
@@ -686,17 +782,23 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Guardar factura mediante API
   Future<void> _saveFacturaAPI() async {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     print('🚀 Iniciando guardado de factura...');
 
     // Validar campos obligatorios antes de continuar
     if (!_isFormValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ Por favor complete todos los campos obligatorios'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              '❌ Por favor complete todos los campos obligatorios',
+            ),
+            backgroundColor: isDark ? Colors.red.shade400 : Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
       return;
     }
 
@@ -706,36 +808,39 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
     if (rucClienteEscaneado.isNotEmpty && rucEmpresaSeleccionada.isNotEmpty) {
       if (rucClienteEscaneado != rucEmpresaSeleccionada) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '❌ RUC del cliente no coincide con la empresa seleccionada',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 4),
-                Text('RUC cliente escaneado: $rucClienteEscaneado'),
-                Text('RUC empresa: $rucEmpresaSeleccionada'),
-                Text('Empresa: ${CompanyService().currentUserCompany}'),
-              ],
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '❌ RUC del cliente no coincide con la empresa seleccionada',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text('RUC cliente escaneado: $rucClienteEscaneado'),
+                  Text('RUC empresa: $rucEmpresaSeleccionada'),
+                  Text('Empresa: ${CompanyService().currentUserCompany}'),
+                ],
+              ),
+              backgroundColor: isDark ? Colors.red.shade400 : Colors.red,
+              duration: const Duration(seconds: 6),
+              action: SnackBarAction(
+                label: 'OK',
+                textColor: isDark ? Colors.white : Colors.white,
+                onPressed: () {},
+              ),
             ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 6),
-            action: SnackBarAction(
-              label: 'OK',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
+          );
+        }
         return;
       }
     }
 
     try {
+      if (!mounted) return;
       setState(() => _isLoading = true);
 
       // Formatear fecha para SQL Server (solo fecha, sin hora)
@@ -899,12 +1004,12 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               '¡Éxito!',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: isDark ? Colors.white : Colors.white,
                               ),
                             ),
                             const Spacer(),
@@ -912,7 +1017,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                               'Factura guardada correctamente',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.8),
+                                color: isDark
+                                    ? Colors.white.withOpacity(0.8)
+                                    : Colors.white.withOpacity(0.8),
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -1018,14 +1125,15 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final double maxHeight = MediaQuery.of(context).size.height * 0.93;
     final double minHeight = MediaQuery.of(context).size.height * 0.55;
 
     return Container(
       constraints: BoxConstraints(minHeight: minHeight, maxHeight: maxHeight),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: isDark ? AppTheme.surfaceDark : Colors.white,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(22),
           topRight: Radius.circular(22),
         ),
@@ -1093,11 +1201,14 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.shade700, Colors.blue.shade400],
+          colors: [
+            Color(0xFF1976D2),
+            Color(0xFF42A5F5),
+          ], // Azul/celeste original
         ),
-        borderRadius: const BorderRadius.only(
+        borderRadius: BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -1118,7 +1229,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                     color: Colors.white,
                   ),
                 ),
-                Text(
+                const Text(
                   'Datos extraídos del QR',
                   style: TextStyle(fontSize: 12, color: Colors.white70),
                 ),
@@ -1136,8 +1247,10 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir la sección de imagen
   Widget _buildImageSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
-      color: Colors.white,
+      color: isDark ? AppTheme.surfaceDark : Colors.white,
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
@@ -1147,9 +1260,13 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               children: [
                 const Icon(Icons.attach_file, color: Colors.red),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Adjuntar Evidencia',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
                 const Text(
                   ' *',
@@ -1172,8 +1289,10 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       (_selectedFile == null) ? 'Agregar' : 'Cambiar',
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: isDark
+                          ? AppTheme.primaryDark
+                          : Colors.blue,
+                      foregroundColor: isDark ? Colors.black87 : Colors.white,
                     ),
                   ),
               ],
@@ -1253,11 +1372,13 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 height: 100,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? AppTheme.backgroundDark : Colors.white,
                   border: Border.all(
                     color: (_selectedFile == null)
                         ? Colors.red.shade300
-                        : Colors.grey.shade300,
+                        : (isDark
+                              ? Colors.grey.shade600
+                              : Colors.grey.shade300),
                     width: (_selectedFile == null) ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(8),
@@ -1276,7 +1397,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       style: TextStyle(
                         color: (_selectedFile == null)
                             ? Colors.red
-                            : Colors.grey,
+                            : (isDark
+                                  ? AppTheme.textSecondaryDark
+                                  : Colors.grey),
                         fontWeight: (_selectedFile == null)
                             ? FontWeight.bold
                             : FontWeight.normal,
@@ -1286,7 +1409,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                     Text(
                       'Imagen o PDF',
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: isDark
+                            ? AppTheme.textSecondaryDark
+                            : Colors.grey.shade600,
                         fontSize: 12,
                       ),
                     ),
@@ -1662,6 +1787,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir la sección de política
   Widget _buildPolicySection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       elevation: 0,
       color: Colors.transparent,
@@ -1676,11 +1803,18 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           children: [
             Row(
               children: [
-                const Icon(Icons.policy, color: Colors.blue),
+                Icon(
+                  Icons.policy,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Política',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -1688,8 +1822,16 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             TextFormField(
               controller: _politicaController,
               enabled: false,
+              style: TextStyle(
+                color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+              ),
               decoration: InputDecoration(
                 labelText: 'Política Seleccionada',
+                labelStyle: TextStyle(
+                  color: isDark
+                      ? AppTheme.textSecondaryDark
+                      : Colors.grey.shade700,
+                ),
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
@@ -1699,17 +1841,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 ),
                 enabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                focusedBorder: UnderlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(
+                    color: isDark ? AppTheme.primaryDark : Colors.blue,
+                    width: 2,
+                  ),
                 ),
                 disabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade700 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
-                prefixIcon: const Icon(Icons.policy),
+                prefixIcon: Icon(
+                  Icons.policy,
+                  color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                ),
               ),
             ),
           ],
@@ -1720,6 +1874,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir la sección de categoría para movilidad
   Widget _buildCategorySection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       elevation: 0,
       color: Colors.transparent,
@@ -1734,11 +1890,18 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           children: [
             Row(
               children: [
-                const Icon(Icons.category, color: Colors.blue),
+                Icon(
+                  Icons.category,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Categoría',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -1804,9 +1967,17 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               )
             else
               DropdownButtonFormField<String>(
-                dropdownColor: Colors.white,
+                dropdownColor: isDark ? AppTheme.surfaceDark : Colors.white,
+                style: TextStyle(
+                  color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Seleccionar Categoría *',
+                  labelStyle: TextStyle(
+                    color: isDark
+                        ? AppTheme.textSecondaryDark
+                        : Colors.grey.shade700,
+                  ),
                   border: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
@@ -1816,17 +1987,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade600 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(
+                      color: isDark ? AppTheme.primaryDark : Colors.blue,
+                      width: 2,
+                    ),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
-                  prefixIcon: const Icon(Icons.category),
+                  prefixIcon: Icon(
+                    Icons.category,
+                    color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                  ),
                 ),
                 initialValue:
                     _categoriaController.text.isNotEmpty &&
@@ -1839,7 +2022,14 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                     .map(
                       (categoria) => DropdownMenuItem<String>(
                         value: categoria.categoria,
-                        child: Text(_formatCategoriaName(categoria.categoria)),
+                        child: Text(
+                          _formatCategoriaName(categoria.categoria),
+                          style: TextStyle(
+                            color: isDark
+                                ? AppTheme.textPrimaryDark
+                                : Colors.black87,
+                          ),
+                        ),
                       ),
                     )
                     .toList(),
@@ -1850,7 +2040,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   return null;
                 },
                 onChanged: (value) {
-                  if (value != null) {
+                  if (value != null && _canSetState) {
                     setState(() {
                       _categoriaController.text = value;
                     });
@@ -1878,6 +2068,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   }
 
   Widget _buildFacturaDataSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       elevation: 0,
       color: Colors.transparent,
@@ -1892,11 +2084,18 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           children: [
             Row(
               children: [
-                const Icon(Icons.receipt_long, color: Colors.blue),
+                Icon(
+                  Icons.receipt_long,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Datos de la Factura',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -1905,11 +2104,18 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Icon(Icons.local_offer, color: Colors.blue),
+                Icon(
+                  Icons.local_offer,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Tipo de Gasto',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -1954,9 +2160,17 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               )
             else
               DropdownButtonFormField<String>(
-                dropdownColor: Colors.white,
+                dropdownColor: isDark ? AppTheme.surfaceDark : Colors.white,
+                style: TextStyle(
+                  color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Seleccionar Tipo de Gasto *',
+                  labelStyle: TextStyle(
+                    color: isDark
+                        ? AppTheme.textSecondaryDark
+                        : Colors.grey.shade700,
+                  ),
                   border: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
@@ -1966,17 +2180,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   ),
                   enabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade600 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Colors.blue, width: 2),
+                  focusedBorder: UnderlineInputBorder(
+                    borderRadius: const BorderRadius.all(Radius.circular(12)),
+                    borderSide: BorderSide(
+                      color: isDark ? AppTheme.primaryDark : Colors.blue,
+                      width: 2,
+                    ),
                   ),
                   disabledBorder: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.grey, width: 1),
+                    borderSide: BorderSide(
+                      color: isDark ? Colors.grey.shade700 : Colors.grey,
+                      width: 1,
+                    ),
                   ),
-                  prefixIcon: const Icon(Icons.local_offer),
+                  prefixIcon: Icon(
+                    Icons.local_offer,
+                    color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                  ),
                 ),
                 value:
                     _tipoGastoController.text.isNotEmpty &&
@@ -1987,7 +2213,14 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                     .map(
                       (tipo) => DropdownMenuItem<String>(
                         value: tipo,
-                        child: Text(tipo),
+                        child: Text(
+                          tipo,
+                          style: TextStyle(
+                            color: isDark
+                                ? AppTheme.textPrimaryDark
+                                : Colors.black87,
+                          ),
+                        ),
                       ),
                     )
                     .toList(),
@@ -2267,24 +2500,32 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   }
 
   Widget _buildTipoMovilidad() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Tipo de movilidad',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+          ),
         ),
         const SizedBox(height: 8),
 
         // Si está cargando, mostrar indicador
         if (_isLoadingTipoMovilidad)
-          const Column(
+          Column(
             children: [
-              Center(child: CircularProgressIndicator()),
-              SizedBox(height: 8),
+              const Center(child: CircularProgressIndicator()),
+              const SizedBox(height: 8),
               Text(
                 'Cargando tipos movilidad...',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(
+                  color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -2293,18 +2534,27 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red.shade50,
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.shade200),
+              border: Border.all(
+                color: isDark ? Colors.red.shade600 : Colors.red.shade200,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.error, color: Colors.red.shade600),
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade600,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Error al cargar tipos movilidad: $_errorTiposMovilidad',
-                    style: TextStyle(color: Colors.red.shade700),
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade300 : Colors.red.shade700,
+                    ),
                   ),
                 ),
                 TextButton(
@@ -2318,9 +2568,20 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           AbsorbPointer(
             absorbing: !_isEditMode,
             child: DropdownButtonFormField<String>(
+              style: TextStyle(
+                color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+                fontSize: 16,
+              ),
+              dropdownColor: isDark ? AppTheme.surfaceDark : Colors.white,
               decoration: InputDecoration(
                 labelText: 'Tipo de Movilidad *',
-                prefixIcon: Icon(Icons.attach_money),
+                labelStyle: TextStyle(
+                  color: isDark ? AppTheme.textSecondaryDark : Colors.grey[600],
+                ),
+                prefixIcon: Icon(
+                  Icons.attach_money,
+                  color: isDark ? AppTheme.primaryDark : Colors.grey[600],
+                ),
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
@@ -2330,18 +2591,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 ),
                 enabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                    width: 1,
+                  ),
                 ),
-                focusedBorder: const UnderlineInputBorder(
+                focusedBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                  borderSide: BorderSide(
+                    color: isDark ? AppTheme.primaryDark : Colors.blue,
+                    width: 2,
+                  ),
                 ),
                 disabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                    width: 1,
+                  ),
                 ),
                 filled: true,
-                fillColor: _isEditMode ? Colors.white : Colors.grey[100],
+                fillColor: _isEditMode
+                    ? (isDark ? AppTheme.surfaceDark : Colors.white)
+                    : (isDark ? Colors.grey[800] : Colors.grey[100]),
               ),
               value:
                   _tipoTransporteController.text.isNotEmpty &&
@@ -2354,7 +2626,14 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   .map(
                     (tipo) => DropdownMenuItem<String>(
                       value: tipo.value,
-                      child: Text(tipo.value),
+                      child: Text(
+                        tipo.value,
+                        style: TextStyle(
+                          color: isDark
+                              ? AppTheme.textPrimaryDark
+                              : Colors.black87,
+                        ),
+                      ),
                     ),
                   )
                   .toList(),
@@ -2380,6 +2659,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir la sección específica de movilidad
   Widget _buildMovilidadSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       elevation: 0,
       color: Colors.transparent,
@@ -2394,11 +2675,18 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           children: [
             Row(
               children: [
-                const Icon(Icons.directions_car, color: Colors.blue),
+                Icon(
+                  Icons.directions_car,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Detalles de Movilidad',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
               ],
             ),
@@ -2408,8 +2696,16 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 Expanded(
                   child: TextFormField(
                     controller: _origenController,
+                    style: TextStyle(
+                      color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Origen *',
+                      labelStyle: TextStyle(
+                        color: isDark
+                            ? AppTheme.textSecondaryDark
+                            : Colors.grey.shade700,
+                      ),
                       border: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
@@ -2419,23 +2715,33 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       ),
                       enabledBorder: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.grey,
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.grey.shade600 : Colors.grey,
                           width: 1,
                         ),
                       ),
-                      focusedBorder: const UnderlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      focusedBorder: UnderlineInputBorder(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
+                        borderSide: BorderSide(
+                          color: isDark ? AppTheme.primaryDark : Colors.blue,
+                          width: 2,
+                        ),
                       ),
                       disabledBorder: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.grey,
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.grey.shade700 : Colors.grey,
                           width: 1,
                         ),
                       ),
-                      prefixIcon: const Icon(Icons.my_location),
+                      prefixIcon: Icon(
+                        Icons.my_location,
+                        color: isDark
+                            ? AppTheme.textSecondaryDark
+                            : Colors.grey,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -2454,8 +2760,16 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 Expanded(
                   child: TextFormField(
                     controller: _destinoController,
+                    style: TextStyle(
+                      color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Destino *',
+                      labelStyle: TextStyle(
+                        color: isDark
+                            ? AppTheme.textSecondaryDark
+                            : Colors.grey.shade700,
+                      ),
                       border: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(
@@ -2465,23 +2779,33 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       ),
                       enabledBorder: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.grey,
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.grey.shade600 : Colors.grey,
                           width: 1,
                         ),
                       ),
-                      focusedBorder: const UnderlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      focusedBorder: UnderlineInputBorder(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(12),
+                        ),
+                        borderSide: BorderSide(
+                          color: isDark ? AppTheme.primaryDark : Colors.blue,
+                          width: 2,
+                        ),
                       ),
                       disabledBorder: UnderlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                          color: Colors.grey,
+                        borderSide: BorderSide(
+                          color: isDark ? Colors.grey.shade700 : Colors.grey,
                           width: 1,
                         ),
                       ),
-                      prefixIcon: const Icon(Icons.location_on),
+                      prefixIcon: Icon(
+                        Icons.location_on,
+                        color: isDark
+                            ? AppTheme.textSecondaryDark
+                            : Colors.grey,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
@@ -2496,8 +2820,16 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _motivoViajeController,
+              style: TextStyle(
+                color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+              ),
               decoration: InputDecoration(
                 labelText: 'Motivo del Viaje *',
+                labelStyle: TextStyle(
+                  color: isDark
+                      ? AppTheme.textSecondaryDark
+                      : Colors.grey.shade700,
+                ),
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
@@ -2507,17 +2839,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 ),
                 enabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
+                focusedBorder: UnderlineInputBorder(
+                  borderRadius: const BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(
+                    color: isDark ? AppTheme.primaryDark : Colors.blue,
+                    width: 2,
+                  ),
                 ),
                 disabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade700 : Colors.grey,
+                    width: 1,
+                  ),
                 ),
-                prefixIcon: const Icon(Icons.description),
+                prefixIcon: Icon(
+                  Icons.description,
+                  color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                ),
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
@@ -2571,6 +2915,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir la sección de notas
   Widget _buildNotesSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Card(
       elevation: 0,
       color: Colors.transparent,
@@ -2585,21 +2931,58 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           children: [
             Row(
               children: [
-                const Icon(Icons.note_add, color: Colors.blue),
+                Icon(
+                  Icons.note_add,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                ),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   'Notas Adicionales',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _notaController,
-              decoration: const InputDecoration(
+              style: TextStyle(
+                color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+              ),
+              decoration: InputDecoration(
                 labelText: 'Nota o Glosa:',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.note),
+                labelStyle: TextStyle(
+                  color: isDark
+                      ? AppTheme.textSecondaryDark
+                      : Colors.grey.shade700,
+                ),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                  ),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey.shade600 : Colors.grey,
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: isDark ? AppTheme.primaryDark : Colors.blue,
+                    width: 2,
+                  ),
+                ),
+                prefixIcon: Icon(
+                  Icons.note,
+                  color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+                ),
+                filled: true,
+                fillColor: isDark
+                    ? AppTheme.backgroundDark
+                    : Colors.grey.shade50,
               ),
               maxLines: 2,
               maxLength: 500,
@@ -2618,6 +3001,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
   /// Construir los botones de acción
   Widget _buildActionButtons() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.fromLTRB(
         20,
@@ -2633,19 +3018,30 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               padding: const EdgeInsets.all(2),
               margin: const EdgeInsets.only(bottom: 6),
               decoration: BoxDecoration(
-                color: Colors.orange.shade50,
+                color: isDark
+                    ? Colors.orange.withOpacity(0.2)
+                    : Colors.orange.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.orange.shade200),
+                border: Border.all(
+                  color: isDark
+                      ? Colors.orange.withOpacity(0.5)
+                      : Colors.orange.shade200,
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.warning, color: Colors.orange.shade600),
+                  Icon(
+                    Icons.warning,
+                    color: isDark
+                        ? Colors.orange.shade300
+                        : Colors.orange.shade600,
+                  ),
                   const SizedBox(width: 8),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Por favor complete todos los campos ',
                       style: TextStyle(
-                        color: Colors.orange,
+                        color: isDark ? Colors.orange.shade300 : Colors.orange,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -2660,11 +3056,16 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   onPressed: widget.onCancel,
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    side: BorderSide(color: Colors.grey[400]!),
+                    side: const BorderSide(color: Colors.red, width: 1.5),
+                    backgroundColor: Colors.transparent,
                   ),
                   child: const Text(
                     'Cancelar',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.red,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
@@ -2676,9 +3077,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       : _saveFacturaAPI,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    backgroundColor: _isFormValid ? Colors.blue : Colors.grey,
+                    backgroundColor: _isFormValid ? Colors.green : Colors.grey,
                     foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey[300],
+                    disabledBackgroundColor: Colors.grey[400],
                     disabledForegroundColor: Colors.grey[600],
                   ),
                   child: _isLoading
@@ -2717,31 +3118,53 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     bool isRequired = false,
     bool readOnly = false,
   }) {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       readOnly: readOnly,
+      style: TextStyle(
+        color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
+      ),
       decoration: InputDecoration(
         labelText: isRequired ? '$label *' : label,
-        prefixIcon: Icon(icon),
+        labelStyle: TextStyle(
+          color: isDark ? AppTheme.textSecondaryDark : Colors.grey.shade700,
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
+        ),
         border: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Colors.transparent, width: 0),
         ),
         enabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade600 : Colors.grey,
+            width: 1,
+          ),
         ),
-        focusedBorder: const UnderlineInputBorder(
-          borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.blue, width: 2),
+        focusedBorder: UnderlineInputBorder(
+          borderRadius: const BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(
+            color: isDark ? AppTheme.primaryDark : Colors.blue,
+            width: 2,
+          ),
         ),
         disabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.grey, width: 1),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey.shade700 : Colors.grey,
+            width: 1,
+          ),
         ),
         filled: true,
-        fillColor: readOnly ? Colors.grey.shade100 : Colors.grey.shade50,
+        fillColor: readOnly
+            ? (isDark ? Colors.grey.shade800 : Colors.grey.shade100)
+            : (isDark ? AppTheme.backgroundDark : Colors.grey.shade50),
       ),
       validator: isRequired
           ? (value) {
