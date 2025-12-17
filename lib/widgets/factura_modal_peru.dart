@@ -2,6 +2,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flu2/controllers/edit_reporte_controller.dart';
 // import 'package:flu2/models/apiruc_model.dart'; // No utilizado actualmente
 import 'package:flutter/material.dart';
@@ -11,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:printing/printing.dart';
 import '../models/factura_data.dart';
 import '../models/categoria_model.dart';
 import '../models/dropdown_option.dart';
@@ -632,6 +634,55 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     }
   }
 
+  /// Convertir PDF a imagen (primera página)
+  /// Retorna un archivo de imagen PNG o null si falla
+  Future<File?> _convertirPdfAImagen(File pdfFile) async {
+    try {
+      debugPrint('🔄 Iniciando conversión de PDF a imagen...');
+
+      // Leer los bytes del PDF
+      final pdfBytes = await pdfFile.readAsBytes();
+
+      // Verificar tamaño del PDF (limitar a 5MB para evitar problemas de memoria)
+      const int maxSizeForConversion = 5 * 1024 * 1024; // 5 MB
+      if (pdfBytes.lengthInBytes > maxSizeForConversion) {
+        debugPrint(
+          '⚠️ PDF demasiado grande (${pdfBytes.lengthInBytes} bytes), omitiendo conversión',
+        );
+        return null;
+      }
+
+      // Rasterizar la primera página del PDF con calidad media
+      debugPrint('📄 Rasterizando primera página del PDF...');
+      final stream = Printing.raster(pdfBytes, pages: [0], dpi: 150);
+      final raster = await stream.first.timeout(const Duration(seconds: 15));
+      final uiImage = await raster.toImage();
+
+      // Convertir la imagen UI a bytes PNG
+      final byteData = await uiImage.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        debugPrint('❌ No se pudo convertir la imagen a bytes');
+        return null;
+      }
+
+      // Guardar la imagen como archivo temporal
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${tempDir.path}/pdf_converted_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(byteData.buffer.asUint8List());
+
+      debugPrint('✅ Imagen guardada en: $imagePath');
+      debugPrint('📊 Tamaño de la imagen: ${await imageFile.length()} bytes');
+
+      return imageFile;
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error al convertir PDF a imagen: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return null;
+    }
+  }
+
   /// Mostrar alerta en medio de la pantalla con mensaje del servidor
   void _showServerAlert(String message) {
     showDialog(
@@ -781,19 +832,67 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       if (_fechaEmisionController.text.isNotEmpty) {
         try {
           // Intentar parsear la fecha del QR
-          final fecha = DateTime.parse(_fechaEmisionController.text);
+          final fechaTexto = _fechaEmisionController.text.trim();
+          debugPrint('📅 Fecha del QR: "$fechaTexto"');
+
+          DateTime fecha;
+
+          // Intentar diferentes formatos de fecha
+          if (fechaTexto.contains('-')) {
+            // Formato: YYYY-MM-DD o variantes
+            fecha = DateTime.parse(fechaTexto);
+          } else if (fechaTexto.contains('/')) {
+            // Formato: DD/MM/YYYY
+            final parts = fechaTexto.split('/');
+            if (parts.length == 3) {
+              fecha = DateTime(
+                int.parse(parts[2]), // año
+                int.parse(parts[1]), // mes
+                int.parse(parts[0]), // día
+              );
+            } else {
+              throw FormatException('Formato de fecha inválido: $fechaTexto');
+            }
+          } else {
+            // Si no tiene separadores, intentar parsear directamente
+            fecha = DateTime.parse(fechaTexto);
+          }
+
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+          debugPrint('✅ Fecha parseada correctamente: $fechaSQL');
         } catch (e) {
-          // Si falla, usar fecha actual
-          final fecha = DateTime.now();
-          fechaSQL =
-              "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+          // ⚠️ Si falla el parsing, mostrar error y no continuar
+          debugPrint('⚠️ Error parseando fecha: $e');
+          debugPrint('❌ Fecha recibida: "${_fechaEmisionController.text}"');
+
+          if (mounted) {
+            setState(() => _isLoading = false);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  '❌ Error: Formato de fecha inválido. Fecha recibida: "${_fechaEmisionController.text}"',
+                ),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+          return;
         }
       } else {
-        final fecha = DateTime.now();
-        fechaSQL =
-            "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+        // Si no hay fecha, dejar vacío y mostrar error
+        debugPrint('❌ No hay fecha de emisión');
+        if (mounted) {
+          setState(() => _isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('❌ Error: La fecha de emisión es obligatoria'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
       }
 
       // 📋 DATOS PRINCIPALES DE LA FACTURA
@@ -893,11 +992,32 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         _selectedFile!.path,
       ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
 
+      // 🔄 Si es un PDF, convertirlo a imagen
+      File archivoASubir = _selectedFile!;
+      String extensionFinal = extension;
+
+      if (_isPdfFile(_selectedFile!.path)) {
+        debugPrint('📄 Detectado PDF, convirtiendo a imagen...');
+        try {
+          final imagenConvertida = await _convertirPdfAImagen(_selectedFile!);
+          if (imagenConvertida != null) {
+            archivoASubir = imagenConvertida;
+            extensionFinal = '.png';
+            debugPrint('✅ PDF convertido a imagen exitosamente');
+          } else {
+            debugPrint('⚠️ No se pudo convertir PDF, subiendo PDF original');
+          }
+        } catch (e) {
+          debugPrint('❌ Error al convertir PDF: $e');
+          debugPrint('⚠️ Subiendo PDF original');
+        }
+      }
+
       String nombreArchivo =
-          '${idRend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extension';
+          '${idRend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extensionFinal';
 
       final driveId = await _apiService.subirArchivo(
-        _selectedFile!.path,
+        archivoASubir.path,
         nombreArchivo: nombreArchivo,
       );
       // ✅ SEGUNDO API: Guardar evidencia/archivo usando el idRend del primer API

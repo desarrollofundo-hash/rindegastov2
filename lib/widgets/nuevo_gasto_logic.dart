@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 import '../models/dropdown_option.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
@@ -77,6 +79,55 @@ class NuevoGastoLogic {
     );
     await file.writeAsBytes(await pdf.save());
     return file;
+  }
+
+  /// Convertir PDF a imagen (primera página)
+  /// Retorna un archivo de imagen PNG o null si falla
+  Future<File?> convertirPdfAImagen(File pdfFile) async {
+    try {
+      debugPrint('🔄 Iniciando conversión de PDF a imagen...');
+
+      // Leer los bytes del PDF
+      final pdfBytes = await pdfFile.readAsBytes();
+
+      // Verificar tamaño del PDF (limitar a 5MB para evitar problemas de memoria)
+      const int maxSizeForConversion = 5 * 1024 * 1024; // 5 MB
+      if (pdfBytes.lengthInBytes > maxSizeForConversion) {
+        debugPrint(
+          '⚠️ PDF demasiado grande (${pdfBytes.lengthInBytes} bytes), omitiendo conversión',
+        );
+        return null;
+      }
+
+      // Rasterizar la primera página del PDF con calidad media
+      debugPrint('📄 Rasterizando primera página del PDF...');
+      final stream = Printing.raster(pdfBytes, pages: [0], dpi: 150);
+      final raster = await stream.first.timeout(const Duration(seconds: 15));
+      final uiImage = await raster.toImage();
+
+      // Convertir la imagen UI a bytes PNG
+      final byteData = await uiImage.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) {
+        debugPrint('❌ No se pudo convertir la imagen a bytes');
+        return null;
+      }
+
+      // Guardar la imagen como archivo temporal
+      final tempDir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final imagePath = '${tempDir.path}/pdf_converted_$timestamp.png';
+      final imageFile = File(imagePath);
+      await imageFile.writeAsBytes(byteData.buffer.asUint8List());
+
+      debugPrint('✅ Imagen guardada en: $imagePath');
+      debugPrint('📊 Tamaño de la imagen: ${await imageFile.length()} bytes');
+
+      return imageFile;
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error al convertir PDF a imagen: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return null;
+    }
   }
 
   /// Prepara el mapa de datos del gasto para la API manteniendo las mismas reglas de truncado y defaults
@@ -176,11 +227,32 @@ class NuevoGastoLogic {
     if (selectedFile != null) {
       final extension = p.extension(selectedFile.path);
 
+      // 🔄 Si es un PDF, convertirlo a imagen
+      File archivoASubir = selectedFile;
+      String extensionFinal = extension;
+
+      if (selectedFile.path.toLowerCase().endsWith('.pdf')) {
+        debugPrint('📄 Detectado PDF, convirtiendo a imagen...');
+        try {
+          final imagenConvertida = await convertirPdfAImagen(selectedFile);
+          if (imagenConvertida != null) {
+            archivoASubir = imagenConvertida;
+            extensionFinal = '.png';
+            debugPrint('✅ PDF convertido a imagen exitosamente');
+          } else {
+            debugPrint('⚠️ No se pudo convertir PDF, subiendo PDF original');
+          }
+        } catch (e) {
+          debugPrint('❌ Error al convertir PDF: $e');
+          debugPrint('⚠️ Subiendo PDF original');
+        }
+      }
+
       final nombreArchivo =
-          '${idRend}_${gastoData['ruc']}_${gastoData['serie']}_${gastoData['numero']}$extension';
+          '${idRend}_${gastoData['ruc']}_${gastoData['serie']}_${gastoData['numero']}$extensionFinal';
 
       driveId = await apiService.subirArchivo(
-        selectedFile.path,
+        archivoASubir.path,
         nombreArchivo: nombreArchivo,
       );
     } else {

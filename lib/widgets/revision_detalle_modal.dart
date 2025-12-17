@@ -51,7 +51,8 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
       try {
         reportesRevision = await _apiService
             .getReportesRendicionRevision_Detalle(
-              idrev: widget.revision.idAd.toString(),
+              //para poder llamar el detalle de revision
+              idrev: widget.revision.idRev.toString(),
             );
       } catch (apiError) {
         // fallback: dejar la lista vacía para mostrar el estado "No hay gastos"
@@ -748,7 +749,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                          color: Colors.black,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
