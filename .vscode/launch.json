@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+        
         /*  {
             "name": "Flutter Emulator",
             "request": "launch",
@@ -27,20 +28,20 @@
             "type": "dart",
             "program": "lib/main.dart",
             "deviceId": "onv845vkcivgwsmf"
-        },  */
+        },  
         {
             "name": "SM A055M",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
             "deviceId": "R9WWB0PCMWH"
-        },
-        /*   {
-            "name": " WDY LX3",
+        },*/
+          {
+            "name": " SM A165M",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
-            "deviceId": "AXLKCP3B15404814"
-        } */
+            "deviceId": "R58Y40FQ80J"
+        } 
     ]
 }
