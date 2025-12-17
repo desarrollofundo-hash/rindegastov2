@@ -21,6 +21,7 @@ import '../services/user_service.dart';
 import '../services/company_service.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:pdfx/pdfx.dart';
 
 /// Widget modal personalizado para mostrar y editar datos de factura peruana
 class FacturaModalPeruEvid extends StatefulWidget {
@@ -989,22 +990,63 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
       if (mounted) setState(() => _isLoading = true);
 
       // Formatear fecha para SQL Server (solo fecha, sin hora)
-
-      // Formatear fecha para SQL Server (solo fecha, sin hora)
       String fechaSQL = "";
       if (_fechaEmisionController.text.isNotEmpty) {
         try {
-          // Intentar parsear la fecha del QR
-          final fecha = DateTime.parse(_fechaEmisionController.text);
+          final fechaTexto = _fechaEmisionController.text.trim();
+          debugPrint('📅 Fecha a parsear: "$fechaTexto"');
+
+          DateTime fecha;
+
+          // Intentar diferentes formatos de fecha
+          if (fechaTexto.contains('/')) {
+            // Formato: DD/MM/YYYY (formato común en Perú)
+            final parts = fechaTexto.split('/');
+            if (parts.length == 3) {
+              fecha = DateTime(
+                int.parse(parts[2]), // año
+                int.parse(parts[1]), // mes
+                int.parse(parts[0]), // día
+              );
+              debugPrint('✅ Fecha parseada (DD/MM/YYYY): $fecha');
+            } else {
+              throw FormatException('Formato de fecha inválido: $fechaTexto');
+            }
+          } else if (fechaTexto.contains('-')) {
+            // Formato: YYYY-MM-DD o DD-MM-YYYY
+            if (fechaTexto.split('-')[0].length == 4) {
+              // YYYY-MM-DD
+              fecha = DateTime.parse(fechaTexto);
+              debugPrint('✅ Fecha parseada (YYYY-MM-DD): $fecha');
+            } else {
+              // DD-MM-YYYY
+              final parts = fechaTexto.split('-');
+              fecha = DateTime(
+                int.parse(parts[2]), // año
+                int.parse(parts[1]), // mes
+                int.parse(parts[0]), // día
+              );
+              debugPrint('✅ Fecha parseada (DD-MM-YYYY): $fecha');
+            }
+          } else {
+            // Intentar parsear directamente
+            fecha = DateTime.parse(fechaTexto);
+            debugPrint('✅ Fecha parseada (ISO): $fecha');
+          }
+
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
+          debugPrint('✅ Fecha SQL generada: $fechaSQL');
         } catch (e) {
+          debugPrint('❌ Error parseando fecha: $e');
+          debugPrint('⚠️ Usando fecha actual como fallback');
           // Si falla, usar fecha actual
           final fecha = DateTime.now();
           fechaSQL =
               "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
         }
       } else {
+        debugPrint('⚠️ Campo de fecha vacío, usando fecha actual');
         final fecha = DateTime.now();
         fechaSQL =
             "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
@@ -1105,15 +1147,51 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
       debugPrint('🆔 ID autogenerado obtenido: $idRend');
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
 
-      final extension = p.extension(
-        selectedFile!.path,
-      ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
+      // Si la evidencia es un PDF, convertir la primera página a imagen PNG
+      String uploadPath = selectedFile!.path;
+      String uploadExtension = p.extension(selectedFile!.path).toLowerCase();
+
+      if (uploadExtension == '.pdf') {
+        try {
+          final doc = await PdfDocument.openFile(selectedFile!.path);
+          final page = await doc.getPage(1);
+
+          // Renderizar como PNG (usar dimensiones de la página)
+          final pageImage = await page.render(
+            width: page.width,
+            height: page.height,
+            format: PdfPageImageFormat.png,
+          );
+
+          final bytes = pageImage?.bytes;
+          await page.close();
+          await doc.close();
+
+          if (bytes != null) {
+            final tempDir = await getTemporaryDirectory();
+            final imgPath =
+                '${tempDir.path}/${p.basenameWithoutExtension(selectedFile!.path)}.png';
+            final imgFile = File(imgPath);
+            await imgFile.writeAsBytes(bytes, flush: true);
+
+            uploadPath = imgFile.path;
+            uploadExtension = '.png';
+          }
+        } catch (e) {
+          debugPrint('⚠️ Error convirtiendo PDF a imagen: $e');
+          // Si falla la conversión, seguir subiendo el PDF original
+          uploadPath = selectedFile!.path;
+          uploadExtension = p.extension(selectedFile!.path).toLowerCase();
+        }
+      }
+
+      final extension = uploadExtension; // ext final a subir
 
       String nombreArchivo =
           '${idRend}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extension';
 
       final driveId = await _apiService.subirArchivo(
-        selectedFile!.path,
+        uploadPath,
         nombreArchivo: nombreArchivo,
       );
       //debugPrint('ID de archivo en Drive: $driveId');

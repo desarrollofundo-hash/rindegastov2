@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flu2/controllers/edit_reporte_controller.dart';
 import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/user_company.dart';
@@ -14,13 +15,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:open_filex/open_filex.dart';
+import 'package:printing/printing.dart';
 import '../models/dropdown_option.dart';
 import '../services/api_service.dart';
 import '../services/user_service.dart';
 import '../services/company_service.dart';
 import '../screens/home_screen.dart';
 import 'nuevo_gasto_logic.dart';
-import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 /// Modal para crear un nuevo gasto con todos los campos personalizados
@@ -116,9 +117,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     'GUÍA DE REMISION',
   ];
 
-  String get fechaSQL =>
+  /*   String get fechaSQL =>
       DateFormat('yyyy-MM-dd').format(DateTime.parse(_fechaController.text));
-
+ */
   /// Validar si el RUC del cliente (escaneado) coincide con la empresa seleccionada
   bool _isRucValid() {
     final rucClienteEscaneado = _rucClienteController.text.trim();
@@ -184,9 +185,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _razonSocialController = TextEditingController();
     _rucClienteController = TextEditingController();
     _tipoComprobanteController = TextEditingController();
-    _fechaController = TextEditingController(
-      text: DateTime.now().toString().split(' ')[0], // Fecha actual por defecto
-    );
+    _fechaController = TextEditingController();
     _serieFacturaController = TextEditingController();
     _numeroFacturaController = TextEditingController();
     _igvController = TextEditingController();
@@ -777,7 +776,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         serie: _serieFacturaController.text,
         numero: _numeroFacturaController.text,
         igv: _igvController.text,
-        fecha: fechaSQL,
+        fecha: _fechaController.text,
         total: _totalController.text,
         moneda: _monedaController.text,
         nota: _notaController.text,

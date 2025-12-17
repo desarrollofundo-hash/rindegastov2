@@ -393,6 +393,7 @@ class _ReportesListState extends State<ReportesList>
                                           ],
                                         ),
                                         const SizedBox(height: 2),
+
                                         Row(
                                           children: [
                                             Icon(
@@ -408,7 +409,7 @@ class _ReportesListState extends State<ReportesList>
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
-                                                  Text(
+                                                  /*  Text(
                                                     formatDate(reporte.fecha),
                                                     style: TextStyle(
                                                       fontSize: 12,
@@ -418,6 +419,33 @@ class _ReportesListState extends State<ReportesList>
                                                     ),
                                                     overflow:
                                                         TextOverflow.ellipsis,
+                                                  ), */
+                                                  Builder(
+                                                    builder: (context) {
+                                                      debugPrint(
+                                                        '📅 Reporte ${reporte.idrend}:',
+                                                      );
+                                                      debugPrint(
+                                                        '   • fecha (emisión): "${reporte.fecha}"',
+                                                      );
+                                                      debugPrint(
+                                                        '   • feccre (creación): "${reporte.feccre}"',
+                                                      );
+
+                                                      return Text(
+                                                        formatDate(
+                                                          reporte.fecha,
+                                                        ),
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color: isDark
+                                                              ? Colors.grey[400]
+                                                              : Colors.black54,
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      );
+                                                    },
                                                   ),
                                                   const SizedBox(
                                                     width: 8,
@@ -438,6 +466,7 @@ class _ReportesListState extends State<ReportesList>
                                                     ),
                                                     child: Text(
                                                       '${diferenciaEnDias(reporte.fecha.toString(), reporte.feccre.toString())} DÍAS',
+
                                                       style: const TextStyle(
                                                         fontFamily: 'FiraSans',
                                                         fontSize: 11,
