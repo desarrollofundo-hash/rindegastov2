@@ -156,6 +156,15 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
   Widget build(BuildContext context) {
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
     final isKeyboardVisible = keyboardHeight > 0;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
+    final surfaceColor = isDarkMode
+        ? const Color(0xFF2D2D2D)
+        : Colors.grey.shade50;
+    final borderColor = isDarkMode
+        ? Colors.grey.shade700
+        : Colors.grey.shade300;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
 
     return Padding(
       padding: EdgeInsets.only(bottom: keyboardHeight),
@@ -165,9 +174,9 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
               ? MediaQuery.of(context).size.height * 0.5
               : MediaQuery.of(context).size.height * 0.75,
         ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           children: [
@@ -177,7 +186,7 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
             width: 40,
             height: 4, */
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: isDarkMode ? Colors.grey[700] : Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -187,7 +196,9 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.indigo.shade700, Colors.indigo.shade400],
+                  colors: isDarkMode
+                      ? [Colors.indigo.shade900, Colors.indigo.shade700]
+                      : [Colors.indigo.shade700, Colors.indigo.shade400],
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
@@ -229,7 +240,12 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: _buildContent(),
+                child: _buildContent(
+                  isDarkMode,
+                  surfaceColor,
+                  borderColor,
+                  textColor,
+                ),
               ),
             ),
 
@@ -237,10 +253,10 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: isDarkMode ? const Color(0xFF2D2D2D) : Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(isDarkMode ? 0.3 : 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
@@ -256,8 +272,14 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                         label: const Text('Cancelar'),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          side: BorderSide(color: Colors.grey.shade400),
-                          foregroundColor: Colors.grey.shade700,
+                          side: BorderSide(
+                            color: isDarkMode
+                                ? Colors.grey.shade600
+                                : Colors.grey.shade400,
+                          ),
+                          foregroundColor: isDarkMode
+                              ? Colors.grey.shade300
+                              : Colors.grey.shade700,
                         ),
                       ),
                     ),
@@ -269,13 +291,15 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                                 _selectedPolitica == null
                             ? null
                             : _crearInforme,
-                        icon: Icon(Icons.save),
-                        label: Text('Crear Informe'),
+                        icon: const Icon(Icons.save),
+                        label: const Text('Crear Informe'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.indigo,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          disabledBackgroundColor: Colors.grey[300],
+                          disabledBackgroundColor: isDarkMode
+                              ? Colors.grey[800]
+                              : Colors.grey[300],
                           disabledForegroundColor: Colors.grey[600],
                         ),
                       ),
@@ -290,7 +314,12 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(
+    bool isDarkMode,
+    Color surfaceColor,
+    Color borderColor,
+    Color textColor,
+  ) {
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
@@ -298,28 +327,35 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Campo de título
-            const Text(
+            Text(
               'Información del Informe',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: textColor,
               ),
             ),
 
             TextFormField(
               controller: _tituloController,
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 labelText: 'Título del Informe *',
+                labelStyle: TextStyle(
+                  color: isDarkMode ? Colors.grey.shade400 : null,
+                ),
                 hintText: 'Ej: Informe de gastos octubre 2025',
+                hintStyle: TextStyle(
+                  color: isDarkMode ? Colors.grey.shade600 : null,
+                ),
                 prefixIcon: const Icon(Icons.title, color: Colors.indigo),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide(color: borderColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide(color: borderColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -334,7 +370,7 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                   borderSide: BorderSide(color: Colors.red.shade600, width: 2),
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: surfaceColor,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 16,
@@ -360,40 +396,52 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
             const SizedBox(height: 1),
 
             // Dropdown de políticas
-            const Text(
+            Text(
               'Política Aplicable',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 4),
 
-            _buildPoliticasDropdown(),
+            _buildPoliticasDropdown(
+              isDarkMode,
+              surfaceColor,
+              borderColor,
+              textColor,
+            ),
 
             const SizedBox(height: 16),
             // Campo de nota
             TextFormField(
               controller: _notaController,
+              style: TextStyle(color: textColor),
               decoration: InputDecoration(
                 labelText: 'Nota (opcional)',
+                labelStyle: TextStyle(
+                  color: isDarkMode ? Colors.grey.shade400 : null,
+                ),
                 hintText: 'Ej: Gastos del viaje de trabajo a ...',
+                hintStyle: TextStyle(
+                  color: isDarkMode ? Colors.grey.shade600 : null,
+                ),
                 prefixIcon: const Icon(Icons.note_add, color: Colors.indigo),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide(color: borderColor),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  borderSide: BorderSide(color: borderColor),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: Colors.indigo, width: 2),
                 ),
                 filled: true,
-                fillColor: Colors.grey.shade50,
+                fillColor: surfaceColor,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 16,
@@ -415,21 +463,26 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
     );
   }
 
-  Widget _buildPoliticasDropdown() {
+  Widget _buildPoliticasDropdown(
+    bool isDarkMode,
+    Color surfaceColor,
+    Color borderColor,
+    Color textColor,
+  ) {
     if (_isLoadingPoliticas) {
       return Container(
         height: 64,
         /* padding: const EdgeInsets.symmetric(horizontal: 16), */
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: borderColor),
           borderRadius: BorderRadius.circular(12),
-          color: Colors.grey.shade50,
+          color: surfaceColor,
         ),
-        child: const Center(
+        child: Center(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
@@ -437,10 +490,13 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
                   valueColor: AlwaysStoppedAnimation(Colors.indigo),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Text(
                 'Cargando políticas...',
-                style: TextStyle(color: Colors.grey, fontSize: 14),
+                style: TextStyle(
+                  color: isDarkMode ? Colors.grey.shade400 : Colors.grey,
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -452,9 +508,13 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.red.shade300),
+          border: Border.all(
+            color: isDarkMode ? Colors.red.shade700 : Colors.red.shade300,
+          ),
           borderRadius: BorderRadius.circular(12),
-          color: Colors.red.shade50,
+          color: isDarkMode
+              ? Colors.red.shade900.withOpacity(0.3)
+              : Colors.red.shade50,
         ),
         child: Column(
           children: [
@@ -500,14 +560,14 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
       value: _selectedPolitica,
       decoration: InputDecoration(
         labelText: 'Política *',
-
+        labelStyle: TextStyle(color: isDarkMode ? Colors.grey.shade400 : null),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -522,13 +582,16 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
           borderSide: BorderSide(color: Colors.red.shade600, width: 2),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: surfaceColor,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
       ),
-      hint: const Text('Seleccionar política...'),
+      hint: Text(
+        'Seleccionar política...',
+        style: TextStyle(color: isDarkMode ? Colors.grey.shade500 : null),
+      ),
       isExpanded: true,
       items: _politicas.map((politica) {
         return DropdownMenuItem<DropdownOption>(
@@ -538,18 +601,21 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
               Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.indigo.shade50,
+                  color: isDarkMode
+                      ? Colors.indigo.shade900.withOpacity(0.3)
+                      : Colors.indigo.shade50,
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(Icons.policy, color: Colors.indigo, size: 16),
+                child: const Icon(Icons.policy, color: Colors.indigo, size: 16),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   politica.value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w500,
                     fontSize: 14,
+                    color: textColor,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -572,8 +638,8 @@ class _NuevoInformeModalState extends State<NuevoInformeModal> {
       },
       icon: const Icon(Icons.arrow_drop_down, color: Colors.indigo),
       iconSize: 24,
-      dropdownColor: Colors.white,
-      style: const TextStyle(color: Colors.black87),
+      dropdownColor: isDarkMode ? const Color(0xFF2D2D2D) : Colors.white,
+      style: TextStyle(color: textColor),
     );
   }
 }

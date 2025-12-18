@@ -749,7 +749,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
