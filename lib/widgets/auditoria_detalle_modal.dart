@@ -1298,7 +1298,8 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
           context: context,
           builder: (BuildContext context) {
             // Aquí pasas el detalle que necesites al modal
-            return DetalleModalGasto(id: detalle.idRend.toString());
+            /* return DetalleModalGasto(id: detalle.idRend.toString()); */
+            return DetalleModalGasto(reporte: detalle.toReporte(), id: '');
           },
         );
       },
