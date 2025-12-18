@@ -717,10 +717,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                     Expanded(
                       child: Text(
                         widget.revision.usuario.toString(), // ← valor dinámico
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -746,10 +746,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                       child: Text(
                         widget.revision.usuarioAuditor
                             .toString(), // ← valor dinámico
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
-                          color: Colors.white,
+                          color: isDark ? Colors.white : Colors.black,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
