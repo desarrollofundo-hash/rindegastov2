@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flu2/models/apiruc_model.dart';
+import 'package:flu2/services/user_service.dart';
 import 'package:flu2/utils/navigation_utils.dart';
 import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 import 'package:flutter/material.dart';
@@ -48,6 +49,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   late TextEditingController _monedaController;
   late TextEditingController _rucClienteController;
   late TextEditingController _notaController;
+  late TextEditingController _centroCostoController;
   // Campos de movilidad
   late TextEditingController _origenController;
   late TextEditingController _destinoController;
@@ -61,6 +63,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
   // Estado
   bool _isLoading = false;
   bool _isEditMode = false;
+
   bool _isFormValid = false;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -84,14 +87,19 @@ class _EditReporteModalState extends State<EditReporteModal> {
   File? _selectedImage;
   String? _selectedFileType; // 'image' o 'pdf'
   String? _selectedFileName;
+  bool _isLoadingCentrosCosto = false;
 
   List<CategoriaModel> _categoriasGeneral = [];
+  List<DropdownOption> _centroCosto = [];
   List<DropdownOption> _tiposGasto = [];
+  final bool _isloadingCentrosCosto = false;
   bool _isLoadingCategorias = false;
   bool _isLoadingTiposGasto = false;
   String? _errorCategorias;
   String? _errorTiposGasto;
   String? _numeroGasto;
+  String? _errorCentroCosto;
+  String? _error;
 
   // Cerca de donde declaran las otras variables de estado
   List<DropdownOption> _tiposMovilidad = [];
@@ -121,7 +129,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
     // asegurarnos de que la categoría guardada esté disponible.
     _loadCategorias(politicaFiltro: widget.reporte.politica);
     _loadTiposGasto();
+    _loadCentrosCosto();
     _loadTiposMovilidad();
+
     // Añadir listeners para validar formulario en tiempo real
     _addValidationListeners();
     // Intentar cargar la evidencia que ya exista en el servidor para este reporte
@@ -222,6 +232,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
       _totalController.addListener(_validateForm);
       _categoriaController.addListener(_validateForm);
       _tipoGastoController.addListener(_validateForm);
+      _centroCostoController.addListener(_validateForm);
+
       // ✅ Agregar listeners para campos de movilidad
       _origenController.addListener(_validateForm);
       _destinoController.addListener(_validateForm);
@@ -240,6 +252,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       _totalController.addListener(_validateForm);
       _categoriaController.addListener(_validateForm);
       _tipoGastoController.addListener(_validateForm);
+      _centroCostoController.addListener(_validateForm);
     }
   }
 
@@ -458,12 +471,22 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _tipoGastoController = TextEditingController(
       text: widget.reporte.tipogasto ?? '',
     );
+    _centroCostoController = TextEditingController(
+      text: widget.reporte.consumidor ?? '',
+    );
+    print('========================================');
+    print('🏁 INICIALIZANDO EDIT REPORTE MODAL');
+    print('📌 Centro de Costo inicial: "${widget.reporte.consumidor ?? ''}"');
+    print('========================================');
     _rucController = TextEditingController(text: widget.reporte.ruc ?? '');
     _razonSocialController = TextEditingController(
       text: widget.reporte.proveedor ?? '',
     );
     _tipoComprobanteController = TextEditingController(
       text: widget.reporte.tipocomprobante ?? '',
+    );
+    debugPrint(
+      '📝 Tipo Comprobante cargado: "${widget.reporte.tipocomprobante}"',
     );
     _serieController = TextEditingController(text: widget.reporte.serie ?? '');
     _numeroController = TextEditingController(
@@ -526,6 +549,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
     _politicaController.dispose();
     _categoriaController.dispose();
     _tipoGastoController.dispose();
+    _centroCostoController.dispose();
     _rucController.dispose();
     _razonSocialController.dispose();
     _tipoComprobanteController.dispose();
@@ -1248,6 +1272,35 @@ class _EditReporteModalState extends State<EditReporteModal> {
     }
   }
 
+  Future<void> _loadCentrosCosto() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingCentrosCosto = true;
+        _error = null;
+      });
+    }
+    try {
+      final centroCosto = await _logic.fetchCentrosCosto(
+        _apiService,
+        UserService().currentUserCode,
+        CompanyService().currentUserCompany,
+      );
+      if (mounted) {
+        setState(() {
+          _centroCosto = centroCosto;
+          _isLoadingCentrosCosto = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingCentrosCosto = false;
+        });
+      }
+    }
+  }
+
   /// Procesar los datos del QR y llenar los campos
   void _processQRData(String qrData) {
     try {
@@ -1826,6 +1879,245 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   setState(() {
                     _tipoGastoController.text = value;
                   });
+                  // ✅ Llamar directamente después del setState
+                  Future.microtask(() => _validateForm());
+                }
+              },
+            ),
+          ),
+      ],
+    );
+  }
+  /* 
+  Widget _buildCentroCostoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Si está cargando, mostrar indicador
+        if (_isLoadingCentrosCosto)
+          const Column(
+            children: [
+              Center(child: CircularProgressIndicator()),
+              SizedBox(height: 8),
+              Text(
+                'Cargando centro de costo ...',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          )
+        else if (_errorCentroCosto != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.2)
+                  : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error al cargar centro de costo: $_errorCentroCosto',
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _loadCentrosCosto,
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
+          )
+        else
+          AbsorbPointer(
+            absorbing: !_isEditMode,
+            child: DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: 'Centro de Costo *',
+                prefixIcon: Icon(Icons.abc),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.red, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white, width: 1),
+                ),
+                filled: true,
+                fillColor: _isEditMode
+                    ? (isDark ? Theme.of(context).cardColor : Colors.white)
+                    : (isDark ? Theme.of(context).cardColor : Colors.white),
+              ),
+              value:
+                  _centroCostoController.text.isNotEmpty &&
+                      _centroCosto.any(
+                        (centro) => centro.value == _centroCostoController.text,
+                      )
+                  ? _centroCostoController.text
+                  : null,
+              items: _centroCosto
+                  .map(
+                    (centro) => DropdownMenuItem<String>(
+                      value: centro.value,
+                      child: Text(centro.value),
+                    ),
+                  )
+                  .toList(),
+
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Centro de costo es obligatorio';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _centroCostoController.text = value;
+                  });
+                  // ✅ Llamar directamente después del setState
+                  Future.microtask(() => _validateForm());
+                }
+              },
+            ),
+          ),
+      ],
+    );
+  }
+ */
+
+  Widget _buildCentroCostoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_isLoadingCentrosCosto)
+          const Column(
+            children: [
+              Center(child: CircularProgressIndicator()),
+              SizedBox(height: 8),
+              Text(
+                'Cargando centro de costo ...',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          )
+        else if (_errorCentroCosto != null)
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.2)
+                  : Colors.red.shade50,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade200,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red.shade600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error al cargar centro de costo: $_errorCentroCosto',
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _loadCentrosCosto,
+                  child: const Text('Reintentar'),
+                ),
+              ],
+            ),
+          )
+        else
+          AbsorbPointer(
+            absorbing: !_isEditMode,
+            child: DropdownButtonFormField<String>(
+              decoration: InputDecoration(
+                labelText: 'Centro de Costo *',
+                prefixIcon: Icon(Icons.abc),
+                border: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Colors.transparent,
+                    width: 0,
+                  ),
+                ),
+                enabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.grey, width: 1),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: Colors.red, width: 2),
+                ),
+                disabledBorder: UnderlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white, width: 1),
+                ),
+                filled: true,
+                fillColor: _isEditMode
+                    ? (isDark ? Theme.of(context).cardColor : Colors.white)
+                    : (isDark ? Theme.of(context).cardColor : Colors.white),
+              ),
+              value:
+                  _centroCostoController.text.isNotEmpty &&
+                      _centroCosto.any(
+                        (centro) => centro.value == _centroCostoController.text,
+                      )
+                  ? _centroCostoController.text
+                  : null,
+              items: _centroCosto
+                  .map(
+                    (centro) => DropdownMenuItem<String>(
+                      value: centro.value,
+                      child: Text(centro.value),
+                    ),
+                  )
+                  .toList(),
+
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Centro de costo es obligatorio';
+                }
+                return null;
+              },
+              onChanged: (value) {
+                if (value != null) {
+                  print('========================================');
+                  print('🔄 DROPDOWN CENTRO DE COSTO CAMBIADO');
+                  print('📌 Valor seleccionado: "$value"');
+                  print('📌 _isEditMode: $_isEditMode');
+                  setState(() {
+                    _centroCostoController.text = value;
+                  });
+                  print(
+                    '✅ Controlador actualizado: "${_centroCostoController.text}"',
+                  );
+                  print('========================================');
                   // ✅ Llamar directamente después del setState
                   Future.microtask(() => _validateForm());
                 }
@@ -2417,11 +2709,20 @@ class _EditReporteModalState extends State<EditReporteModal> {
 
     setState(() => _isLoading = true);
     try {
+      // 🔍 DEBUG: Verificar valor del centro de costo antes de enviar
+      print('========================================');
+      print('📤 ENVIANDO DATOS AL SERVIDOR');
+      print('🔍 Centro de Costo: "${_centroCostoController.text}"');
+      print('🔍 Categoría: "${_categoriaController.text}"');
+      print('🔍 Tipo Gasto: "${_tipoGastoController.text}"');
+      print('========================================');
+
       final success = await _controller.saveReporte(
         reporte: widget.reporte,
         politica: _politicaController.text,
         categoria: _categoriaController.text,
         tipoGasto: _tipoGastoController.text,
+        centroCosto: _centroCostoController.text,
         ruc: _rucController.text,
         razonsocial: _razonSocialController.text,
         tipoComprobante: _tipoComprobanteController.text,
@@ -2481,20 +2782,48 @@ class _EditReporteModalState extends State<EditReporteModal> {
           ),
         );
 
-        if (widget.onSave != null) widget.onSave!(widget.reporte);
+        // Actualizar el objeto reporte con los nuevos valores
+        final updatedReporte = Reporte(
+          idrend: widget.reporte.idrend,
+          iduser: widget.reporte.iduser,
+          dni: widget.reporte.dni,
+          politica: _politicaController.text,
+          categoria: _categoriaController.text,
+          tipogasto: _tipoGastoController.text,
+          ruc: _rucController.text,
+          proveedor: _razonSocialController.text,
+          tipocomprobante: _tipoComprobanteController.text,
+          serie: _serieController.text,
+          numero: _numeroController.text,
+          igv: double.tryParse(_igvController.text),
+          fecha: _fechaEmisionController.text,
+          total: double.tryParse(_totalController.text),
+          moneda: _monedaController.text,
+          ruccliente: _rucClienteController.text,
+          desempr: widget.reporte.desempr,
+          dessed: widget.reporte.dessed,
+          gerencia: widget.reporte.gerencia,
+          area: widget.reporte.area,
+          idcuenta: widget.reporte.idcuenta,
+          consumidor:
+              _centroCostoController.text, // ✅ ACTUALIZAR CENTRO DE COSTO
+          placa: _placaController.text,
+          estadoActual: widget.reporte.estadoActual,
+          glosa: widget.reporte.glosa,
+          motivoviaje: _motivoViajeController.text,
+          lugarorigen: _origenController.text,
+          lugardestino: _destinoController.text,
+          tipomovilidad: _tipoMovilidadController.text,
+          feccre: widget.reporte.feccre,
+          obs: _notaController.text,
+          evidencia: widget.reporte.evidencia,
+          motivorechazo: widget.reporte.motivorechazo,
+        );
+
+        if (widget.onSave != null) widget.onSave!(updatedReporte);
 
         // Cerrar modal
         Navigator.of(context).pop();
-
-        // Cerrar pantalla QR si existe y navegar a HomeScreen para forzar refresco
-        try {
-          Navigator.of(context).pop();
-        } catch (_) {}
-
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false,
-        );
       }
     } catch (e) {
       final serverMessage = _extractServerMessage(e.toString());
@@ -2541,6 +2870,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                           const SizedBox(height: 4),
                           _buildCategorySection(),
                           const SizedBox(height: 4),
+                          _buildCentroCostoSection(),
+                          const SizedBox(height: 4),
 
                           // Fecha Emisión
                           _buildDateField(
@@ -2585,6 +2916,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                           _buildCategorySection(),
                           const SizedBox(height: 10),
                           _buildTipoGastoSection(),
+                          const SizedBox(height: 10),
+                          _buildCentroCostoSection(),
                           const SizedBox(height: 10),
                           _buildInvoiceDataSection(),
                           const SizedBox(height: 10),
@@ -2652,6 +2985,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                               const SizedBox(height: 4),
                               _buildCategorySection(),
                               const SizedBox(height: 4),
+                              _buildCentroCostoSection(),
+                              const SizedBox(height: 4),
                               _buildDateField(
                                 _fechaEmisionController,
                                 'Fecha Emisión ',
@@ -2691,6 +3026,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                               _buildPolicySection(),
                               const SizedBox(height: 10),
                               _buildCategorySection(),
+                              const SizedBox(height: 10),
+                              _buildCentroCostoSection(),
                               const SizedBox(height: 10),
                               _buildTipoGastoSection(),
                               const SizedBox(height: 10),
@@ -2884,6 +3221,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
           if (!_isEditMode)
             IconButton(
               onPressed: () {
+                print('========================================');
+                print('🔓 MODO EDICIÓN ACTIVADO');
+                print('========================================');
                 setState(() {
                   _isEditMode = true;
                 });

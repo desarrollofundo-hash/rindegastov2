@@ -1,17 +1,22 @@
 //factura_modal_movilidad.dart
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:flu2/controllers/edit_reporte_controller.dart';
 // import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/dropdown_option.dart';
 import 'package:flu2/services/user_service.dart';
+import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:printing/printing.dart';
+import 'package:path/path.dart' as p;
 import '../models/factura_data.dart';
 import '../models/categoria_model.dart';
 import '../services/categoria_service.dart';
@@ -50,6 +55,12 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   String? _errorTiposGasto;
   List<String> _tiposGasto = [];
   // Controladores para cada campo específico de movilidad
+  final FocusNode _origenFocusNode = FocusNode();
+  final FocusNode _destinoFocusNode = FocusNode();
+  final FocusNode _motivoViajeFocusNode = FocusNode();
+  final FocusNode _placaFocusNode = FocusNode();
+  final FocusNode _notaFocusNode = FocusNode();
+
   late TextEditingController _politicaController;
   late TextEditingController _rucController;
   late TextEditingController _razonSocialController;
@@ -62,6 +73,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   late TextEditingController _monedaController;
   late TextEditingController _rucClienteController;
   late TextEditingController _notaController;
+  late TextEditingController _centroCostoController;
 
   // Campos específicos para movilidad
   late TextEditingController _origenController;
@@ -79,12 +91,19 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
   String? _selectedFileName;
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
+  final NuevoGastoLogic _logic = NuevoGastoLogic();
+
   bool _isLoading = false;
   bool _isLoadingCategorias = false;
   List<CategoriaModel> _categoriasMovilidad = [];
   List<DropdownOption> _tiposMovilidad = [];
+  List<DropdownOption> _centroCosto = [];
+  DropdownOption? _selectedCentroCosto;
+
   String? _errorCategorias;
   String? _errorTiposMovilidad;
+  bool _isLoadingCentrosCosto = false;
+  String? _error;
 
   ///ApiRuc
   // bool _isLoadingApiRuc = false;
@@ -111,6 +130,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       await Future.wait([
         _loadCategorias(),
         _loadTiposGasto(),
+        _loadCentrosCosto(),
+
         _loadTipoMovilidad(),
         _loadApiRuc(widget.facturaData.ruc.toString()),
       ]);
@@ -166,6 +187,40 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         setState(() {
           _errorTiposMovilidad = e.toString();
           _isLoadingTipoMovilidad = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadCentrosCosto() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingCentrosCosto = true;
+        _error = null;
+      });
+    }
+    try {
+      final centroCosto = await _logic.fetchCentrosCosto(
+        _apiService,
+        UserService().currentUserCode,
+        CompanyService().currentUserCompany,
+      );
+      if (mounted) {
+        setState(() {
+          _centroCosto = centroCosto;
+          _isLoadingCentrosCosto = false;
+          // Seleccionar automáticamente el primer centro de costo
+          if (_centroCosto.isNotEmpty && _selectedCentroCosto == null) {
+            _selectedCentroCosto = _centroCosto.first;
+            _centroCostoController.text = _centroCosto.first.value;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingCentrosCosto = false;
         });
       }
     }
@@ -278,6 +333,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         _destinoController.text.trim().isNotEmpty &&
         _motivoViajeController.text.trim().isNotEmpty &&
         _categoriaController.text.trim().isNotEmpty &&
+        (_centroCostoController.text
+            .trim()
+            .isNotEmpty) && // ✅ Validación segura de centro de costo
         _rucClienteController.text.trim().isNotEmpty &&
         _notaController.text.trim().isNotEmpty &&
         (_selectedFile !=
@@ -334,6 +392,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     );
     _rucController = TextEditingController(text: widget.facturaData.ruc ?? '');
 
+    _centroCostoController = TextEditingController();
     _razonSocialController = TextEditingController();
     _tipoComprobanteController = TextEditingController(
       text: widget.facturaData.tipoComprobante ?? '',
@@ -398,6 +457,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     _destinoController.removeListener(_validateForm);
     _motivoViajeController.removeListener(_validateForm);
     _categoriaController.removeListener(_validateForm);
+    _centroCostoController.removeListener(_validateForm);
 
     // Dispose de los controladores
     _politicaController.dispose();
@@ -780,6 +840,135 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     }
   }
 
+  /// Convertir PDF a imagen PNG con múltiples estrategias de fallback
+  Future<File?> convertirPdfAImagen(File pdfFile) async {
+    try {
+      debugPrint('🔄 Iniciando conversión de PDF a imagen...');
+
+      // 1️⃣ Validar que el archivo existe
+      if (!await pdfFile.exists()) {
+        debugPrint('❌ El archivo PDF no existe');
+        return null;
+      }
+
+      // 2️⃣ Leer los bytes del PDF
+      final pdfBytes = await pdfFile.readAsBytes();
+
+      // 3️⃣ Validar que no está vacío
+      if (pdfBytes.isEmpty) {
+        debugPrint('❌ El archivo PDF está vacío');
+        return null;
+      }
+
+      // 4️⃣ Validar firma del PDF (debe empezar con %PDF)
+      final header = String.fromCharCodes(pdfBytes.take(4));
+      if (!header.startsWith('%PDF')) {
+        debugPrint('❌ El archivo no es un PDF válido (header: $header)');
+        return null;
+      }
+
+      debugPrint('✅ PDF válido detectado (${pdfBytes.lengthInBytes} bytes)');
+
+      // 5️⃣ Verificar tamaño del PDF (limitar a 10MB para evitar problemas de memoria)
+      const int maxSizeForConversion = 10 * 1024 * 1024; // 10 MB
+      if (pdfBytes.lengthInBytes > maxSizeForConversion) {
+        debugPrint(
+          '⚠️ PDF demasiado grande (${pdfBytes.lengthInBytes} bytes), omitiendo conversión',
+        );
+        return null;
+      }
+
+      // 6️⃣ Intentar conversión con diferentes calidades (fallback automático)
+      final List<double> dpis = [
+        150.0,
+        100.0,
+        72.0,
+      ]; // Calidad alta, media, baja
+
+      for (double dpi in dpis) {
+        try {
+          debugPrint('📄 Intentando rasterizar con $dpi DPI...');
+
+          final stream = Printing.raster(pdfBytes, pages: [0], dpi: dpi);
+          final raster = await stream.first.timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw TimeoutException('Timeout al rasterizar PDF');
+            },
+          );
+
+          final uiImage = await raster.toImage();
+          debugPrint(
+            '✅ Imagen rasterizada: ${uiImage.width}x${uiImage.height}',
+          );
+
+          // 7️⃣ Convertir la imagen UI a bytes PNG
+          final byteData = await uiImage.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          if (byteData == null) {
+            debugPrint(
+              '⚠️ No se pudo convertir a bytes con DPI $dpi, probando siguiente...',
+            );
+            continue;
+          }
+
+          // 8️⃣ Validar que los bytes no están vacíos
+          final imageBytes = byteData.buffer.asUint8List();
+          if (imageBytes.isEmpty) {
+            debugPrint('⚠️ Bytes vacíos con DPI $dpi, probando siguiente...');
+            continue;
+          }
+
+          // 9️⃣ Guardar la imagen como archivo temporal
+          final tempDir = await getTemporaryDirectory();
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final imagePath = '${tempDir.path}/pdf_converted_$timestamp.png';
+          final imageFile = File(imagePath);
+          await imageFile.writeAsBytes(imageBytes);
+
+          // 🔟 Validar que el archivo se guardó correctamente
+          if (!await imageFile.exists()) {
+            debugPrint('⚠️ Archivo no se guardó correctamente con DPI $dpi');
+            continue;
+          }
+
+          final fileSize = await imageFile.length();
+          if (fileSize == 0) {
+            debugPrint('⚠️ Archivo guardado está vacío con DPI $dpi');
+            await imageFile.delete();
+            continue;
+          }
+
+          debugPrint('✅ Conversión exitosa con $dpi DPI');
+          debugPrint('✅ Imagen guardada en: $imagePath');
+          debugPrint('📊 Dimensiones: ${uiImage.width}x${uiImage.height}');
+          debugPrint('📊 Tamaño del archivo: $fileSize bytes');
+
+          return imageFile;
+        } catch (e) {
+          debugPrint('⚠️ Error con DPI $dpi: $e');
+          if (dpi == dpis.last) {
+            // Si es el último intento, propagar el error
+            rethrow;
+          }
+          // Continuar con el siguiente DPI
+          continue;
+        }
+      }
+
+      debugPrint('❌ No se pudo convertir con ningún nivel de calidad');
+      return null;
+    } on TimeoutException catch (e) {
+      debugPrint('❌ Timeout al convertir PDF: $e');
+      return null;
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error al convertir PDF a imagen: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return null;
+    }
+  }
+
   /// Guardar factura mediante API
   Future<void> _saveFacturaAPI() async {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
@@ -918,7 +1107,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         "gerencia": CompanyService().currentCompany?.gerencia ?? '',
         "area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
-        "consumidor": CompanyService().currentCompany?.consumidor ?? '',
+        /* "consumidor": CompanyService().currentCompany?.consumidor ?? '', */
+        "consumidor": _centroCostoController.text,
         "placa": _placaController.text,
         "estadoActual": "BORRADOR",
         "glosa": "ESCANER IA",
@@ -959,11 +1149,32 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
       debugPrint('🆔 ID autogenerado obtenido: $idRend');
       debugPrint('📋 Preparando datos de evidencia con el ID generado...');
 
+      // 🔄 Si es un PDF, convertirlo a imagen
+      File archivoASubir = _selectedFile!;
+      String extensionFinal = p.extension(_selectedFile!.path);
+
+      if (_selectedFile!.path.toLowerCase().endsWith('.pdf')) {
+        debugPrint('📄 Detectado PDF, convirtiendo a imagen...');
+        try {
+          final imagenConvertida = await convertirPdfAImagen(_selectedFile!);
+          if (imagenConvertida != null) {
+            archivoASubir = imagenConvertida;
+            extensionFinal = '.png';
+            debugPrint('✅ PDF convertido a imagen exitosamente');
+          } else {
+            debugPrint('⚠️ No se pudo convertir PDF, subiendo PDF original');
+          }
+        } catch (e) {
+          debugPrint('❌ Error al convertir PDF: $e');
+          debugPrint('⚠️ Subiendo PDF original');
+        }
+      }
+
       String nombreArchivo =
-          '${idRend.toString()}_${_rucController.text}_${_serieController.text}_${_numeroController.text}.png';
+          '${idRend.toString()}_${_rucController.text}_${_serieController.text}_${_numeroController.text}$extensionFinal';
 
       final driveId = await _apiService.subirArchivo(
-        _selectedFile!.path, //_selectedFile!.path,
+        archivoASubir.path,
         nombreArchivo: nombreArchivo,
       );
 
@@ -1169,6 +1380,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                         const SizedBox(height: 10),
 
                         _buildCategorySection(),
+                        const SizedBox(height: 10),
+
+                        _buildCentroCostoSection(),
                         const SizedBox(height: 10),
 
                         _buildFacturaDataSection(),
@@ -2657,6 +2871,168 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
     );
   }
 
+  Widget _buildCentroCostoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoadingCentrosCosto) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          SizedBox(height: 8),
+          Center(child: CircularProgressIndicator()),
+        ],
+      );
+    }
+
+    if (_error != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.blue.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error cargando centros de costo: $_error',
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Mostrar mensaje si la lista está vacía
+    if (_centroCosto.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.orange.shade900.withOpacity(0.3)
+                  : Colors.orange.shade50,
+              border: Border.all(
+                color: isDark ? Colors.orange.shade700 : Colors.orange.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info,
+                  color: isDark
+                      ? Colors.orange.shade400
+                      : Colors.orange.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'No hay centros de costo disponibles',
+                    style: TextStyle(
+                      color: isDark
+                          ? Colors.orange.shade400
+                          : Colors.orange.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return DropdownButtonFormField<DropdownOption>(
+      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+      value: _selectedCentroCosto,
+      decoration: InputDecoration(
+        labelText: 'Centro de Costo',
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[600]! : Colors.grey,
+            width: 1,
+          ),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.blue, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+        ),
+        prefixIcon: Icon(
+          Icons.account_box,
+          color: isDark ? Colors.grey[400] : Colors.grey,
+        ),
+      ),
+      isExpanded: true,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+      items: _centroCosto.map((centroCosto) {
+        return DropdownMenuItem<DropdownOption>(
+          value: centroCosto,
+          child: Text(
+            centroCosto.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCentroCosto = value;
+          _centroCostoController.text = value?.value ?? '';
+        });
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Seleccione un centro de costo';
+        }
+        return null;
+      },
+    );
+  }
+
   /// Construir la sección específica de movilidad
   Widget _buildMovilidadSection() {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
@@ -2696,6 +3072,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                 Expanded(
                   child: TextFormField(
                     controller: _origenController,
+                    focusNode: _origenFocusNode,
+                    textInputAction: TextInputAction.next,
                     style: TextStyle(
                       color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
                     ),
@@ -2759,6 +3137,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    focusNode: _destinoFocusNode,
+                    textInputAction: TextInputAction.next,
                     controller: _destinoController,
                     style: TextStyle(
                       color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
@@ -2819,6 +3199,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             ),
             const SizedBox(height: 12),
             TextFormField(
+              focusNode: _motivoViajeFocusNode,
+              textInputAction: TextInputAction.next,
               controller: _motivoViajeController,
               style: TextStyle(
                 color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
@@ -2878,6 +3260,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
 
             // PLACA
             TextFormField(
+              focusNode: _placaFocusNode,
+              textInputAction: TextInputAction.next,
               controller: _placaController,
               decoration: InputDecoration(
                 labelText: 'Placa',
