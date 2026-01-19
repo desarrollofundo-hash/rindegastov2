@@ -19,9 +19,11 @@ import 'package:path/path.dart' as path;
 class ApiService {
   /// Base URL de la API
   /// BASE URL DE BASE DE DATOS PRODUCCION
-  ///   static const String baseUrl = 'http://190.119.200.124:45490';
+  static const String baseUrl = 'http://190.119.200.124:45490';
+
   /// BASE URL DE BASE DE DATOS QA_TEST
-  static const String baseUrl = 'http://190.119.200.124:45491';
+  /*   static const String baseUrl = 'http://190.119.200.124:45491';
+ */
   static const String baseUrlApi = 'https://apiperu.dev';
   static const Duration timeout = Duration(seconds: 60);
 

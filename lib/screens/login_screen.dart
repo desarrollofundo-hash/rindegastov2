@@ -27,7 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _handleLogin() async {
     try {
       final userData = await _loginController.login();
-
+      
       if (userData != null && mounted) {
         // Mostrar modal de selección de empresa
         showDialog(

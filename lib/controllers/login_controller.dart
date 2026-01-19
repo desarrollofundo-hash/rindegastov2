@@ -63,6 +63,14 @@ class LoginController extends ChangeNotifier {
         app: 12,
       );
 
+      // ✅ Validar versión de la app
+      const String versionActualApp = "v.01.01";
+      final String? versionServidor = userData['versionactual'];
+
+      if (versionServidor != null && versionServidor != versionActualApp) {
+        throw Exception('HAY UNA NUEVA VERSIÓN DISPONIBLE');
+      }
+
       // Crear el UserModel con los datos del login
       final userModel = UserModel.fromJson(userData);
       // Guardar el usuario en el servicio singleton
@@ -88,6 +96,8 @@ class LoginController extends ChangeNotifier {
       errorMessage = 'Usuario inactivo. Contacta al administrador.';
     } else if (error.toString().contains('Usuario o contraseña incorrectos')) {
       errorMessage = 'Usuario o contraseña incorrectos';
+    } else if (error.toString().contains('HAY UNA NUEVA VERSIÓN DISPONIBLE')) {
+      errorMessage = 'HAY UNA NUEVA VERSIÓN DISPONIBLE';
     } else {
       errorMessage = 'Error al iniciar sesión. Intenta nuevamente.';
     }
