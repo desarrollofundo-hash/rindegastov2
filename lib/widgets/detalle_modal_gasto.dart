@@ -589,6 +589,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
                       const SizedBox(height: 16),
                       _buildGeneralDataSection(),
                       const SizedBox(height: 16),
+
                       //_buildStatusSection(),
                       //const SizedBox(height: 16),
                       _buildAmountSection(),
