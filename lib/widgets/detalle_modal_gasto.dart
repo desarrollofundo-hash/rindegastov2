@@ -954,11 +954,13 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
         ),
         const SizedBox(height: 8),
         _buildReadOnlyField('Politica', _reporte!.politica ?? 'N/A'),
+        _buildReadOnlyField('Centro Costo', _reporte!.consumidor ?? 'N/A'),
         _buildReadOnlyField('Tipo Gasto', _reporte!.tipogasto ?? 'N/A'),
         _buildReadOnlyField('Categoria', _reporte!.categoria ?? 'N/A'),
         _buildReadOnlyField('RUC Emisor', _reporte!.ruc ?? 'N/A'),
         _buildReadOnlyField('Razon Social', _reporte!.proveedor ?? 'N/A'),
         _buildReadOnlyField('RUC Cliente', _reporte?.ruccliente ?? 'N/A'),
+        _buildReadOnlyField('Placa', _reporte?.placa ?? ''),
       ],
     );
   }
