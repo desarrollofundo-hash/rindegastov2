@@ -31,6 +31,8 @@ class ReporteAuditoriaDetalle {
   final String? lugarDestino;
   final String? tipoMovilidad;
   final int idRev;
+  final String? consumidor;
+  final String? placa;
 
   ReporteAuditoriaDetalle({
     required this.id,
@@ -61,6 +63,8 @@ class ReporteAuditoriaDetalle {
     this.lugarDestino,
     this.tipoMovilidad,
     required this.idRev,
+    this.consumidor,
+    this.placa,
   });
 
   factory ReporteAuditoriaDetalle.fromJson(Map<String, dynamic> json) {
@@ -93,6 +97,8 @@ class ReporteAuditoriaDetalle {
       lugarDestino: json['lugardestino'],
       tipoMovilidad: json['tipomovilidad'],
       idRev: json['idrev'] ?? 0,
+      consumidor: json['consumidor'],
+      placa: json['placa'],
     );
   }
 
@@ -126,6 +132,8 @@ class ReporteAuditoriaDetalle {
       'lugardestino': lugarDestino,
       'tipomovilidad': tipoMovilidad,
       'idrev': idRev,
+      'consumidor': consumidor,
+      'placa': placa,
     };
   }
 
@@ -152,8 +160,8 @@ class ReporteAuditoriaDetalle {
       gerencia: null, // Asigna valores como correspondan
       area: null, // Asigna valores como correspondan
       idcuenta: null, // Asigna valores como correspondan
-      consumidor: null, // Asigna valores como correspondan
-      placa: null, // Asigna valores como correspondan
+      consumidor: consumidor, // Asigna valores como correspondan
+      placa: placa, // Asigna valores como correspondan
       estadoActual: estadoActual,
       glosa: null, // Asigna valores como correspondan
       motivoviaje: motivoViaje,

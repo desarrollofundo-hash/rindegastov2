@@ -3034,6 +3034,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
                               const SizedBox(height: 4),
                               _buildCentroCostoSection(),
                               const SizedBox(height: 4),
+                              //tipo de gasto para planilla de movilidad
+                              _buildTipoGastoSection(),
+                              const SizedBox(height: 4),
                               _buildDateField(
                                 _fechaEmisionController,
                                 'Fecha Emisión ',
