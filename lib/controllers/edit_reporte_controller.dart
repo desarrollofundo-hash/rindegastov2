@@ -246,64 +246,71 @@ class EditReporteController {
       print('   tipoGasto: "${facturaData["tipoGasto"]}"');
       print('========================================');
 
-      // 🔄 Si es un PDF, convertirlo a imagen PNG
-      File archivoASubir = selectedImage!;
-      String extension = p.extension(selectedImage.path);
-
-      if (selectedImage.path.toLowerCase().endsWith('.pdf')) {
-        debugPrint('📄 Detectado PDF, convirtiendo a PNG...');
-        try {
-          final imagenConvertida = await convertirPdfAImagen(selectedImage);
-          if (imagenConvertida != null) {
-            archivoASubir = imagenConvertida;
-            extension = '.png';
-            debugPrint('✅ PDF convertido a PNG exitosamente');
-          } else {
-            debugPrint('⚠️ No se pudo convertir PDF, subiendo PDF original');
-          }
-        } catch (e) {
-          debugPrint('❌ Error al convertir PDF: $e');
-          debugPrint('⚠️ Subiendo PDF original');
-        }
-      }
-
-      String nombreArchivo =
-          '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}$extension';
-
-      final driveId = await _apiService.subirArchivo(
-        archivoASubir.path,
-        nombreArchivo: nombreArchivo,
-      );
-
-      debugPrint('ID de archivo en Drive: $driveId');
-
-      final facturaDataEvidencia = {
-        "idRend": reporte.idrend,
-        "evidencia": null,
-        "obs": driveId,
-        "estado": "S",
-        "fecCre": DateTime.now().toIso8601String(),
-        "useReg": reporte.iduser,
-        "hostname": "FLUTTER",
-        "fecEdit": DateTime.now().toIso8601String(),
-        "useEdit": reporte.iduser,
-        "useElim": 0,
-      };
-
-      debugPrint('Guardando factura');
-
+      // 🔄 Actualizar la factura primero
       debugPrint('📤 Enviando datos al API saveupdateRendicionGasto...');
       final apiResponse = await _apiService.saveupdateRendicionGasto(
         facturaData,
       );
       debugPrint('📥 Respuesta del API: $apiResponse');
 
-      debugPrint('Guardando evidencia');
+      // ✅ Solo actualizar evidencia si hay una imagen nueva
+      if (selectedImage != null) {
+        debugPrint('📸 Nueva imagen detectada, actualizando evidencia...');
 
-      final success = await _apiService.saveRendicionGastoEvidencia(
-        facturaDataEvidencia,
-      );
-      return success;
+        // 🔄 Si es un PDF, convertirlo a imagen PNG
+        File archivoASubir = selectedImage;
+        String extension = p.extension(selectedImage.path);
+
+        if (selectedImage.path.toLowerCase().endsWith('.pdf')) {
+          debugPrint('📄 Detectado PDF, convirtiendo a PNG...');
+          try {
+            final imagenConvertida = await convertirPdfAImagen(selectedImage);
+            if (imagenConvertida != null) {
+              archivoASubir = imagenConvertida;
+              extension = '.png';
+              debugPrint('✅ PDF convertido a PNG exitosamente');
+            } else {
+              debugPrint('⚠️ No se pudo convertir PDF, subiendo PDF original');
+            }
+          } catch (e) {
+            debugPrint('❌ Error al convertir PDF: $e');
+            debugPrint('⚠️ Subiendo PDF original');
+          }
+        }
+
+        String nombreArchivo =
+            '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}$extension';
+
+        final driveId = await _apiService.subirArchivo(
+          archivoASubir.path,
+          nombreArchivo: nombreArchivo,
+        );
+
+        debugPrint('ID de archivo en Drive: $driveId');
+
+        final facturaDataEvidencia = {
+          "idRend": reporte.idrend,
+          "evidencia": null,
+          "obs": driveId,
+          "estado": "S",
+          "fecCre": DateTime.now().toIso8601String(),
+          "useReg": reporte.iduser,
+          "hostname": "FLUTTER",
+          "fecEdit": DateTime.now().toIso8601String(),
+          "useEdit": reporte.iduser,
+          "useElim": 0,
+        };
+
+        debugPrint('Guardando evidencia');
+
+        final success = await _apiService.saveRendicionGastoEvidencia(
+          facturaDataEvidencia,
+        );
+        return success;
+      } else {
+        debugPrint('⚠️ No hay imagen nueva, solo se actualizó la factura');
+        return true; // ✅ Retornar true si solo se actualizó la factura
+      }
     } catch (e) {
       rethrow;
     }

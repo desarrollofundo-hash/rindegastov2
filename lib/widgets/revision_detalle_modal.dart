@@ -1136,7 +1136,9 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                             _buildDetailSection('Motivo de rechazo', [
                               _buildDetailRow(
                                 'Motivo: ',
-                                widget.revision.obs.toString(),
+                                (widget.revision.obs?.isNotEmpty ?? false)
+                                    ? widget.revision.obs!
+                                    : 'Ningún motivo proporcionado',
                               ),
                             ]),
 
@@ -1252,8 +1254,8 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         showDialog(
           context: context,
           builder: (BuildContext context) {
-           /*  return DetalleModalGasto(id: detalle.idRend.toString()); */
-           return DetalleModalGasto(reporte: detalle.toReporte(), id: '');
+            /*  return DetalleModalGasto(id: detalle.idRend.toString()); */
+            return DetalleModalGasto(reporte: detalle.toReporte(), id: '');
           },
         );
       },

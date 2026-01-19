@@ -468,7 +468,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (BuildContext context) => EditReporteModal(reporte: reporte),
+      builder: (BuildContext context) => EditReporteModal(
+        reporte: reporte,
+        onSave: (reporteActualizado) {
+          // ✅ Recargar los reportes después de guardar
+          _loadReportes();
+        },
+      ),
     ).then((_) {
       // Desactivar el focus del buscador cuando se cierra el modal
       _searchFocusNode.unfocus();
