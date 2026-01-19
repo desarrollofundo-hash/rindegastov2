@@ -1,9 +1,11 @@
 //factura_modal_peru.dart
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:flu2/controllers/edit_reporte_controller.dart';
+import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 // import 'package:flu2/models/apiruc_model.dart'; // No utilizado actualmente
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -44,13 +46,16 @@ class FacturaModalPeru extends StatefulWidget {
 }
 
 class _FacturaModalPeruState extends State<FacturaModalPeru> {
+  final FocusNode _notaFocusNode = FocusNode();
   // Controladores para cada campo
   late TextEditingController _politicaController;
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
+  late TextEditingController _centroCostoController;
   late TextEditingController _rucController;
   late TextEditingController _razonSocialController;
   late TextEditingController _tipoComprobanteController;
+
   late TextEditingController _serieController;
   late TextEditingController _numeroController;
   late TextEditingController _igvController;
@@ -74,15 +79,21 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
   String? _selectedFileName;
   final ImagePicker _picker = ImagePicker();
   final ApiService _apiService = ApiService();
+  final NuevoGastoLogic _logic = NuevoGastoLogic();
+
   bool _isLoading = false;
   bool _isLoadingCategorias = false;
   bool _isLoadingTiposGasto = false;
   List<CategoriaModel> _categoriasGeneral = [];
+  DropdownOption? _selectedCentroCosto;
   List<DropdownOption> _tiposGasto = [];
+  List<DropdownOption> _centroCosto = [];
   // List<DropdownOption> _tiposMovilidad = []; // No utilizado actualmente
   String? _errorCategorias;
   String? _errorTiposGasto;
+  bool _isLoadingCentrosCosto = false;
   // String? _errorTiposMovilidad; // No utilizado
+  String? _error;
 
   ///ApiRuc - campos comentados porque no se usan actualmente
   // bool _isLoadingApiRuc = false;
@@ -106,6 +117,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     _loadCategorias();
     _loadTiposGasto(); // Cargar gasto
     _loadTipoMovilidad();
+    _loadCentrosCosto();
     _loadApiRuc(
       widget.facturaData.ruc.toString(),
     ); //widget.facturaData.rucEmisor
@@ -174,6 +186,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         _totalController.text.trim().isNotEmpty &&
         _categoriaController.text.trim().isNotEmpty &&
         _tipoGastoController.text.trim().isNotEmpty &&
+        _centroCostoController.text
+            .trim()
+            .isNotEmpty && // ✅ Añadido centro de costo
         _rucClienteController.text.trim().isNotEmpty &&
         _notaController.text.trim().isNotEmpty &&
         (_selectedFile !=
@@ -184,6 +199,40 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
       setState(() {
         _isFormValid = isValid;
       });
+    }
+  }
+
+  Future<void> _loadCentrosCosto() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingCentrosCosto = true;
+        _error = null;
+      });
+    }
+    try {
+      final centroCosto = await _logic.fetchCentrosCosto(
+        _apiService,
+        UserService().currentUserCode,
+        CompanyService().currentUserCompany,
+      );
+      if (mounted) {
+        setState(() {
+          _centroCosto = centroCosto;
+          _isLoadingCentrosCosto = false;
+          // Seleccionar automáticamente el primer centro de costo
+          if (_centroCosto.isNotEmpty && _selectedCentroCosto == null) {
+            _selectedCentroCosto = _centroCosto.first;
+            _centroCostoController.text = _centroCosto.first.value;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingCentrosCosto = false;
+        });
+      }
     }
   }
 
@@ -316,6 +365,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     _tipoGastoController = TextEditingController(
       text: CompanyService().companyTipogasto,
     );
+    _centroCostoController = TextEditingController();
+
     _rucController = TextEditingController(text: widget.facturaData.ruc ?? '');
     _razonSocialController = TextEditingController();
     _tipoComprobanteController = TextEditingController(
@@ -374,11 +425,13 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     _categoriaController.removeListener(_validateForm);
     _tipoGastoController.removeListener(_validateForm);
     _notaController.removeListener(_validateForm);
+    _centroCostoController.removeListener(_validateForm);
 
     // Dispose de los controladores
     _politicaController.dispose();
     _categoriaController.dispose();
     _tipoGastoController.dispose();
+    _centroCostoController.dispose();
     _rucController.dispose();
     _razonSocialController.dispose();
     _tipoComprobanteController.dispose();
@@ -634,17 +687,37 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     }
   }
 
-  /// Convertir PDF a imagen (primera página)
-  /// Retorna un archivo de imagen PNG o null si falla
+  /// Convertir PDF a imagen PNG con múltiples estrategias de fallback
   Future<File?> _convertirPdfAImagen(File pdfFile) async {
     try {
       debugPrint('🔄 Iniciando conversión de PDF a imagen...');
 
-      // Leer los bytes del PDF
+      // 1️⃣ Validar que el archivo existe
+      if (!await pdfFile.exists()) {
+        debugPrint('❌ El archivo PDF no existe');
+        return null;
+      }
+
+      // 2️⃣ Leer los bytes del PDF
       final pdfBytes = await pdfFile.readAsBytes();
 
-      // Verificar tamaño del PDF (limitar a 5MB para evitar problemas de memoria)
-      const int maxSizeForConversion = 5 * 1024 * 1024; // 5 MB
+      // 3️⃣ Validar que no está vacío
+      if (pdfBytes.isEmpty) {
+        debugPrint('❌ El archivo PDF está vacío');
+        return null;
+      }
+
+      // 4️⃣ Validar firma del PDF (debe empezar con %PDF)
+      final header = String.fromCharCodes(pdfBytes.take(4));
+      if (!header.startsWith('%PDF')) {
+        debugPrint('❌ El archivo no es un PDF válido (header: $header)');
+        return null;
+      }
+
+      debugPrint('✅ PDF válido detectado (${pdfBytes.lengthInBytes} bytes)');
+
+      // 5️⃣ Verificar tamaño del PDF (limitar a 10MB para evitar problemas de memoria)
+      const int maxSizeForConversion = 10 * 1024 * 1024; // 10 MB
       if (pdfBytes.lengthInBytes > maxSizeForConversion) {
         debugPrint(
           '⚠️ PDF demasiado grande (${pdfBytes.lengthInBytes} bytes), omitiendo conversión',
@@ -652,30 +725,90 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         return null;
       }
 
-      // Rasterizar la primera página del PDF con calidad media
-      debugPrint('📄 Rasterizando primera página del PDF...');
-      final stream = Printing.raster(pdfBytes, pages: [0], dpi: 150);
-      final raster = await stream.first.timeout(const Duration(seconds: 15));
-      final uiImage = await raster.toImage();
+      // 6️⃣ Intentar conversión con diferentes calidades (fallback automático)
+      final List<double> dpis = [
+        150.0,
+        100.0,
+        72.0,
+      ]; // Calidad alta, media, baja
 
-      // Convertir la imagen UI a bytes PNG
-      final byteData = await uiImage.toByteData(format: ui.ImageByteFormat.png);
-      if (byteData == null) {
-        debugPrint('❌ No se pudo convertir la imagen a bytes');
-        return null;
+      for (double dpi in dpis) {
+        try {
+          debugPrint('📄 Intentando rasterizar con $dpi DPI...');
+
+          final stream = Printing.raster(pdfBytes, pages: [0], dpi: dpi);
+          final raster = await stream.first.timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw TimeoutException('Timeout al rasterizar PDF');
+            },
+          );
+
+          final uiImage = await raster.toImage();
+          debugPrint(
+            '✅ Imagen rasterizada: ${uiImage.width}x${uiImage.height}',
+          );
+
+          // 7️⃣ Convertir la imagen UI a bytes PNG
+          final byteData = await uiImage.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          if (byteData == null) {
+            debugPrint(
+              '⚠️ No se pudo convertir a bytes con DPI $dpi, probando siguiente...',
+            );
+            continue;
+          }
+
+          // 8️⃣ Validar que los bytes no están vacíos
+          final imageBytes = byteData.buffer.asUint8List();
+          if (imageBytes.isEmpty) {
+            debugPrint('⚠️ Bytes vacíos con DPI $dpi, probando siguiente...');
+            continue;
+          }
+
+          // 9️⃣ Guardar la imagen como archivo temporal
+          final tempDir = await getTemporaryDirectory();
+          final timestamp = DateTime.now().millisecondsSinceEpoch;
+          final imagePath = '${tempDir.path}/pdf_converted_$timestamp.png';
+          final imageFile = File(imagePath);
+          await imageFile.writeAsBytes(imageBytes);
+
+          // 🔟 Validar que el archivo se guardó correctamente
+          if (!await imageFile.exists()) {
+            debugPrint('⚠️ Archivo no se guardó correctamente con DPI $dpi');
+            continue;
+          }
+
+          final fileSize = await imageFile.length();
+          if (fileSize == 0) {
+            debugPrint('⚠️ Archivo guardado está vacío con DPI $dpi');
+            await imageFile.delete();
+            continue;
+          }
+
+          debugPrint('✅ Conversión exitosa con $dpi DPI');
+          debugPrint('✅ Imagen guardada en: $imagePath');
+          debugPrint('📊 Dimensiones: ${uiImage.width}x${uiImage.height}');
+          debugPrint('📊 Tamaño del archivo: $fileSize bytes');
+
+          return imageFile;
+        } catch (e) {
+          debugPrint('⚠️ Error con DPI $dpi: $e');
+          if (dpi == dpis.last) {
+            // Si es el último intento, propagar el error
+            rethrow;
+          }
+          // Continuar con el siguiente DPI
+          continue;
+        }
       }
 
-      // Guardar la imagen como archivo temporal
-      final tempDir = await getTemporaryDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final imagePath = '${tempDir.path}/pdf_converted_$timestamp.png';
-      final imageFile = File(imagePath);
-      await imageFile.writeAsBytes(byteData.buffer.asUint8List());
-
-      debugPrint('✅ Imagen guardada en: $imagePath');
-      debugPrint('📊 Tamaño de la imagen: ${await imageFile.length()} bytes');
-
-      return imageFile;
+      debugPrint('❌ No se pudo convertir con ningún nivel de calidad');
+      return null;
+    } on TimeoutException catch (e) {
+      debugPrint('❌ Timeout al convertir PDF: $e');
+      return null;
     } catch (e, stackTrace) {
       debugPrint('❌ Error al convertir PDF a imagen: $e');
       debugPrint('Stack trace: $stackTrace');
@@ -954,7 +1087,12 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
         "gerencia": CompanyService().currentCompany?.gerencia ?? '',
         "area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
-        "consumidor": CompanyService().currentCompany?.consumidor ?? '',
+        /* "consumidor": CompanyService().currentCompany?.consumidor ?? '' */
+        "consumidor": _centroCostoController.text.isEmpty
+            ? ""
+            : (_centroCostoController.text.length > 80
+                  ? _centroCostoController.text.substring(0, 80)
+                  : _centroCostoController.text),
         "placa": _placaController.text,
         "estadoActual": "BORRADOR",
         "glosa": "CODIGO QR",
@@ -1131,53 +1269,6 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
     }
   }
 
-  /*   @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildImageSection(),
-                    const SizedBox(height: 20),
-                    _buildPolicySection(),
-                    const SizedBox(height: 12),
-                    _buildCategorySection(),
-                    const SizedBox(height: 12),
-                    _buildTipoGastoSection(),
-                    const SizedBox(height: 12),
-                    _buildFacturaDataSection(),
-                    const SizedBox(height: 20),
-                    _buildNotesSection(),
-                    //const SizedBox(height: 12),
-                    //_buildRawDataSection(),
-                  ],
-                ),
-              ),
-            ),
-            _buildActionButtons(),
-          ],
-        ),
-      ),
-    );
-  }
- */
-
   @override
   Widget build(BuildContext context) {
     final double maxHeight = MediaQuery.of(context).size.height * 0.93;
@@ -1227,8 +1318,11 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
                         const SizedBox(height: 12),
                         _buildTipoGastoSection(),
                         const SizedBox(height: 12),
+                        _buildCentroCostoSection(),
+                        const SizedBox(height: 12),
                         _buildFacturaDataSection(),
                         const SizedBox(height: 20),
+
                         _buildNotesSection(),
 
                         /*  const SizedBox(
@@ -2144,6 +2238,168 @@ class _FacturaModalPeruState extends State<FacturaModalPeru> {
             },
           ),
       ],
+    );
+  }
+
+  Widget _buildCentroCostoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoadingCentrosCosto) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          SizedBox(height: 8),
+          Center(child: CircularProgressIndicator()),
+        ],
+      );
+    }
+
+    if (_error != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error cargando centros de costo: $_error',
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    /*     // Mostrar mensaje si la lista está vacía
+    if (_centroCosto.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.orange.shade900.withOpacity(0.3)
+                  : Colors.orange.shade50,
+              border: Border.all(
+                color: isDark ? Colors.orange.shade700 : Colors.orange.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info,
+                  color: isDark
+                      ? Colors.orange.shade400
+                      : Colors.orange.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'No hay centros de costo disponibles',
+                    style: TextStyle(
+                      color: isDark
+                          ? Colors.orange.shade400
+                          : Colors.orange.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    } */
+
+    return DropdownButtonFormField<DropdownOption>(
+      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+      value: _selectedCentroCosto,
+      decoration: InputDecoration(
+        labelText: 'Centro de Costo',
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[600]! : Colors.grey,
+            width: 1,
+          ),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+        ),
+        prefixIcon: Icon(
+          Icons.account_box,
+          color: isDark ? Colors.grey[400] : Colors.grey,
+        ),
+      ),
+      isExpanded: true,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+      items: _centroCosto.map((centroCosto) {
+        return DropdownMenuItem<DropdownOption>(
+          value: centroCosto,
+          child: Text(
+            centroCosto.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCentroCosto = value;
+          _centroCostoController.text = value?.value ?? '';
+        });
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Seleccione un centro de costo';
+        }
+        return null;
+      },
     );
   }
 

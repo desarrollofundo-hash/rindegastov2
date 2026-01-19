@@ -18,7 +18,10 @@ import 'package:path/path.dart' as path;
 
 class ApiService {
   /// Base URL de la API
-  static const String baseUrl = 'http://190.119.200.124:45490';
+  /// BASE URL DE BASE DE DATOS PRODUCCION
+  ///   static const String baseUrl = 'http://190.119.200.124:45490';
+  /// BASE URL DE BASE DE DATOS QA_TEST
+  static const String baseUrl = 'http://190.119.200.124:45491';
   static const String baseUrlApi = 'https://apiperu.dev';
   static const Duration timeout = Duration(seconds: 60);
 
@@ -59,6 +62,11 @@ class ApiService {
       final uri = Uri.parse('$baseUrl/reporte/rendiciongasto').replace(
         queryParameters: {'id': id, 'idrend': idrend, 'user': user, 'ruc': ruc},
       );
+
+      print('========================================');
+      print('🔍 GET REPORTES RENDICION GASTO');
+      print('📍 URL: $uri');
+      print('========================================');
       /* 
       debugPrint('📡 Realizando petición HTTP GET...');
       debugPrint('🌍 URL final: $uri');
@@ -115,6 +123,18 @@ class ApiService {
           for (int i = 0; i < jsonData.length; i++) {
             try {
               final reporte = Reporte.fromJson(jsonData[i]);
+
+              // 🔍 DEBUG: Verificar qué consumidor viene del servidor
+              if (i == 0) {
+                // Solo el primer registro para no llenar la consola
+                print('========================================');
+                print('🔍 GET REPORTE DESDE SERVIDOR');
+                print('   idRend: ${reporte.idrend}');
+                print('   consumidor: "${reporte.consumidor}"');
+                print('   Raw JSON consumidor: "${jsonData[i]['consumidor']}"');
+                print('========================================');
+              }
+
               reportes.add(reporte);
             } catch (e) {
               errores++;
@@ -1272,8 +1292,122 @@ class ApiService {
     }
   }
 
+  Future<List<DropdownOption>> getRendicionCentrosCosto({
+    /* String politica = 'todos', */
+    required String iduser,
+    required String empresa,
+  }) async {
+    debugPrint(
+      '🚀 Obteniendo CENTROS DE COSTO para usuario: $iduser, empresa: $empresa',
+    );
+    debugPrint(
+      '📍 URL: $baseUrl/reporte/usuarioceco?id=$iduser&empresa=$empresa',
+    );
+
+    try {
+      // Diagnóstico de conectividad en modo debug
+      if (!kReleaseMode) {
+        final diagnostic = await ConnectivityHelper.fullConnectivityDiagnostic(
+          baseUrl,
+        );
+        if (!diagnostic['internetConnection']) {
+          throw Exception('❌ Sin conexión a internet');
+        }
+        if (!diagnostic['serverReachable']) {
+          throw Exception('❌ No se puede alcanzar el servidor $baseUrl');
+        }
+      }
+
+      final uri = Uri.parse(
+        '$baseUrl/reporte/usuarioceco',
+      ).replace(queryParameters: {'id': iduser, 'empresa': empresa});
+
+      final response = await client
+          .get(
+            uri,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json; charset=UTF-8',
+              'User-Agent': 'Flutter-App/${Platform.operatingSystem}',
+              'Connection': 'keep-alive',
+              'Cache-Control': 'no-cache',
+            },
+          )
+          .timeout(timeout);
+
+      debugPrint(
+        '📊 Respuesta categorías rendición - Status: ${response.statusCode}',
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('✅ Status 200 - Procesando centros de costo...');
+
+        if (response.body.isEmpty) {
+          throw Exception('⚠️ Respuesta vacía del servidor');
+        }
+
+        try {
+          final jsonData = json.decode(response.body);
+          debugPrint('📋 Tipo de datos recibidos: ${jsonData.runtimeType}');
+          debugPrint('📋 Datos crudos: $jsonData');
+
+          // Si la respuesta es una lista directa
+          if (jsonData is List) {
+            debugPrint('📦 Es una lista con ${jsonData.length} elementos');
+
+            final options = jsonData.map<DropdownOption>((item) {
+              debugPrint('  🔹 Parseando item: $item');
+              final option = DropdownOption.fromJson(item);
+              debugPrint(
+                '  ✅ Opción creada - ID: ${option.id}, Value: ${option.value}, isActive: ${option.isActive}',
+              );
+              return option;
+            }).toList();
+
+            // No filtrar por isActive en centros de costo porque la API no devuelve ese campo
+
+            debugPrint('✅ ${options.length} centros de costo cargados');
+            debugPrint(
+              '✅ Opciones finales: ${options.map((o) => o.value).toList()}',
+            );
+            return options;
+          }
+
+          // Si la respuesta tiene estructura de objeto
+          final dropdownResponse = DropdownOptionsResponse.fromJson(jsonData);
+          debugPrint(
+            '✅ ${dropdownResponse.options.length} centros de costo cargados',
+          );
+          return dropdownResponse.options;
+        } catch (e) {
+          debugPrint('❌ Error al parsear JSON de categorías: $e');
+          throw Exception('Error al procesar respuesta del servidor: $e');
+        }
+      } else {
+        debugPrint('❌ Status ${response.statusCode}');
+        throw Exception(
+          'Error del servidor (${response.statusCode}): ${response.reasonPhrase}',
+        );
+      }
+    } on SocketException catch (e) {
+      debugPrint('🔌 Error de conexión en categorías: $e');
+      throw Exception(
+        'Sin conexión al servidor. Verifica tu conexión a internet.',
+      );
+    } on HttpException catch (e) {
+      debugPrint('🌐 Error HTTP en categorías: $e');
+      throw Exception('Error de protocolo HTTP: $e');
+    } on FormatException catch (e) {
+      debugPrint('📝 Error de formato en categorías: $e');
+      throw Exception('El servidor devolvió datos en formato incorrecto');
+    } catch (e) {
+      debugPrint('💥 Error no manejado en categorías: $e');
+      throw Exception('Error inesperado: $e');
+    }
+  }
+
   /// Obtener categorías de rendición según la política seleccionada
-  /// [politica] - NOMBRE de la política o "todos" para obtener todas las categorías
+  /// [politica] - NOMBRE de la polí1tica o "todos" para obtener todas las categorías
   Future<List<DropdownOption>> getRendicionCategorias({
     String politica = 'todos',
   }) async {
@@ -2737,9 +2871,12 @@ class ApiService {
   Future<bool> saveupdateRendicionGasto(
     Map<String, dynamic> informeDetalleData,
   ) async {
-    debugPrint('🚀 Guardando detalle de informe de rendición...');
-    debugPrint('📍 URL: $baseUrl/saveupdate/updaterendiciongasto');
-    debugPrint('📦 Datos a enviar: $informeDetalleData');
+    print('========================================');
+    print('🚀 API SERVICE - saveupdateRendicionGasto');
+    print('📍 URL: $baseUrl/saveupdate/updaterendiciongasto');
+    print('📦 idRend: ${informeDetalleData["idRend"]}');
+    print('📦 consumidor en payload: "${informeDetalleData["consumidor"]}"');
+    print('========================================');
 
     try {
       // Diagnóstico de conectividad en modo debug
@@ -2755,6 +2892,13 @@ class ApiService {
         }
       }
 
+      // 🔍 CAPTURAR EL BODY EXACTO QUE SE ENVÍA
+      final bodyToSend = json.encode([informeDetalleData]);
+      print('========================================');
+      print('📡 BODY JSON ENVIADO AL SERVIDOR:');
+      print(bodyToSend);
+      print('========================================');
+
       final response = await client
           .post(
             Uri.parse('$baseUrl/saveupdate/updaterendiciongasto'),
@@ -2764,14 +2908,15 @@ class ApiService {
               'User-Agent': 'Flutter-App/${Platform.operatingSystem}',
               'Connection': 'keep-alive',
             },
-            body: json.encode([informeDetalleData]),
+            body: bodyToSend,
           )
           .timeout(const Duration(seconds: 30));
 
-      debugPrint(
-        '📊 Respuesta guardar detalle informe - Status: ${response.statusCode}',
-      );
-      debugPrint('📄 Response body: ${response.body}');
+      print('========================================');
+      print('📊 RESPUESTA - updaterendiciongasto');
+      print('   Status: ${response.statusCode}');
+      print('   Body: ${response.body}');
+      print('========================================');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Verificar si la respuesta contiene errores

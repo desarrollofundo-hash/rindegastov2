@@ -28,6 +28,7 @@ class DropdownOption {
     return DropdownOption(
       id: json['id']?.toString() ?? '',
       value:
+          json['consumidor']?.toString() ??
           json['categoria']?.toString() ??
           json['politica']?.toString() ??
           json['nombre']?.toString() ??
@@ -42,7 +43,9 @@ class DropdownOption {
           true,
       metadata:
           json['metadata'] as Map<String, dynamic>? ??
-          (json.containsKey('politica') || json.containsKey('categoria')
+          (json.containsKey('politica') || 
+           json.containsKey('categoria') ||
+           json.containsKey('consumidor')
               ? Map<String, dynamic>.from(json)
               : null),
     );

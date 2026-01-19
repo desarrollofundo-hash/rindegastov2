@@ -30,6 +30,8 @@ class NuevoGastoModal extends StatefulWidget {
   final VoidCallback onCancel;
   final Function(Map<String, dynamic>) onSave;
 
+  //FOCUS NODES
+
   const NuevoGastoModal({
     super.key,
     required this.politicaSeleccionada,
@@ -46,10 +48,30 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   final ApiService _apiService = ApiService();
   final NuevoGastoLogic _logic = NuevoGastoLogic();
 
+  final FocusNode _categoriaFocusNode = FocusNode();
+  final FocusNode _tipoGastoFocusNode = FocusNode();
+  final FocusNode _centroCostoFocusNode = FocusNode();
+  final FocusNode _rucProveedorFocusNode = FocusNode();
+  final FocusNode _razonSocialFocusNode = FocusNode();
+  final FocusNode _tipoComprobanteFocusNode = FocusNode();
+  final FocusNode _fechaFocusNode = FocusNode();
+  final FocusNode _serieFacturaFocusNode = FocusNode();
+  final FocusNode _numeroFacturaFocusNode = FocusNode();
+  final FocusNode _igvFocusNode = FocusNode();
+  final FocusNode _totalFocusNode = FocusNode();
+  final FocusNode _origenFocusNode = FocusNode();
+  final FocusNode _destinoFocusNode = FocusNode();
+  final FocusNode _motivoViajeFocusNode = FocusNode();
+  final FocusNode _movilidadFocusNode = FocusNode();
+  final FocusNode _placaFocusNode = FocusNode();
+  final FocusNode _notaFocusNode = FocusNode();
+
   // Controladores para todos los campos
   late TextEditingController _politicaController;
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
+  //centro de costo
+  late TextEditingController _centroCostoController;
   late TextEditingController _razonSocialController;
   late TextEditingController _rucProveedorController;
   late TextEditingController _rucClienteController;
@@ -84,9 +106,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   // Variables para dropdowns
   List<DropdownOption> _categorias = [];
   List<DropdownOption> _tiposGasto = [];
+  //dropdown centro de costo
+  List<DropdownOption> _centroCosto = [];
   List<DropdownOption> _tiposMovilidad = [];
   DropdownOption? _selectedCategoria;
   DropdownOption? _selectedTipoGasto;
+  DropdownOption? _selectedCentroCosto;
   DropdownOption? _selectedTipoMovilidad;
   String? _selectedComprobante;
 
@@ -102,6 +127,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   bool _isLoading = false;
   bool _isLoadingCategorias = false;
   bool _isLoadingTiposGasto = false;
+
+  bool _isLoadingCentrosCosto = false;
   bool _isLoadingTipoMovilidad = false;
   String? _error;
 
@@ -168,6 +195,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _loadCategorias();
     _loadTiposGasto();
     _loadTipoMovilidad();
+    _loadCentrosCosto();
     //_loadApiRuc(_rucController.toString());
     _addValidationListeners();
   }
@@ -181,10 +209,13 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _tipoGastoController = TextEditingController(
       text: CompanyService().companyTipogasto,
     );
+    _centroCostoController = TextEditingController();
     _rucProveedorController = TextEditingController();
     _razonSocialController = TextEditingController();
     _rucClienteController = TextEditingController();
-    _tipoComprobanteController = TextEditingController();
+    _tipoComprobanteController = TextEditingController(
+      text: 'FACTURA ELECTRONICA', // Valor por defecto
+    );
     _fechaController = TextEditingController();
     _serieFacturaController = TextEditingController();
     _numeroFacturaController = TextEditingController();
@@ -223,6 +254,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _politicaController.dispose();
     _categoriaController.dispose();
     _tipoGastoController.dispose();
+    _centroCostoController.dispose();
     _rucProveedorController.dispose();
     _razonSocialController.dispose();
     _rucClienteController.dispose();
@@ -252,6 +284,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _totalController.addListener(_validateForm);
     _categoriaController.addListener(_validateForm);
     _tipoGastoController.addListener(_validateForm);
+    _centroCostoController.addListener(_validateForm);
   }
 
   /// Validar si todos los campos obligatorios están llenos
@@ -262,6 +295,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         _totalController.text.trim().isNotEmpty &&
         _categoriaController.text.trim().isNotEmpty &&
         _tipoGastoController.text.trim().isNotEmpty &&
+        _centroCostoController.text.trim().isNotEmpty &&
         _origenController.text.trim().isNotEmpty &&
         _destinoController.text.trim().isNotEmpty &&
         _motivoViajeController.text
@@ -272,6 +306,40 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       setState(() {
         _isFormValid = isValid;
       });
+    }
+  }
+
+  Future<void> _loadCentrosCosto() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingCentrosCosto = true;
+        _error = null;
+      });
+    }
+    try {
+      final centroCosto = await _logic.fetchCentrosCosto(
+        _apiService,
+        UserService().currentUserCode,
+        CompanyService().currentUserCompany,
+      );
+      if (mounted) {
+        setState(() {
+          _centroCosto = centroCosto;
+          _isLoadingCentrosCosto = false;
+          // Seleccionar automáticamente el primer centro de costo
+          if (_centroCosto.isNotEmpty && _selectedCentroCosto == null) {
+            _selectedCentroCosto = _centroCosto.first;
+            _centroCostoController.text = _centroCosto.first.value;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingCentrosCosto = false;
+        });
+      }
     }
   }
 
@@ -684,6 +752,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     } else if (_categoriaController.text == "PLANILLA DE MOVILIDAD") {
       if (_totalController.text.trim() == "") {
         _showMensaggeDialog("INGRESE MONTO");
+      } else if (_centroCostoController.text.trim() == "") {
+        _showMensaggeDialog("SELECCIONA CENTRO DE COSTO");
       } else if (_origenController.text.trim() == "") {
         _showMensaggeDialog("FALTA ORIGEN");
       } else if (_destinoController.text.trim() == "") {
@@ -694,6 +764,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         _guardarGasto();
       }
     } else if (_categoriaController.text == "VIAJES CON COMPROBANTE") {
+      // Validar razón social para VIAJES CON COMPROBANTE
+      if (_razonSocialController.text.trim().isEmpty) {
+        _showMensaggeDialog("FALTA RAZÓN SOCIAL");
+        return;
+      }
       if (CompanyService().companyRuc.toString() !=
           _rucClienteController.text) {
         _showMensaggeDialog(
@@ -701,6 +776,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         );
       } else if (_totalController.text.trim() == "") {
         _showMensaggeDialog("INGRESE MONTO");
+      } else if (_centroCostoController.text.trim() == "") {
+        _showMensaggeDialog("SELECCIONA CENTRO DE COSTO");
       } else if (_selectedFile == null) {
         _showMensaggeDialog("ADJUNTE EVIDENCIA 📷");
       } else if (_origenController.text.trim() == "") {
@@ -713,6 +790,11 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         _guardarGasto();
       }
     } else {
+      // Validar razón social para cualquier otra categoría (excepto PLANILLA DE MOVILIDAD)
+      if (_razonSocialController.text.trim().isEmpty) {
+        _showMensaggeDialog("FALTA RAZÓN SOCIAL");
+        return;
+      }
       if (_selectedFile == null) {
         _showMensaggeDialog("ADJUNTE EVIDENCIA 📷");
       } else if (CompanyService().companyRuc.toString() !=
@@ -722,6 +804,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         );
       } else if (_totalController.text.trim() == "") {
         _showMensaggeDialog("INGRESE MONTO");
+      } else if (_centroCostoController.text.trim() == "") {
+        _showMensaggeDialog("SELECCIONA CENTRO DE COSTO");
       } else {
         _guardarGasto();
       }
@@ -732,6 +816,14 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   Future<void> _guardarGasto() async {
     // Antes
     // if (_selectedFile == null && _categoriaController.text == "PLANILLA DE MOVILIDAD")
+
+    // Si el centro de costo está vacío, usar el primero de la lista
+    if (_centroCostoController.text.trim().isEmpty && _centroCosto.isNotEmpty) {
+      setState(() {
+        _selectedCentroCosto = _centroCosto.first;
+        _centroCostoController.text = _centroCosto.first.value;
+      });
+    }
 
     try {
       // Mostrar indicador de carga
@@ -771,6 +863,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         politica: _politicaController.text,
         categoria: _categoriaController.text,
         tipoGasto: _tipoGastoController.text,
+        centroCosto: _centroCostoController.text,
         ruc: _rucProveedorController.text,
         tipoComprobante: _tipoComprobanteController.text,
         serie: _serieFacturaController.text,
@@ -1175,6 +1268,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(); // Cerrar diálogo de advertencia
+                FocusScope.of(
+                  context,
+                ).unfocus(); // Quitar el focus de cualquier campo
               },
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
@@ -1264,124 +1360,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       },
     );
   }
-  /* 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildImageSection(),
-                    const SizedBox(height: 10),
-                    if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
-                      _buildLectorSunatSection(),
-                    const SizedBox(height: 10),
-                    _buildDatosGeneralesSection(),
-                    const SizedBox(height: 10),
-                    _buildDatosFacturaSection(),
-                    const SizedBox(height: 10),
-                    if (_politicaController.text.contains(
-                      'GASTOS DE MOVILIDAD',
-                    ))
-                      _buildDatosMovilidadSection(),
-                    const SizedBox(height: 10),
-                    _buildNotasSection(),
-                  ],
-                ),
-              ),
-            ),
-            // Evitar que los botones queden pegados al borde inferior del modal
-            SafeArea(
-              top: false,
-              left: false,
-              right: false,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 1.0),
-                child: _buildActionButtons(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
- */
-
-  /* @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: _buildHeader(), // Tu encabezado original
-        ),
-      ),
-
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildImageSection(),
-                    const SizedBox(height: 10),
-
-                    if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
-                      _buildLectorSunatSection(),
-
-                    const SizedBox(height: 10),
-                    _buildDatosGeneralesSection(),
-                    const SizedBox(height: 10),
-                    _buildDatosFacturaSection(),
-                    const SizedBox(height: 10),
-
-                    if (_politicaController.text.contains(
-                      'GASTOS DE MOVILIDAD',
-                    ))
-                      _buildDatosMovilidadSection(),
-
-                    const SizedBox(height: 10),
-                    _buildNotasSection(),
-                  ],
-                ),
-              ),
-            ),
-
-            // Zona inferior segura para evitar que se tape con el teclado
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8.0),
-                child: _buildActionButtons(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
- */
 
   @override
   Widget build(BuildContext context) {
@@ -1971,6 +1949,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         const SizedBox(height: 12),
 
         _buildTipoGastoSection(),
+        _buildCentroCostoSection(),
       ],
     );
   }
@@ -1994,23 +1973,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         ),
         // Campos que se muestran solo si NO es planilla de movilidad
         if (!esPlanillaMovilidad) ...[
-          // RUC Emisor
-          /* TextFormField(
-            controller: _rucClienteController,
-            decoration: const InputDecoration(
-              labelText: 'RUC Cliente',
-              border: UnderlineInputBorder(),
-              prefixIcon: Icon(Icons.business),
-              suffixIcon: Icon(Icons.lock, color: Colors.grey),
-            ),
-            enabled: false,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
-            ),
-          ), */
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               controller: _rucProveedorController,
               readOnly: _hasScannedData,
               /* _hasScannedData ||
@@ -2039,7 +2005,6 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 ),
                 prefixIcon: const Icon(Icons.badge),
               ),
-              keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (value) {
                 if (value.length == 11) {
@@ -2059,7 +2024,18 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           // Razón Social
           if (_categoriaController.text != "PLANILLA DE MOVILIDAD")
             TextFormField(
+              focusNode: _razonSocialFocusNode,
+              textInputAction: TextInputAction.next,
               controller: _razonSocialController,
+              validator: (value) {
+                // Obligatorio excepto en PLANILLA DE MOVILIDAD
+                if (_categoriaController.text != "PLANILLA DE MOVILIDAD") {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'La Razón Social es obligatoria';
+                  }
+                }
+                return null;
+              },
               readOnly: _hasScannedData,
               /* _hasScannedData ||
                   _categoriaController.text !=
@@ -2090,6 +2066,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 prefixIcon: const Icon(Icons.business, color: Colors.grey),
               ),
             ),
+
           const SizedBox(height: 12),
 
           // RUC Cliente
@@ -2205,7 +2182,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               },
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Seleccione';
+                  // Si no hay selección, tomar el primero de la lista
+                  setState(() {
+                    _selectedComprobante = tipocomprobante.first;
+                    _tipoComprobanteController.text = tipocomprobante.first;
+                  });
+                  return null; // Ya no es error, se asignó automáticamente
                 }
                 return null;
               },
@@ -2317,6 +2299,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    focusNode: _serieFacturaFocusNode,
+                    textInputAction: TextInputAction.next,
                     controller: _serieFacturaController,
                     readOnly: _hasScannedData,
                     /* !_validar ||
@@ -2356,6 +2340,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: TextFormField(
+                    focusNode: _numeroFacturaFocusNode,
+                    textInputAction: TextInputAction.next,
+                    keyboardType: TextInputType.number,
                     controller: _numeroFacturaController,
                     readOnly: _hasScannedData,
 
@@ -2403,6 +2390,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
               children: [
                 Expanded(
                   child: TextFormField(
+                    focusNode: _igvFocusNode,
+                    textInputAction: TextInputAction.next,
+                    keyboardType: TextInputType.number,
                     controller: _igvController,
                     /*  readOnly: true, // 🔒 Bloqueado solo después de escanear QR */
                     readOnly: _hasScannedData,
@@ -2451,6 +2441,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             Expanded(
               flex: 1,
               child: TextFormField(
+                focusNode: _totalFocusNode,
+                textInputAction: TextInputAction.next,
                 controller: _totalController,
 
                 /*   readOnly:
@@ -2784,6 +2776,168 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     );
   }
 
+  Widget _buildCentroCostoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoadingCentrosCosto) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          SizedBox(height: 8),
+          Center(child: CircularProgressIndicator()),
+        ],
+      );
+    }
+
+    if (_error != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error cargando centros de costo: $_error',
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Mostrar mensaje si la lista está vacía
+    if (_centroCosto.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.orange.shade900.withOpacity(0.3)
+                  : Colors.orange.shade50,
+              border: Border.all(
+                color: isDark ? Colors.orange.shade700 : Colors.orange.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info,
+                  color: isDark
+                      ? Colors.orange.shade400
+                      : Colors.orange.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'No hay centros de costo disponibles',
+                    style: TextStyle(
+                      color: isDark
+                          ? Colors.orange.shade400
+                          : Colors.orange.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return DropdownButtonFormField<DropdownOption>(
+      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+      value: _selectedCentroCosto,
+      decoration: InputDecoration(
+        labelText: 'Centro de Costo',
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[600]! : Colors.grey,
+            width: 1,
+          ),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.green, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+        ),
+        prefixIcon: Icon(
+          Icons.account_box,
+          color: isDark ? Colors.grey[400] : Colors.grey,
+        ),
+      ),
+      isExpanded: true,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+      items: _centroCosto.map((centroCosto) {
+        return DropdownMenuItem<DropdownOption>(
+          value: centroCosto,
+          child: Text(
+            centroCosto.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCentroCosto = value;
+          _centroCostoController.text = value?.value ?? '';
+        });
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Seleccione un centro de costo';
+        }
+        return null;
+      },
+    );
+  }
+
   /// Construir la sección de tipo de gasto
   Widget _buildTipoMovilidadSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -2919,6 +3073,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
         // ORIGEN VIAJE
         TextFormField(
+          focusNode: _origenFocusNode,
+          textInputAction: TextInputAction.next,
           controller: _origenController,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
@@ -2961,6 +3117,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
         // DESTINO VIAJE
         TextFormField(
+          focusNode: _destinoFocusNode,
+          textInputAction: TextInputAction.next,
           controller: _destinoController,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
@@ -3002,6 +3160,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
         // MOTIVo VIAJE
         TextFormField(
+          focusNode: _motivoViajeFocusNode,
+          textInputAction: TextInputAction.next,
           controller: _motivoViajeController,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
@@ -3049,6 +3209,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
         // PLACA
         TextFormField(
+          focusNode: _placaFocusNode,
+          textInputAction: TextInputAction.next,
           controller: _placaController,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
@@ -3093,6 +3255,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         TextFormField(
+          focusNode: _notaFocusNode,
+          textInputAction: TextInputAction.next,
           controller: _notaController,
           style: TextStyle(color: isDark ? Colors.white : Colors.black),
           decoration: InputDecoration(
