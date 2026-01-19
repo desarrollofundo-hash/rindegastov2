@@ -16,6 +16,17 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class NuevoGastoLogic {
+  Future<List<DropdownOption>> fetchCentrosCosto(
+    ApiService apiService,
+    String iduser,
+    String empresa,
+  ) async {
+    return await apiService.getRendicionCentrosCosto(
+      iduser: iduser,
+      empresa: empresa,
+    );
+  }
+
   /// Obtiene categorías desde el servicio API
   Future<List<DropdownOption>> fetchCategorias(
     ApiService apiService,
@@ -135,6 +146,7 @@ class NuevoGastoLogic {
     required String politica,
     required String categoria,
     required String tipoGasto,
+    required String centroCosto,
     required String ruc,
     required String tipoComprobante,
     required String serie,
@@ -178,7 +190,11 @@ class NuevoGastoLogic {
       "gerencia": companyService.currentCompany?.gerencia ?? '',
       "area": companyService.currentCompany?.area ?? '',
       "idCuenta": "",
-      "consumidor": CompanyService().currentCompany?.consumidor ?? '',
+      "consumidor": centroCosto.isEmpty
+          ? "SIN CENTRO DE COSTO"
+          : (centroCosto.length > 80
+                ? centroCosto.substring(0, 80)
+                : centroCosto),
       "placa": placa,
       "estadoActual": "BORRADOR",
       "glosa": "CREAR GASTO",

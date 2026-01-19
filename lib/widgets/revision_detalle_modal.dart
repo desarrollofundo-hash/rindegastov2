@@ -1252,7 +1252,8 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
         showDialog(
           context: context,
           builder: (BuildContext context) {
-            return DetalleModalGasto(id: detalle.idRend.toString());
+           /*  return DetalleModalGasto(id: detalle.idRend.toString()); */
+           return DetalleModalGasto(reporte: detalle.toReporte(), id: '');
           },
         );
       },
