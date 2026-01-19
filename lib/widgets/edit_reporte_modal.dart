@@ -233,6 +233,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       _categoriaController.addListener(_validateForm);
       _tipoGastoController.addListener(_validateForm);
       _centroCostoController.addListener(_validateForm);
+      _notaController.addListener(_validateForm);
 
       // ✅ Agregar listeners para campos de movilidad
       _origenController.addListener(_validateForm);
@@ -253,6 +254,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
       _categoriaController.addListener(_validateForm);
       _tipoGastoController.addListener(_validateForm);
       _centroCostoController.addListener(_validateForm);
+      _notaController.addListener(_validateForm);
     }
   }
 
@@ -312,8 +314,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
               _destinoController.text.trim().isNotEmpty &&
               _motivoViajeController.text.trim().isNotEmpty &&
               _tipoMovilidadController.text.trim().isNotEmpty &&
-              _placaController.text.trim().isNotEmpty &&
-              (_selectedImage != null)
+              _placaController.text.trim().isNotEmpty
         : // Validación para formulario completo
           _rucController.text.trim().isNotEmpty &&
               _tipoComprobanteController.text.trim().isNotEmpty &&
@@ -323,7 +324,6 @@ class _EditReporteModalState extends State<EditReporteModal> {
               _totalController.text.trim().isNotEmpty &&
               _categoriaController.text.trim().isNotEmpty &&
               _tipoGastoController.text.trim().isNotEmpty &&
-              (_selectedImage != null) &&
               _isRucValid();
 
     if (_isFormValid != isValid) {
@@ -2762,6 +2762,9 @@ class _EditReporteModalState extends State<EditReporteModal> {
       print('🔍 Centro de Costo: "${_centroCostoController.text}"');
       print('🔍 Categoría: "${_categoriaController.text}"');
       print('🔍 Tipo Gasto: "${_tipoGastoController.text}"');
+      print(
+        '🔍 Imagen seleccionada: ${_selectedImage != null ? "Sí (${_selectedImage!.path})" : "No (null)"}',
+      );
       print('========================================');
 
       final success = await _controller.saveReporte(
@@ -2788,7 +2791,7 @@ class _EditReporteModalState extends State<EditReporteModal> {
         lugarDestino: _destinoController.text,
         tipoMovilidad: _tipoMovilidadController.text,
         placa: _placaController.text,
-        selectedImage: _selectedImage,
+        selectedImage: _selectedImage, // ✅ Si es null, se envía null
         apiEvidencia: null,
       );
       /* 

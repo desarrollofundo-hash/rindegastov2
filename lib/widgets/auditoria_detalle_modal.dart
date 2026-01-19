@@ -1006,7 +1006,10 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
                             _buildDetailSection('Motivo de rechazo', [
                               _buildDetailRow(
                                 'Motivo: ',
-                                widget.auditoria.obsRechazo.toString(),
+                                (widget.auditoria.obsRechazo?.isNotEmpty ??
+                                        false)
+                                    ? widget.auditoria.obsRechazo!
+                                    : 'Ningún motivo proporcionado',
                               ),
                             ]),
 
@@ -1342,7 +1345,13 @@ class _AuditoriaDetalleModalState extends State<AuditoriaDetalleModal>
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (BuildContext context) => EditReporteModal(reporte: reporte),
+      builder: (BuildContext context) => EditReporteModal(
+        reporte: reporte,
+        onSave: (reporteActualizado) {
+          // ✅ Recargar los detalles después de guardar
+          _loadDetalles();
+        },
+      ),
     );
   }
 
