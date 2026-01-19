@@ -18,8 +18,9 @@ import 'package:share_plus/share_plus.dart';
 class DetalleModalGasto extends StatefulWidget {
   final String id;
   final String? tipo;
+  final Reporte? reporte; // nuevo parámetro opcional
 
-  const DetalleModalGasto({required this.id, this.tipo});
+  const DetalleModalGasto({required this.id, this.tipo, this.reporte});
 
   @override
   _DetalleModalGastoState createState() => _DetalleModalGastoState();
@@ -44,7 +45,19 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
   void initState() {
     super.initState();
     _controller = EditReporteController(apiService: _apiService);
-    _loadReporte();
+
+    // 🔹 Si se pasó un reporte directamente, usarlo
+    if (widget.reporte != null) {
+      _reporte = widget.reporte;
+      _isLoading = false;
+      // Cargar la evidencia
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _cargarImagenServidor();
+      });
+    } else {
+      // Si solo se pasó el ID, cargar desde la API
+      _loadReporte();
+    }
   }
 
   Future<void> _loadReporte() async {
@@ -171,11 +184,11 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
       ); */
       if (mounted) {
         SchedulerBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          /* ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('No se encontró la evidencia en el servidor'),
             ),
-          );
+          ); */
         });
       }
     } catch (e) {

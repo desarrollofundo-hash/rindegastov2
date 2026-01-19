@@ -1895,11 +1895,11 @@ class _EditReporteModalState extends State<EditReporteModal> {
         '⚠️ No se encontró la evidencia en el servidor (probadas: ${candidates.join(', ')})',
       ); */
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        /*  ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('No se encontró la evidencia en el servidor'),
           ),
-        );
+        ); */
       }
     } catch (e) {
       debugPrint('🔥 Error cargando imagen del servidor: $e');
