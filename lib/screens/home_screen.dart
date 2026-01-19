@@ -300,7 +300,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     try {
       final auditoria = await _apiService.getReportesRendicionAuditoria(
         id: '1',
-        /* idad: '1', */
         idad: UserService().currentUserCode,
         area: CompanyService().currentUserArea,
         ruc: CompanyService().companyRuc,
