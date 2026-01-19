@@ -93,6 +93,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   String? _errorTiposGasto;
   String? _errorTiposMovilidad;
   DropdownOption? _selectedCentroCosto;
+  DropdownOption? _selectedTipoGasto;
 
   ///ApiRuc
   bool _isLoadingApiRuc = false;
@@ -630,6 +631,63 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           if (_centroCosto.isNotEmpty && _selectedCentroCosto == null) {
             _selectedCentroCosto = _centroCosto.first;
             _centroCostoController.text = _centroCosto.first.value;
+
+            // 🔄 Cargar automáticamente el tipo de gasto y placa desde la metadata del primer centro de costo
+            final value = _centroCosto.first;
+            if (value.metadata != null) {
+              debugPrint('========================================');
+              debugPrint('🔍 CENTRO DE COSTO SELECCIONADO AUTOMÁTICAMENTE');
+              debugPrint('📌 Valor: ${value.value}');
+              debugPrint('📌 ID: ${value.id}');
+              debugPrint('📦 Metadata completa: ${value.metadata}');
+              debugPrint('========================================');
+
+              // Cargar tipo de gasto
+              final tipogasto =
+                  value.metadata!['tipogasto']?.toString() ??
+                  value.metadata!['tipoGasto']?.toString();
+
+              debugPrint('📊 Tipo gasto extraído de metadata: "$tipogasto"');
+
+              if (tipogasto != null && tipogasto.isNotEmpty) {
+                // Buscar el tipo de gasto en la lista (DropdownOption)
+                final tipoGastoEncontrado = _tiposGasto.firstWhere(
+                  (tipo) => tipo.value.toUpperCase() == tipogasto.toUpperCase(),
+                  orElse: () => DropdownOption(id: '', value: ''),
+                );
+
+                if (tipoGastoEncontrado.value.isNotEmpty) {
+                  _tipoGastoController.text = tipoGastoEncontrado.value;
+                  debugPrint(
+                    '✅ Tipo de gasto asignado automáticamente: ${tipoGastoEncontrado.value}',
+                  );
+                } else {
+                  debugPrint(
+                    '⚠️ Tipo de gasto "$tipogasto" no encontrado en la lista',
+                  );
+                }
+              } else {
+                debugPrint('❌ Tipo de gasto no encontrado en metadata');
+              }
+
+              // Cargar placa
+              final placa = value.metadata!['placa']?.toString();
+              debugPrint('🚗 Placa extraída de metadata: "$placa"');
+
+              if (placa != null && placa.isNotEmpty) {
+                _placaController.text = placa;
+                debugPrint('✅ Placa asignada automáticamente: $placa');
+              } else {
+                _placaController.text = '';
+                debugPrint(
+                  'ℹ️ Placa vacía en metadata, asignando valor por defecto: N',
+                );
+              }
+            } else {
+              debugPrint(
+                '❌ NO HAY METADATA EN EL CENTRO DE COSTO SELECCIONADO',
+              );
+            }
           }
         });
       }
@@ -1464,10 +1522,10 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                         _buildCategorySection(),
                         const SizedBox(height: 12),
 
-                        _buildTipoGastoSection(),
+                        _buildCentroCostoSection(),
                         const SizedBox(height: 12),
 
-                        _buildCentroCostoSection(),
+                        _buildTipoGastoSection(),
                         const SizedBox(height: 12),
 
                         _buildFacturaDataSection(),
@@ -2413,15 +2471,20 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                   ? Theme.of(context).cardColor
                   : Colors.white,
               decoration: InputDecoration(
-                labelText: 'Tipo de Gasto *',
+                labelText: 'Tipo de Gasto (Automático)',
                 labelStyle: TextStyle(
                   color: isDark
                       ? Theme.of(context).textTheme.bodyMedium?.color
                       : null,
                 ),
                 prefixIcon: Icon(
-                  Icons.attach_money,
-                  color: isDark ? Theme.of(context).iconTheme.color : null,
+                  Icons.lock_outline,
+                  color: isDark ? Colors.grey[400] : Colors.grey,
+                ),
+                suffixIcon: Tooltip(
+                  message:
+                      'El tipo de gasto se asigna automáticamente según el centro de costo',
+                  child: Icon(Icons.info_outline, size: 20, color: Colors.grey),
                 ),
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -2484,14 +2547,15 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                 }
                 return null;
               },
-              onChanged: (value) {
+              /* onChanged: (value) {
                 if (value != null) {
                   setState(() {
                     _tipoGastoController.text = value;
                   });
                   _validateForm(); // Validar cuando cambie el tipo de gasto
                 }
-              },
+              }, */
+              onChanged: null,
             ),
           ),
       ],
@@ -2813,6 +2877,44 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         setState(() {
           _selectedCentroCosto = value;
           _centroCostoController.text = value?.value ?? '';
+
+          // 🔄 Cargar automáticamente el tipo de gasto y placa desde la metadata del centro de costo
+          if (value?.metadata != null) {
+            // Cargar tipo de gasto
+            final tipogasto =
+                value!.metadata!['tipogasto']?.toString() ??
+                value.metadata!['tipoGasto']?.toString();
+
+            if (tipogasto != null && tipogasto.isNotEmpty) {
+              // Buscar el tipo de gasto en la lista
+              final tipoGastoEncontrado = _tiposGasto.firstWhere(
+                (tipo) => tipo.value.toUpperCase() == tipogasto.toUpperCase(),
+                orElse: () => DropdownOption.empty,
+              );
+
+              if (tipoGastoEncontrado.id.isNotEmpty) {
+                _selectedTipoGasto = tipoGastoEncontrado;
+                _tipoGastoController.text = tipoGastoEncontrado.value;
+                debugPrint(
+                  '✅ Tipo de gasto asignado automáticamente: ${tipoGastoEncontrado.value}',
+                );
+              } else {
+                debugPrint(
+                  '⚠️ Tipo de gasto "$tipogasto" no encontrado en la lista',
+                );
+              }
+            }
+
+            // Cargar placa
+            final placa = value.metadata!['placa']?.toString();
+            if (placa != null && placa.isNotEmpty) {
+              _placaController.text = placa;
+              debugPrint('✅ Placa asignada automáticamente: $placa');
+            } else {
+              _placaController.text = ''; // Valor por defecto
+              debugPrint('ℹ️ Placa por defecto: N');
+            }
+          }
         });
       },
       validator: (value) {

@@ -213,6 +213,63 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           if (_centroCosto.isNotEmpty && _selectedCentroCosto == null) {
             _selectedCentroCosto = _centroCosto.first;
             _centroCostoController.text = _centroCosto.first.value;
+
+            // 🔄 Cargar automáticamente el tipo de gasto y placa desde la metadata del primer centro de costo
+            final value = _centroCosto.first;
+            if (value.metadata != null) {
+              debugPrint('========================================');
+              debugPrint('🔍 CENTRO DE COSTO SELECCIONADO AUTOMÁTICAMENTE');
+              debugPrint('📌 Valor: ${value.value}');
+              debugPrint('📌 ID: ${value.id}');
+              debugPrint('📦 Metadata completa: ${value.metadata}');
+              debugPrint('========================================');
+
+              // Cargar tipo de gasto
+              final tipogasto =
+                  value.metadata!['tipogasto']?.toString() ??
+                  value.metadata!['tipoGasto']?.toString();
+
+              debugPrint('📊 Tipo gasto extraído de metadata: "$tipogasto"');
+
+              if (tipogasto != null && tipogasto.isNotEmpty) {
+                // Buscar el tipo de gasto en la lista (String)
+                final tipoGastoEncontrado = _tiposGasto.firstWhere(
+                  (tipo) => tipo.toUpperCase() == tipogasto.toUpperCase(),
+                  orElse: () => '',
+                );
+
+                if (tipoGastoEncontrado.isNotEmpty) {
+                  _tipoGastoController.text = tipoGastoEncontrado;
+                  debugPrint(
+                    '✅ Tipo de gasto asignado automáticamente: $tipoGastoEncontrado',
+                  );
+                } else {
+                  debugPrint(
+                    '⚠️ Tipo de gasto "$tipogasto" no encontrado en la lista',
+                  );
+                }
+              } else {
+                debugPrint('❌ Tipo de gasto no encontrado en metadata');
+              }
+
+              // Cargar placa
+              final placa = value.metadata!['placa']?.toString();
+              debugPrint('🚗 Placa extraída de metadata: "$placa"');
+
+              if (placa != null && placa.isNotEmpty) {
+                _placaController.text = placa;
+                debugPrint('✅ Placa asignada automáticamente: $placa');
+              } else {
+                _placaController.text = '';
+                debugPrint(
+                  'ℹ️ Placa vacía en metadata, asignando valor por defecto: N',
+                );
+              }
+            } else {
+              debugPrint(
+                '❌ NO HAY METADATA EN EL CENTRO DE COSTO SELECCIONADO',
+              );
+            }
           }
         });
       }
@@ -1317,6 +1374,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                     const SizedBox(height: 10),
                     _buildCategorySection(),
                     const SizedBox(height: 10),
+                    _buildTipoGastoSection(),
+                    const SizedBox(height: 10),
                     _buildFacturaDataSection(),
                     const SizedBox(height: 10),
                     _buildMovilidadSection(),
@@ -1383,6 +1442,9 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                         const SizedBox(height: 10),
 
                         _buildCentroCostoSection(),
+                        const SizedBox(height: 10),
+
+                        _buildTipoGastoSection(),
                         const SizedBox(height: 10),
 
                         _buildFacturaDataSection(),
@@ -2281,7 +2343,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         .join(' ');
   }
 
-  Widget _buildFacturaDataSection() {
+  /// Sección separada para Tipo de Gasto
+  Widget _buildTipoGastoSection() {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
@@ -2297,27 +2360,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: [
-                Icon(
-                  Icons.receipt_long,
-                  color: isDark ? AppTheme.primaryDark : Colors.blue,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Datos de la Factura',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
-                  ),
-                ),
-              ],
-            ),
-
-            // Sección de tipo de gasto debajo de categoría
-            const SizedBox(height: 16),
-            Row(
-              children: [
+              /*  children: [
                 Icon(
                   Icons.local_offer,
                   color: isDark ? AppTheme.primaryDark : Colors.blue,
@@ -2331,9 +2374,8 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                     color: isDark ? AppTheme.textPrimaryDark : Colors.black,
                   ),
                 ),
-              ],
+              ], */
             ),
-            const SizedBox(height: 12),
             if (_isLoadingTiposGasto)
               const Center(
                 child: Column(
@@ -2375,15 +2417,29 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
             else
               DropdownButtonFormField<String>(
                 dropdownColor: isDark ? AppTheme.surfaceDark : Colors.white,
+
                 style: TextStyle(
                   color: isDark ? AppTheme.textPrimaryDark : Colors.black87,
                 ),
                 decoration: InputDecoration(
-                  labelText: 'Seleccionar Tipo de Gasto *',
+                  labelText: 'Tipo de Gasto (Automático)',
                   labelStyle: TextStyle(
                     color: isDark
                         ? AppTheme.textSecondaryDark
                         : Colors.grey.shade700,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.lock_outline,
+                    color: isDark ? Colors.grey[400] : Colors.grey,
+                  ),
+                  suffixIcon: Tooltip(
+                    message:
+                        'El tipo de gasto se asigna automáticamente según el centro de costo',
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
                   ),
                   border: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -2413,10 +2469,6 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                       width: 1,
                     ),
                   ),
-                  prefixIcon: Icon(
-                    Icons.local_offer,
-                    color: isDark ? AppTheme.textSecondaryDark : Colors.grey,
-                  ),
                 ),
                 value:
                     _tipoGastoController.text.isNotEmpty &&
@@ -2444,15 +2496,54 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
                   }
                   return null;
                 },
-                onChanged: (value) {
+                /*  onChanged: (value) {
                   if (value != null) {
                     setState(() {
                       _tipoGastoController.text = value;
                     });
                     _validateForm();
                   }
-                },
+                }, */
+                onChanged: null, // Campo deshabilitado
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFacturaDataSection() {
+    final bool isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Card(
+      elevation: 0,
+      color: Colors.transparent,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(0),
+        side: BorderSide.none,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.receipt_long,
+                  color: isDark ? AppTheme.primaryDark : Colors.blue,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Datos de la Factura',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? AppTheme.textPrimaryDark : Colors.black,
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 12),
             Row(
               children: [
@@ -2976,7 +3067,6 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         ],
       );
     }
-
     return DropdownButtonFormField<DropdownOption>(
       dropdownColor: isDark ? Colors.grey[800] : Colors.white,
       value: _selectedCentroCosto,
@@ -2996,7 +3086,7 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         ),
         focusedBorder: const UnderlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Colors.blue, width: 2),
+          borderSide: BorderSide(color: Colors.green, width: 2),
         ),
         disabledBorder: UnderlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -3022,6 +3112,43 @@ class _FacturaModalMovilidadState extends State<FacturaModalMovilidad> {
         setState(() {
           _selectedCentroCosto = value;
           _centroCostoController.text = value?.value ?? '';
+
+          // 🔄 Cargar automáticamente el tipo de gasto y placa desde la metadata del centro de costo
+          if (value?.metadata != null) {
+            // Cargar tipo de gasto
+            final tipogasto =
+                value!.metadata!['tipogasto']?.toString() ??
+                value.metadata!['tipoGasto']?.toString();
+
+            if (tipogasto != null && tipogasto.isNotEmpty) {
+              // Buscar el tipo de gasto en la lista (String)
+              final tipoGastoEncontrado = _tiposGasto.firstWhere(
+                (tipo) => tipo.toUpperCase() == tipogasto.toUpperCase(),
+                orElse: () => '',
+              );
+
+              if (tipoGastoEncontrado.isNotEmpty) {
+                _tipoGastoController.text = tipoGastoEncontrado;
+                debugPrint(
+                  '✅ Tipo de gasto asignado automáticamente: $tipoGastoEncontrado',
+                );
+              } else {
+                debugPrint(
+                  '⚠️ Tipo de gasto "$tipogasto" no encontrado en la lista',
+                );
+              }
+            }
+
+            // Cargar placa
+            final placa = value.metadata!['placa']?.toString();
+            if (placa != null && placa.isNotEmpty) {
+              _placaController.text = placa;
+              debugPrint('✅ Placa asignada automáticamente: $placa');
+            } else {
+              _placaController.text = ''; // Valor por defecto
+              debugPrint('ℹ️ Placa por defecto: N');
+            }
+          }
         });
       },
       validator: (value) {
