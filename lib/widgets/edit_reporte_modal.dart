@@ -1824,11 +1824,16 @@ class _EditReporteModalState extends State<EditReporteModal> {
           )
         else
           AbsorbPointer(
-            absorbing: !_isEditMode,
+            absorbing: true, // 🔒 Siempre bloqueado - no editable
             child: DropdownButtonFormField<String>(
               decoration: InputDecoration(
-                labelText: 'Tipo de Gasto *',
-                prefixIcon: Icon(Icons.abc),
+                labelText: 'Tipo de Gasto * (Automático)',
+                prefixIcon: Icon(Icons.lock_outline, color: Colors.grey),
+                suffixIcon: Tooltip(
+                  message:
+                      'El tipo de gasto se asigna automáticamente según el centro de costo',
+                  child: Icon(Icons.info_outline, size: 20, color: Colors.grey),
+                ),
                 border: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
@@ -1842,16 +1847,17 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 ),
                 focusedBorder: const UnderlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(12)),
-                  borderSide: BorderSide(color: Colors.red, width: 2),
+                  borderSide: BorderSide(color: Colors.grey, width: 2),
                 ),
                 disabledBorder: UnderlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Colors.white, width: 1),
+                  borderSide: BorderSide(
+                    color: isDark ? Colors.grey[700]! : Colors.grey[300]!,
+                    width: 1,
+                  ),
                 ),
                 filled: true,
-                fillColor: _isEditMode
-                    ? (isDark ? Theme.of(context).cardColor : Colors.white)
-                    : (isDark ? Theme.of(context).cardColor : Colors.white),
+                fillColor: isDark ? Colors.grey[850] : Colors.grey[100],
               ),
               value:
                   _tipoGastoController.text.isNotEmpty &&
@@ -1874,15 +1880,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 }
                 return null;
               },
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _tipoGastoController.text = value;
-                  });
-                  // ✅ Llamar directamente después del setState
-                  Future.microtask(() => _validateForm());
-                }
-              },
+              onChanged:
+                  null, // 🔒 Deshabilitado - no se puede cambiar manualmente
             ),
           ),
       ],
@@ -2111,9 +2110,57 @@ class _EditReporteModalState extends State<EditReporteModal> {
                   print('🔄 DROPDOWN CENTRO DE COSTO CAMBIADO');
                   print('📌 Valor seleccionado: "$value"');
                   print('📌 _isEditMode: $_isEditMode');
+
                   setState(() {
                     _centroCostoController.text = value;
+
+                    // 🔄 Cargar automáticamente el tipo de gasto y placa desde la metadata del centro de costo
+                    final centroSeleccionado = _centroCosto.firstWhere(
+                      (c) => c.value == value,
+                      orElse: () => DropdownOption.empty,
+                    );
+
+                    if (centroSeleccionado.metadata != null) {
+                      // Cargar tipo de gasto
+                      final tipogasto =
+                          centroSeleccionado.metadata!['tipogasto']
+                              ?.toString() ??
+                          centroSeleccionado.metadata!['tipoGasto']?.toString();
+
+                      if (tipogasto != null && tipogasto.isNotEmpty) {
+                        // Buscar el tipo de gasto en la lista
+                        final tipoGastoEncontrado = _tiposGasto.firstWhere(
+                          (tipo) =>
+                              tipo.value.toUpperCase() ==
+                              tipogasto.toUpperCase(),
+                          orElse: () => DropdownOption.empty,
+                        );
+
+                        if (tipoGastoEncontrado.id.isNotEmpty) {
+                          _tipoGastoController.text = tipoGastoEncontrado.value;
+                          print(
+                            '✅ Tipo de gasto asignado automáticamente: ${tipoGastoEncontrado.value}',
+                          );
+                        } else {
+                          print(
+                            '⚠️ Tipo de gasto "$tipogasto" no encontrado en la lista',
+                          );
+                        }
+                      }
+
+                      // Cargar placa
+                      final placa = centroSeleccionado.metadata!['placa']
+                          ?.toString();
+                      if (placa != null && placa.isNotEmpty) {
+                        _placaController.text = placa;
+                        print('✅ Placa asignada automáticamente: $placa');
+                      } else {
+                        _placaController.text = 'N'; // Valor por defecto
+                        print('ℹ️ Placa por defecto: N');
+                      }
+                    }
                   });
+
                   print(
                     '✅ Controlador actualizado: "${_centroCostoController.text}"',
                   );
@@ -3714,6 +3761,15 @@ class _EditReporteModalState extends State<EditReporteModal> {
                 readOnly: !_isEditMode,
                 decoration: InputDecoration(
                   labelText: 'Placa',
+                  suffixIcon: Tooltip(
+                    message:
+                        'La placa se carga automáticamente pero puede editarse',
+                    child: Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: Colors.grey,
+                    ),
+                  ),
                   border: UnderlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: const BorderSide(
