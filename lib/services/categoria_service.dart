@@ -4,7 +4,7 @@ import '../models/categoria_model.dart';
 
 /// Servicio para manejar las operaciones relacionadas con categorías
 class CategoriaService {
-  static const String _baseUrl = 'http://190.119.200.124:45490';
+  static const String _baseUrl = 'http://190.119.200.124:45491';
 
   /// Obtiene todas las categorías disponibles desde la API
   static Future<List<CategoriaModel>> getCategorias() async {

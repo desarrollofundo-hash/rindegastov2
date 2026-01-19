@@ -86,6 +86,8 @@ class AppConfig {
     'reportesCosecha': '/reporte/cosechavalvulas',
     'rendicionPoliticas': '/maestros/rendicion_politica',
     'rendicionCategorias': '/maestros/rendicion_categoria',
+    'rendicionCentrosCosto': '/reporte/usuarioceco',
+
     'categorias': '/maestros/categorias',
     'politicas': '/maestros/politicas',
     'usuarios': '/maestros/usuarios',

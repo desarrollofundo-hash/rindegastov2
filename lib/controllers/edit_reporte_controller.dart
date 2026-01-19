@@ -2,11 +2,13 @@ import 'dart:io';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:pdfx/pdfx.dart';
 
 import '../models/reporte_model.dart';
 import '../services/api_service.dart';
 import '../services/company_service.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class EditReporteController {
   final ApiService _apiService;
@@ -55,6 +57,61 @@ class EditReporteController {
     return base64Encode(bytes);
   }
 
+  /// Convertir PDF a imagen PNG (primera página)
+  /// Retorna un archivo de imagen PNG solo si el PDF tiene 1 página
+  /// Si tiene 2 o más páginas, retorna null para subir el PDF original
+  Future<File?> convertirPdfAImagen(File pdfFile) async {
+    try {
+      debugPrint('🔄 Iniciando conversión de PDF a imagen...');
+
+      // Abrir el documento PDF
+      final doc = await PdfDocument.openFile(pdfFile.path);
+
+      // Verificar el número de páginas
+      final pageCount = doc.pagesCount;
+      debugPrint('📄 El PDF tiene $pageCount página(s)');
+
+      // Si tiene más de 1 página, no convertir
+      if (pageCount > 1) {
+        debugPrint('⚠️ PDF tiene $pageCount páginas, se subirá como PDF');
+        await doc.close();
+        return null;
+      }
+
+      // Solo si tiene 1 página, convertir a PNG
+      final page = await doc.getPage(1);
+
+      // Renderizar como PNG
+      final pageImage = await page.render(
+        width: page.width,
+        height: page.height,
+        format: PdfPageImageFormat.png,
+      );
+
+      final bytes = pageImage?.bytes;
+      await page.close();
+      await doc.close();
+
+      if (bytes != null) {
+        final tempDir = await getTemporaryDirectory();
+        final imgPath =
+            '${tempDir.path}/${p.basenameWithoutExtension(pdfFile.path)}.png';
+        final imgFile = File(imgPath);
+        await imgFile.writeAsBytes(bytes, flush: true);
+
+        debugPrint('✅ PDF de 1 página convertido a PNG: $imgPath');
+        debugPrint('📊 Tamaño de la imagen: ${await imgFile.length()} bytes');
+
+        return imgFile;
+      }
+
+      return null;
+    } catch (e) {
+      debugPrint('❌ Error al convertir PDF a imagen: $e');
+      return null;
+    }
+  }
+
   /// Preparar y enviar los datos de la factura y evidencia al API
   /// Retorna true si la operación fue exitosa
   Future<bool> updateFacturaAPI({
@@ -77,6 +134,7 @@ class EditReporteController {
     required String politica,
     required String categoria,
     required String tipoGasto,
+    required String centroCosto,
     required String ruc,
     required String razonsocial,
     required String tipoComprobante,
@@ -134,6 +192,11 @@ class EditReporteController {
             "${fecha.year}-${fecha.month.toString().padLeft(2, '0')}-${fecha.day.toString().padLeft(2, '0')}";
       }
 
+      print('========================================');
+      print('🔄 PREPARANDO PAYLOAD PARA EL SERVIDOR');
+      print('📌 Centro de Costo recibido: "$centroCosto"');
+      print('========================================');
+
       final facturaData = {
         "idRend": reporte.idrend,
         "idUser": reporte.iduser,
@@ -157,7 +220,7 @@ class EditReporteController {
         //"gerencia": CompanyService().currentCompany?.gerencia ?? '',
         //"area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
-        "consumidor": CompanyService().currentCompany?.consumidor ?? '',
+        "consumidor": centroCosto,
         "placa": placa,
         "estadoActual": "",
         "glosa": "",
@@ -175,15 +238,40 @@ class EditReporteController {
         "useElim": 0,
       };
 
-      final extension = p.extension(
-        selectedImage!.path,
-      ); // obtiene la extensión, e.g. ".pdf", ".png", ".jpg"
+      print('========================================');
+      print('📦 PAYLOAD COMPLETO:');
+      print('   idRend: ${facturaData["idRend"]}');
+      print('   consumidor: "${facturaData["consumidor"]}"');
+      print('   categoria: "${facturaData["categoria"]}"');
+      print('   tipoGasto: "${facturaData["tipoGasto"]}"');
+      print('========================================');
+
+      // 🔄 Si es un PDF, convertirlo a imagen PNG
+      File archivoASubir = selectedImage!;
+      String extension = p.extension(selectedImage.path);
+
+      if (selectedImage.path.toLowerCase().endsWith('.pdf')) {
+        debugPrint('📄 Detectado PDF, convirtiendo a PNG...');
+        try {
+          final imagenConvertida = await convertirPdfAImagen(selectedImage);
+          if (imagenConvertida != null) {
+            archivoASubir = imagenConvertida;
+            extension = '.png';
+            debugPrint('✅ PDF convertido a PNG exitosamente');
+          } else {
+            debugPrint('⚠️ No se pudo convertir PDF, subiendo PDF original');
+          }
+        } catch (e) {
+          debugPrint('❌ Error al convertir PDF: $e');
+          debugPrint('⚠️ Subiendo PDF original');
+        }
+      }
 
       String nombreArchivo =
           '${reporte.idrend}_${ruc}_${serie}_${numero.toString()}$extension';
 
       final driveId = await _apiService.subirArchivo(
-        selectedImage.path,
+        archivoASubir.path,
         nombreArchivo: nombreArchivo,
       );
 
@@ -204,7 +292,11 @@ class EditReporteController {
 
       debugPrint('Guardando factura');
 
-      await _apiService.saveupdateRendicionGasto(facturaData);
+      debugPrint('📤 Enviando datos al API saveupdateRendicionGasto...');
+      final apiResponse = await _apiService.saveupdateRendicionGasto(
+        facturaData,
+      );
+      debugPrint('📥 Respuesta del API: $apiResponse');
 
       debugPrint('Guardando evidencia');
 

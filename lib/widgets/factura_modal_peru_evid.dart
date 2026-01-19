@@ -5,6 +5,7 @@ import 'package:flu2/controllers/edit_reporte_controller.dart';
 import 'package:flu2/models/apiruc_model.dart';
 import 'package:flu2/models/factura_data_ocr.dart';
 import 'package:flu2/utils/navigation_utils.dart';
+import 'package:flu2/widgets/nuevo_gasto_logic.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -45,7 +46,14 @@ class FacturaModalPeruEvid extends StatefulWidget {
 }
 
 class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
+  final NuevoGastoLogic _logic = NuevoGastoLogic();
   // Controladores para cada campo
+  //centro de costo
+  final FocusNode _origenFocusNode = FocusNode();
+  final FocusNode _destinoFocusNode = FocusNode();
+  final FocusNode _motivoViajeFocusNode = FocusNode();
+  final FocusNode _placaFocusNode = FocusNode();
+  late TextEditingController _centroCostoController;
   late TextEditingController _politicaController;
   late TextEditingController _categoriaController;
   late TextEditingController _tipoGastoController;
@@ -79,14 +87,19 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
   List<CategoriaModel> _categoriasGeneral = [];
   List<DropdownOption> _tiposGasto = [];
   List<DropdownOption> _tiposMovilidad = [];
+  //dropdown centro de costo
+  List<DropdownOption> _centroCosto = [];
   String? _errorCategorias;
   String? _errorTiposGasto;
   String? _errorTiposMovilidad;
+  DropdownOption? _selectedCentroCosto;
 
   ///ApiRuc
   bool _isLoadingApiRuc = false;
   String? _errorApiRuc;
   ApiRuc? _apiRucData;
+  String? _error;
+  bool _isLoadingCentrosCosto = false;
 
   bool _isLoadingTipoMovilidad = false;
 
@@ -125,7 +138,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _loadApiRuc(
       widget.facturaData.rucEmisor.toString(),
     ); //widget.facturaData.rucEmisor
-
+    _loadCentrosCosto();
     // Si el modal recibió un archivo seleccionado, cargarlo en la sección de evidencia
     if (widget.selectedFile != null) {
       selectedFile = widget.selectedFile;
@@ -148,10 +161,11 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _totalController.addListener(_validateForm);
     _categoriaController.addListener(_validateForm);
     _tipoGastoController.addListener(_validateForm);
-
+    _centroCostoController.addListener(_validateForm);
     // Cargar datos iniciales
     _loadCategorias();
     _loadTiposGasto();
+    _loadCentrosCosto();
     _validateForm();
   }
 
@@ -178,24 +192,33 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
   /// Validar si todos los campos obligatorios están llenos
   void _validateForm() {
-    final isValid =
-        _rucController.text.trim().isNotEmpty &&
-        _tipoComprobanteController.text.trim().isNotEmpty &&
-        _serieController.text.trim().isNotEmpty &&
-        _numeroController.text.trim().isNotEmpty &&
-        _fechaEmisionController.text.trim().isNotEmpty &&
-        _totalController.text.trim().isNotEmpty &&
-        _categoriaController.text.trim().isNotEmpty &&
-        _tipoGastoController.text.trim().isNotEmpty &&
-        _rucClienteController.text.trim().isNotEmpty &&
-        (selectedFile !=
-            null) && // ✅ Actualizado para aceptar archivos o imágenes
-        _isRucValid(); // ✅ Añadida validación de RUC
+    // Verificar que todos los controladores estén inicializados
+    if (!mounted) return;
 
-    if (_isFormValid != isValid) {
-      setState(() {
-        _isFormValid = isValid;
-      });
+    try {
+      final isValid =
+          _rucController.text.trim().isNotEmpty &&
+          _tipoComprobanteController.text.trim().isNotEmpty &&
+          _serieController.text.trim().isNotEmpty &&
+          _numeroController.text.trim().isNotEmpty &&
+          _fechaEmisionController.text.trim().isNotEmpty &&
+          _totalController.text.trim().isNotEmpty &&
+          _categoriaController.text.trim().isNotEmpty &&
+          _tipoGastoController.text.trim().isNotEmpty &&
+          _rucClienteController.text.trim().isNotEmpty &&
+          _centroCostoController.text.trim().isNotEmpty &&
+          (selectedFile !=
+              null) && // ✅ Actualizado para aceptar archivos o imágenes
+          _isRucValid(); // ✅ Añadida validación de RUC
+
+      if (_isFormValid != isValid) {
+        setState(() {
+          _isFormValid = isValid;
+        });
+      }
+    } catch (e) {
+      // Si algún controlador no está inicializado, ignorar la validación
+      debugPrint('⚠️ Error en _validateForm: $e');
     }
   }
 
@@ -340,6 +363,7 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _tipoGastoController = TextEditingController(
       text: CompanyService().currentCompany?.tipogasto ?? '',
     );
+    _centroCostoController = TextEditingController(text: '');
     _rucController = TextEditingController(
       text: widget.facturaData.rucEmisor ?? '',
     );
@@ -399,11 +423,13 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     _totalController.removeListener(_validateForm);
     _categoriaController.removeListener(_validateForm);
     _tipoGastoController.removeListener(_validateForm);
+    _centroCostoController.removeListener(_validateForm);
 
     // Dispose de los controladores
     _politicaController.dispose();
     _categoriaController.dispose();
     _tipoGastoController.dispose();
+    _centroCostoController.dispose();
     _rucController.dispose();
     _razonSocialController.dispose();
     _tipoComprobanteController.dispose();
@@ -582,6 +608,41 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     }
   }
 */
+
+  Future<void> _loadCentrosCosto() async {
+    if (mounted) {
+      setState(() {
+        _isLoadingCentrosCosto = true;
+        _error = null;
+      });
+    }
+    try {
+      final centroCosto = await _logic.fetchCentrosCosto(
+        _apiService,
+        UserService().currentUserCode,
+        CompanyService().currentUserCompany,
+      );
+      if (mounted) {
+        setState(() {
+          _centroCosto = centroCosto;
+          _isLoadingCentrosCosto = false;
+          // Seleccionar automáticamente el primer centro de costo
+          if (_centroCosto.isNotEmpty && _selectedCentroCosto == null) {
+            _selectedCentroCosto = _centroCosto.first;
+            _centroCostoController.text = _centroCosto.first.value;
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoadingCentrosCosto = false;
+        });
+      }
+    }
+  }
+
   /// Seleccionar archivo (imagen o PDF)
   Future<void> _pickImage() async {
     try {
@@ -1111,7 +1172,11 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
         "gerencia": CompanyService().currentCompany?.gerencia ?? '',
         "area": CompanyService().currentCompany?.area ?? '',
         "idCuenta": "",
-        "consumidor": CompanyService().currentCompany?.consumidor ?? '',
+        /*         "consumidor": CompanyService().currentCompany?.consumidor ?? '',
+
+ */
+        "consumidor": _centroCostoController.text,
+
         "placa": _placaController.text,
         "estadoActual": "BORRADOR",
         "glosa": "ESCANER IA",
@@ -1400,6 +1465,9 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
                         const SizedBox(height: 12),
 
                         _buildTipoGastoSection(),
+                        const SizedBox(height: 12),
+
+                        _buildCentroCostoSection(),
                         const SizedBox(height: 12),
 
                         _buildFacturaDataSection(),
@@ -2594,6 +2662,168 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
     );
   }
 
+  Widget _buildCentroCostoSection() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    if (_isLoadingCentrosCosto) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          SizedBox(height: 8),
+          Center(child: CircularProgressIndicator()),
+        ],
+      );
+    }
+
+    if (_error != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.red.shade900.withOpacity(0.3)
+                  : Colors.red.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.red.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error,
+                  color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Error cargando centros de costo: $_error',
+                    style: TextStyle(
+                      color: isDark ? Colors.red.shade400 : Colors.red.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Mostrar mensaje si la lista está vacía
+    if (_centroCosto.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Centro de Costo',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? Colors.orange.shade900.withOpacity(0.3)
+                  : Colors.orange.shade50,
+              border: Border.all(
+                color: isDark ? Colors.red.shade700 : Colors.orange.shade300,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info,
+                  color: isDark
+                      ? Colors.orange.shade400
+                      : Colors.orange.shade700,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'No hay centros de costo disponibles',
+                    style: TextStyle(
+                      color: isDark
+                          ? Colors.orange.shade400
+                          : Colors.orange.shade700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    return DropdownButtonFormField<DropdownOption>(
+      dropdownColor: isDark ? Colors.grey[800] : Colors.white,
+      value: _selectedCentroCosto,
+      decoration: InputDecoration(
+        labelText: 'Centro de Costo',
+        labelStyle: TextStyle(color: isDark ? Colors.grey[400] : null),
+        border: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.transparent, width: 0),
+        ),
+        enabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDark ? Colors.grey[600]! : Colors.grey,
+            width: 1,
+          ),
+        ),
+        focusedBorder: const UnderlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: Colors.red, width: 2),
+        ),
+        disabledBorder: UnderlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1),
+        ),
+        prefixIcon: Icon(
+          Icons.account_box,
+          color: isDark ? Colors.grey[400] : Colors.grey,
+        ),
+      ),
+      isExpanded: true,
+      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+      items: _centroCosto.map((centroCosto) {
+        return DropdownMenuItem<DropdownOption>(
+          value: centroCosto,
+          child: Text(
+            centroCosto.value,
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
+        );
+      }).toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCentroCosto = value;
+          _centroCostoController.text = value?.value ?? '';
+        });
+      },
+      validator: (value) {
+        if (value == null) {
+          return 'Seleccione un centro de costo';
+        }
+        return null;
+      },
+    );
+  }
+
   /// Construir la sección de datos de la factura
   Widget _buildFacturaDataSection() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -3030,6 +3260,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             children: [
               Expanded(
                 child: TextFormField(
+                  focusNode: _origenFocusNode,
+                  textInputAction: TextInputAction.next,
                   controller: _origenController,
                   style: TextStyle(
                     color: isDark
@@ -3093,6 +3325,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
             children: [
               Expanded(
                 child: TextFormField(
+                  focusNode: _destinoFocusNode,
+                  textInputAction: TextInputAction.next,
                   controller: _destinoController,
                   style: TextStyle(
                     color: isDark
@@ -3153,6 +3387,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
           ),
           const SizedBox(height: 12),
           TextFormField(
+            focusNode: _motivoViajeFocusNode,
+            textInputAction: TextInputAction.next,
             controller: _motivoViajeController,
             style: TextStyle(
               color: isDark
@@ -3215,6 +3451,8 @@ class _FacturaModalPeruState extends State<FacturaModalPeruEvid> {
 
           // PLACA
           TextFormField(
+            focusNode: _placaFocusNode,
+            textInputAction: TextInputAction.next,
             controller: _placaController,
             style: TextStyle(
               color: isDark

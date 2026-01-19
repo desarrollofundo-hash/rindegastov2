@@ -1,56 +1,19 @@
 {
     "version": "0.2.0",
     "configurations": [
-<<<<<<< HEAD
-        /*  {
-=======
-        /*    {
->>>>>>> 346f09c31b382f64cf97712b1b7c161ff8e3dbcd
-            "name": "Flutter Emulator",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "deviceId": "emulator-5554"
-        }, */  
-        /*  {
-            "name": "Flutter: Attach to Pixel 6",
-            "request": "attach",
-            "type": "dart",
-            "deviceId": "emulator-5554"
-        }, */
-        /* {
-            "name": "SM A055M",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "deviceId": "RF8X20GFZFB"
-        },*/
         {
             "name": "22101316UG",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
             "deviceId": "onv845vkcivgwsmf"
-<<<<<<< HEAD
         },
-        /*{
-=======
-        },   */
-         {
->>>>>>> 346f09c31b382f64cf97712b1b7c161ff8e3dbcd
+        {
             "name": "SM A055M",
             "request": "launch",
             "type": "dart",
             "program": "lib/main.dart",
             "deviceId": "R9WWB0PCMWH"
-        }, */
-        /*   {
-            "name": " WDY LX3",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "deviceId": "R58Y40FQ80J"
-        } 
-            */
+        }
     ]
 }
