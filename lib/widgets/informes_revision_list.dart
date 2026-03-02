@@ -158,6 +158,19 @@ class _InformesRevisionListState extends State<InformesRevisionList> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     // Título de la auditoría (más compacto)
+                                    //FILA DE GERENCIA Y AREA
+                                    /*   Text(
+                                      revisionn.gerencia ?? 'GERENCIA SIN DEFINIR',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark
+                                            ? Colors.white
+                                            : Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ), */
                                     Text(
                                       revisionn.titulo ?? 'Sin título',
                                       style: TextStyle(

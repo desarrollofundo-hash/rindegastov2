@@ -1,15 +1,27 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io';
 
 /// Configuración de la aplicación
 /// Centraliza URLs, timeouts y configuraciones de red
+/// Utiliza variables de entorno desde .env para mayor flexibilidad y seguridad
 class AppConfig {
-  // URLs del servidor - diferentes para emulador y dispositivo real
-  static const String _prodBaseUrl = 'http://190.119.200.124:45490';
-  static const String _emulatorBaseUrl =
-      'http://10.0.2.2:45490'; // Para emulador que redirecciona al host
-  // static const String _devBaseUrl =
-  //     'http://localhost:3000'; // Para desarrollo local
+  // URLs desde variables de entorno con fallback a valores por defecto
+  static String get _prodBaseUrl =>
+      dotenv.get('PROD_BASE_URL', fallback: 'http://190.119.200.124:45490');
+
+  static String get _qaTestBaseUrl =>
+      dotenv.get('QA_TEST_BASE_URL', fallback: 'http://190.119.200.124:45491');
+
+  static String get _emulatorBaseUrl =>
+      dotenv.get('EMULATOR_BASE_URL', fallback: 'http://10.0.2.2:45490');
+
+  static String get _devBaseUrl =>
+      dotenv.get('DEV_BASE_URL', fallback: 'http://localhost:45490');
+
+  /// Ambiente actual desde .env
+  static String get environment =>
+      dotenv.get('ENVIRONMENT', fallback: 'production');
 
   /// URL base dependiendo del entorno y dispositivo
   static String get baseUrl {
@@ -21,15 +33,29 @@ class AppConfig {
       return _emulatorBaseUrl;
     }
 
-    // En modo debug, permitir override para desarrollo
-    if (kDebugMode) {
-      // Cambiar esta línea para probar diferentes configuraciones:
-      return _prodBaseUrl; // Usar servidor de producción
-      // return _devBaseUrl;   // Usar servidor local
-    }
+    // Seleccionar URL según el ambiente configurado en .env
+    switch (environment.toLowerCase()) {
+      case 'qa_test':
+      case 'qa':
+      case 'test':
+        debugPrint('🧪 Usando ambiente QA/Test');
+        return _qaTestBaseUrl;
 
-    return _prodBaseUrl;
+      case 'development':
+      case 'dev':
+        debugPrint('💻 Usando ambiente de desarrollo');
+        return _devBaseUrl;
+
+      case 'production':
+      case 'prod':
+      default:
+        debugPrint('🚀 Usando ambiente de producción');
+        return _prodBaseUrl;
+    }
   }
+
+  /// URL para QA/Test (categorías y pruebas)
+  static String get qaTestBaseUrl => _qaTestBaseUrl;
 
   /// Detecta si la app está corriendo en un emulador
   static bool _isRunningInEmulator() {
@@ -44,11 +70,12 @@ class AppConfig {
   }
 
   /// URLs alternativas para probar conectividad
-  static const List<String> alternativeUrls = [
-    'http://190.119.200.124:45490',
-    'http://10.0.2.2:45490', // Para emulador Android
-    'http://127.0.0.1:45490', // Localhost
-    'http://localhost:45490', // Localhost explícito
+  static List<String> get alternativeUrls => [
+    _prodBaseUrl,
+    _qaTestBaseUrl,
+    _emulatorBaseUrl,
+    'http://127.0.0.1:45490',
+    'http://localhost:45490',
   ];
 
   // Timeouts

@@ -1065,7 +1065,7 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Observacion',
+          'Observación',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -1074,7 +1074,10 @@ class _DetalleModalGastoState extends State<DetalleModalGasto> {
                 : null,
           ),
         ),
-        _buildReadOnlyField('Comentario', _reporte?.obs ?? 'N/A'),
+        _buildReadOnlyField(
+          'Comentario',
+          _reporte?.obs ?? 'Ninguna observación',
+        ),
       ],
     );
   }

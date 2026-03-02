@@ -39,7 +39,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           // Campo de búsqueda moderno: tarjeta elevada y pill-shaped
           Expanded(
             child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+              margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
               child: Material(
                 elevation: 2,
                 shadowColor: Colors.black.withOpacity(isDark ? 0.3 : 0.08),
@@ -48,7 +48,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   height: 46,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: isDark ? colorScheme.background : Colors.white,
+                    color: isDark
+                        ? colorScheme.background
+                        : const Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.circular(28),
                   ),
                   child: Row(
@@ -87,7 +89,33 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                           ),
                         ),
                       ),
-                      // Optional: quick clear button when there's text (kept simple)
+                      // Botón de limpiar texto cuando hay contenido
+                      if (controller != null)
+                        ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: controller!,
+                          builder: (context, value, child) {
+                            if (value.text.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                size: 20,
+                                color: isDark
+                                    ? colorScheme.onSurface.withOpacity(0.6)
+                                    : Colors.grey,
+                              ),
+                              onPressed: () {
+                                controller!.clear();
+                                onSearch?.call('');
+                                focusNode?.unfocus();
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              splashRadius: 16,
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),

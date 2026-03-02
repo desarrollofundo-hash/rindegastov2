@@ -393,6 +393,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
       builder: (BuildContext context) => const ProfileModal(),
     ).then((_) {
+      // Desactivar el focus del buscador cuando se cierra el modal
+      _searchFocusNode.unfocus();
       // Restaurar el FAB después de cerrar el modal
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback(
@@ -535,7 +537,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ),
         body: TabbedScreen(
           tabLabels: const ["Todos", "Aprobado", "Rechazado"],
-          tabColors: const [Colors.indigo, Colors.indigo],
+          /* tabColors: const [Colors.indigo, Colors.indigo], */
+          tabColors: Theme.of(context).brightness == Brightness.dark
+              ? [Colors.white, Colors.white] // modo oscuro → letras claras
+              : [Colors.indigo, Colors.indigo], // modo claro → letras oscuras
           tabViews: [
             InformesReporteList(
               informes: _informes,
@@ -604,8 +609,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         // 🔹 TabbedScreen con 3 pestañas
         body: TabbedScreen(
           tabLabels: const ["Todos", "Pendiente", "Rechazado"],
-          tabColors: const [Colors.indigo, Colors.orange, Colors.red],
-
+          /*           tabColors: const [Colors.indigo, Colors.orange, Colors.red],
+ */
+          tabColors: Theme.of(context).brightness == Brightness.dark
+              ? [Colors.white, Colors.white] // modo oscuro → letras claras
+              : [Colors.indigo, Colors.indigo], // modo claro → letras oscuras
           tabViews: [
             // 🟢 TAB 1: Todos
             InformesAuditoriaList(
@@ -673,7 +681,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ),
         body: TabbedScreen(
           tabLabels: const ["Todos", "Pendiente", "Aprobado"],
-          tabColors: const [Colors.indigo],
+          /*           tabColors: const [Colors.indigo],
+ */
+          tabColors: Theme.of(context).brightness == Brightness.dark
+              ? [Colors.white, Colors.white] // modo oscuro → letras claras
+              : [Colors.indigo, Colors.indigo], // modo claro → letras oscuras
           tabViews: [
             InformesRevisionList(
               revision: _revision,
@@ -738,6 +750,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         final monto = (r.total?.toString() ?? '').toLowerCase();
         final rucCliente = (r.ruccliente ?? '').toLowerCase();
         final politica = (r.politica ?? '').toLowerCase();
+        final idrend = (r.idrend);
         // Para estado en Reporte usamos 'obs' o 'destino' si aplica
         final estado = (r.obs ?? r.estadoActual ?? '').toLowerCase();
 
@@ -746,6 +759,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             monto.contains(q) ||
             rucCliente.contains(q) ||
             politica.contains(q) ||
+            idrend.toString().contains(q) ||
             estado.contains(q);
       }).toList();
     });
@@ -1072,11 +1086,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     // 🧭 Construir dinámicamente los iconos del menú inferior
     final List<NavigationDestination> destinations = [
-      if (puedeGastos) _animatedIcon(MdiIcons.cashMultiple, "Gastos", 0),
+      if (puedeGastos) _animatedIcon(MdiIcons.cashPlus, "Gastos", 0),
       if (puedeInformes) _animatedIcon(Feather.file_text, "Informes", 1),
       if (puedeAuditoria)
         _animatedIcon(MdiIcons.shieldCheckOutline, "Auditoría", 2),
-      if (puedeRevision) _animatedIcon(Feather.inbox, "Revisión", 3),
+      if (puedeRevision) _animatedIcon(Feather.check_circle, "Revisión", 3),
     ];
 
     // Evitar index fuera de rango si hay menos pestañas disponibles
@@ -1084,100 +1098,122 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ? 0
         : _selectedIndex.clamp(0, pages.length - 1);
 
-    return Scaffold(
-      backgroundColor: isDark ? Colors.grey[900] : Colors.white,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: pages.isNotEmpty
-            ? pages[safeIndex]
-            : Center(
-                child: CircularProgressIndicator(
-                  color: isDark ? Colors.white : const Color(0xFF1565C0),
-                  strokeWidth: 5.0,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+
+        // Si no está en la primera pestaña, regresar a la primera
+        if (_selectedIndex != 0) {
+          setState(() {
+            _selectedIndex = 0;
+          });
+          return;
+        }
+
+        // Si está en la primera pestaña, mostrar confirmación para salir
+        final shouldPop = await _showExitConfirmation(context);
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: pages.isNotEmpty
+              ? pages[safeIndex]
+              : Center(
+                  child: CircularProgressIndicator(
+                    color: isDark ? Colors.white : const Color(0xFF1565C0),
+                    strokeWidth: 5.0,
+                  ),
                 ),
-              ),
-      ),
+        ),
+        // 🧊 Barra inferior flotante moderna
+        bottomNavigationBar: pages.isEmpty
+            ? null
+            : Padding(
+                padding: const EdgeInsets.only(left: 7, right: 7, bottom: 1),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 400),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black : Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isDark
+                            ? Colors.black.withOpacity(0.5)
+                            : Colors.black.withOpacity(0.2),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(30),
+                    child: NavigationBarTheme(
+                      data: NavigationBarThemeData(
+                        height: 70,
+                        indicatorColor: isDark ? Colors.black : Colors.white,
+                        backgroundColor: Colors.transparent,
 
-      // 🧊 Barra inferior flotante moderna
-      bottomNavigationBar: pages.isEmpty
-          ? null
-          : Padding(
-              padding: const EdgeInsets.only(left: 7, right: 7, bottom: 1),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 400),
-                decoration: BoxDecoration(
-                  color: isDark ? Colors.black : Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isDark
-                          ? Colors.black.withOpacity(0.5)
-                          : Colors.black.withOpacity(0.2),
-                      blurRadius: 15,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(30),
-                  child: NavigationBarTheme(
-                    data: NavigationBarThemeData(
-                      height: 70,
-                      indicatorColor: isDark ? Colors.black : Colors.white,
-                      backgroundColor: Colors.transparent,
+                        labelTextStyle:
+                            WidgetStateProperty.resolveWith<TextStyle>((
+                              states,
+                            ) {
+                              return TextStyle(
+                                color: states.contains(WidgetState.selected)
+                                    ? const Color(0xFF1565C0)
+                                    : isDark
+                                    ? Colors.grey[400]
+                                    : Colors.grey.shade700,
+                                fontWeight:
+                                    states.contains(WidgetState.selected)
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                              );
+                            }),
+                      ),
+                      child: NavigationBar(
+                        elevation: 0,
+                        selectedIndex: safeIndex,
+                        onDestinationSelected: (index) async {
+                          _searchController.clear();
+                          _searchFocusNode.unfocus();
 
-                      labelTextStyle:
-                          WidgetStateProperty.resolveWith<TextStyle>((states) {
-                            return TextStyle(
-                              color: states.contains(WidgetState.selected)
-                                  ? const Color(0xFF1565C0)
-                                  : isDark
-                                  ? Colors.grey[400]
-                                  : Colors.grey.shade700,
-                              fontWeight: states.contains(WidgetState.selected)
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                            );
-                          }),
-                    ),
-                    child: NavigationBar(
-                      elevation: 0,
-                      selectedIndex: safeIndex,
-                      onDestinationSelected: (index) async {
-                        _searchController.clear();
-                        _searchFocusNode.unfocus();
+                          // ✅ REMOVER FAB INMEDIATAMENTE (sin delay)
+                          _removeFabOverlay();
+                          if (mounted) {
+                            setState(() {
+                              _selectedIndex = pages.isEmpty
+                                  ? 0
+                                  : index.clamp(0, pages.length - 1);
+                            });
+                          }
 
-                        // ✅ REMOVER FAB INMEDIATAMENTE (sin delay)
-                        _removeFabOverlay();
-                        if (mounted) {
-                          setState(() {
-                            _selectedIndex = pages.isEmpty
-                                ? 0
-                                : index.clamp(0, pages.length - 1);
-                          });
-                        }
+                          // 🔁 Recargar la data correspondiente
+                          if (puedeGastos && index == 0) {
+                            await _loadReportes();
+                          } else if (puedeInformes && index == 1) {
+                            await _loadInformes();
+                          } else if (puedeAuditoria && index == 2) {
+                            await loadAuditoria();
+                          } else if (puedeRevision && index == 3) {
+                            await _loadRevision();
+                          }
 
-                        // 🔁 Recargar la data correspondiente
-                        if (puedeGastos && index == 0) {
-                          await _loadReportes();
-                        } else if (puedeInformes && index == 1) {
-                          await _loadInformes();
-                        } else if (puedeAuditoria && index == 2) {
-                          await loadAuditoria();
-                        } else if (puedeRevision && index == 3) {
-                          await _loadRevision();
-                        }
-
-                        WidgetsBinding.instance.addPostFrameCallback(
-                          (_) => _updateFabOverlay(),
-                        );
-                      },
-                      destinations: destinations,
+                          WidgetsBinding.instance.addPostFrameCallback(
+                            (_) => _updateFabOverlay(),
+                          );
+                        },
+                        destinations: destinations,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 
@@ -1208,5 +1244,56 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
       label: label,
     );
+  }
+
+  /// Mostrar diálogo de confirmación para salir de la app
+  Future<bool> _showExitConfirmation(BuildContext context) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: isDark ? Colors.grey[850] : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              '¿Salir de la aplicación?',
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: Text(
+              '¿Estás seguro de que quieres salir?',
+              style: TextStyle(
+                color: isDark ? Colors.grey[300] : Colors.grey[700],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(
+                  'Cancelar',
+                  style: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: isDark ? Colors.red[700] : Colors.red[600],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('Salir'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
   }
 }

@@ -20,18 +20,14 @@ class FacturaOcrData {
       '07': 'NOTA DE CREDITO',
       '08': 'NOTA DE DEBITO',
       '09': 'GUÍA DE REMISION',
+      '10': 'RECIBO POR HONORARIOS',
     };
     return tipos[codigo] ?? '($codigo)';
   }
 
   // HELPER: Determinar tipo de comprobante según código SUNAT
   static String? getTipoMoneda(String moneda) {
-    final tipos = {
-      'PEN': 'PEN',
-      'USD': 'USD',
-      'S': 'PEN',
-      'D': 'USD',
-    };
+    final tipos = {'PEN': 'PEN', 'USD': 'USD', 'S': 'PEN', 'D': 'USD'};
     return tipos[moneda] ?? '($moneda)';
   }
 
