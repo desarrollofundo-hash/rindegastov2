@@ -18,6 +18,11 @@ import '../widgets/nuevo_gasto_modal.dart';
 // NOTE: ya no abrimos `factura_modal_peru_ocr_extractor.dart` desde aquí.
 
 class ReportesListController {
+  // Callback para refrescar la lista después de guardar un gasto
+  final VoidCallback? onRefresh;
+
+  ReportesListController({this.onRefresh});
+
   // Abre el escáner QR y muestra SnackBar con resultado
   Future<void> abrirEscaneadorQR(
     BuildContext context,
@@ -455,10 +460,16 @@ class ReportesListController {
         onCancel: () => Navigator.of(ctx).pop(),
         onSave: (data) {
           Navigator.of(ctx).pop();
-          // opcional: manejar resultado saved data si es necesario
+          // Retornar true para indicar que se guardó exitosamente
+          Navigator.of(ctx).pop(true);
         },
       ),
-    );
+    ).then((result) {
+      // Si se guardó un gasto (result == true), recargar la lista
+      if (result == true && onRefresh != null) {
+        onRefresh!();
+      }
+    });
 
     /*
     final key = politicaObj.value.toUpperCase();

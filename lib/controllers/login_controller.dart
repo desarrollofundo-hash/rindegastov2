@@ -68,7 +68,9 @@ class LoginController extends ChangeNotifier {
       final String? versionServidor = userData['versionactual'];
 
       if (versionServidor != null && versionServidor != versionActualApp) {
-        throw Exception('HAY UNA NUEVA VERSIÓN DISPONIBLE');
+        throw Exception(
+          'VERSION_DESACTUALIZADA|https://github.com/Genry8/apk_rindegasto/releases/download/v01.01/asa-rindegasto.apk',
+        );
       }
 
       // Crear el UserModel con los datos del login

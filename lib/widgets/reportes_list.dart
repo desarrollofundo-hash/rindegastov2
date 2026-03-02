@@ -26,10 +26,27 @@ class ReportesList extends StatefulWidget {
 
 class _ReportesListState extends State<ReportesList>
     with SingleTickerProviderStateMixin {
-  final ReportesListController _controller = ReportesListController();
+  late final ReportesListController _controller;
 
   AnimationController? _animationController;
   Animation<double>? _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Crear el controller pasando el callback de refresh
+    _controller = ReportesListController(onRefresh: widget.onRefresh);
+
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    )..repeat(reverse: true);
+    final curved = CurvedAnimation(
+      parent: _animationController!,
+      curve: Curves.bounceInOut,
+    );
+    _animation = Tween<double>(begin: -20, end: 20).animate(curved);
+  }
 
   // Función para abrir el escáner QR
   void _abrirEscaneadorQR() =>
@@ -62,20 +79,6 @@ class _ReportesListState extends State<ReportesList>
         );
       },
     );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-    final curved = CurvedAnimation(
-      parent: _animationController!,
-      curve: Curves.bounceInOut,
-    );
-    _animation = Tween<double>(begin: -20, end: 20).animate(curved);
   }
 
   @override
@@ -182,10 +185,14 @@ class _ReportesListState extends State<ReportesList>
         child: Column(
           children: [
             TabBar(
-              labelColor: Colors.indigo,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.indigo,
-              dividerColor: Colors.grey.withOpacity(0.4),
+              labelColor: Theme.of(context).colorScheme.primary,
+              unselectedLabelColor: Theme.of(
+                context,
+              ).colorScheme.onSurface.withOpacity(0.7),
+              indicatorColor: Theme.of(context).colorScheme.primary,
+              dividerColor: Theme.of(
+                context,
+              ).colorScheme.outline.withOpacity(0.4),
               dividerHeight: 0.5,
               tabs: const [
                 Tab(text: "Todos"),
@@ -511,13 +518,31 @@ class _ReportesListState extends State<ReportesList>
                                     ),
                                     colorBlendMode: BlendMode.srcIn,
                                   ), */
-                                    const SizedBox(width: 4),
+                                    /*  const SizedBox(width: 4),
                                     Text(
                                       '${reporte.total} ${reporte.moneda} ',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w900,
                                         fontSize: 14,
                                         color: Color(0xFF2563EB),
+                                      ),
+                                    ), */
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${reporte.total} ${reporte.moneda}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 14,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? const Color(
+                                                0xFF60A5FA,
+                                              ) // azul claro (modo oscuro)
+                                            : const Color(
+                                                0xFF2563EB,
+                                              ), // azul normal (modo claro)
+                                        fontFamily: 'firaSans',
                                       ),
                                     ),
                                   ],

@@ -1344,6 +1344,8 @@ class _EditReporteModalState extends State<EditReporteModal> {
               case '09':
                 tipoTexto = 'GUIA DE REMISION';
                 break;
+              case '10':
+                tipoTexto = 'RECIBO POR HONORARIOS';
               default:
                 tipoTexto = 'COMPROBANTE';
             }

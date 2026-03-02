@@ -23,6 +23,7 @@ import '../services/company_service.dart';
 import '../screens/home_screen.dart';
 import 'nuevo_gasto_logic.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Modal para crear un nuevo gasto con todos los campos personalizados
 class NuevoGastoModal extends StatefulWidget {
@@ -43,7 +44,8 @@ class NuevoGastoModal extends StatefulWidget {
   State<NuevoGastoModal> createState() => _NuevoGastoModalState();
 }
 
-class _NuevoGastoModalState extends State<NuevoGastoModal> {
+class _NuevoGastoModalState extends State<NuevoGastoModal>
+    with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final ApiService _apiService = ApiService();
   final NuevoGastoLogic _logic = NuevoGastoLogic();
@@ -142,6 +144,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     'NOTA DE CREDITO',
     'NOTA DE DEBITO',
     'GUÍA DE REMISION',
+    'RECIBO POR HONORARIOS',
   ];
 
   /*   String get fechaSQL =>
@@ -152,11 +155,17 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     final rucClienteEscaneado = _rucClienteController.text.trim();
     final rucEmpresaSeleccionada = CompanyService().companyRuc;
 
-    // Si no hay RUC del cliente escaneado o no hay empresa seleccionada, consideramos válido
-    if (rucClienteEscaneado.isEmpty || rucEmpresaSeleccionada.isEmpty) {
+    // Si no hay empresa seleccionada, no es válido
+    if (rucEmpresaSeleccionada.isEmpty) {
+      return false;
+    }
+
+    // Si no hay RUC del cliente escaneado, consideramos válido (para casos sin QR)
+    if (rucClienteEscaneado.isEmpty) {
       return true;
     }
 
+    // Si ambos existen, deben coincidir
     return rucClienteEscaneado == rucEmpresaSeleccionada;
   }
 
@@ -191,6 +200,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeControllers();
     _loadCategorias();
     _loadTiposGasto();
@@ -198,6 +208,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _loadCentrosCosto();
     //_loadApiRuc(_rucController.toString());
     _addValidationListeners();
+    _loadDraft(); // ✅ Cargar borrador al iniciar
   }
 
   void _initializeControllers() {
@@ -251,6 +262,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _politicaController.dispose();
     _categoriaController.dispose();
     _tipoGastoController.dispose();
@@ -285,6 +297,169 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
     _categoriaController.addListener(_validateForm);
     _tipoGastoController.addListener(_validateForm);
     _centroCostoController.addListener(_validateForm);
+  }
+
+  /// 🔄 Detectar cuando la app va a segundo plano y guardar borrador
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _saveDraft(); // Guardar borrador automáticamente
+    }
+  }
+
+  /// 💾 Guardar borrador en SharedPreferences
+  Future<void> _saveDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // ⏰ Guardar timestamp actual (marca de tiempo)
+      await prefs.setInt(
+        'draft_timestamp',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+
+      await prefs.setString('draft_categoria', _categoriaController.text);
+      await prefs.setString('draft_tipoGasto', _tipoGastoController.text);
+      await prefs.setString('draft_centroCosto', _centroCostoController.text);
+      await prefs.setString('draft_rucProveedor', _rucProveedorController.text);
+      await prefs.setString('draft_razonSocial', _razonSocialController.text);
+      await prefs.setString('draft_rucCliente', _rucClienteController.text);
+      await prefs.setString(
+        'draft_tipoComprobante',
+        _tipoComprobanteController.text,
+      );
+      await prefs.setString('draft_fecha', _fechaController.text);
+      await prefs.setString('draft_serieFactura', _serieFacturaController.text);
+      await prefs.setString(
+        'draft_numeroFactura',
+        _numeroFacturaController.text,
+      );
+      await prefs.setString('draft_igv', _igvController.text);
+      await prefs.setString('draft_total', _totalController.text);
+      await prefs.setString('draft_moneda', _monedaController.text);
+      await prefs.setString('draft_origen', _origenController.text);
+      await prefs.setString('draft_destino', _destinoController.text);
+      await prefs.setString('draft_motivoViaje', _motivoViajeController.text);
+      await prefs.setString('draft_movilidad', _movilidadController.text);
+      await prefs.setString('draft_placa', _placaController.text);
+      await prefs.setString('draft_nota', _notaController.text);
+    } catch (e) {
+      // Silencioso, no afecta la experiencia del usuario
+    }
+  }
+
+  /// 📂 Cargar borrador desde SharedPreferences
+  Future<void> _loadDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Solo cargar si existe al menos un campo guardado
+      final hasData = prefs.containsKey('draft_categoria');
+      if (!hasData) return;
+
+      // ⏰ Verificar si el borrador tiene menos de 30 minutos
+      final timestamp = prefs.getInt('draft_timestamp');
+      if (timestamp != null) {
+        final savedTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        final now = DateTime.now();
+        final difference = now.difference(savedTime);
+
+        // Si pasaron más de 30 minutos, limpiar, cerrar modal y notificar
+        if (difference.inMinutes > 30) {
+          await _clearDraft();
+
+          if (mounted) {
+            // Mostrar mensaje de expiración
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text(
+                  '⏰ El borrador expiró (más de 30 minutos). Por favor, vuelva a llenar el formulario.',
+                ),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+
+            // Cerrar el modal automáticamente
+            Navigator.of(context).pop();
+          }
+          return;
+        }
+      }
+
+      setState(() {
+        _categoriaController.text = prefs.getString('draft_categoria') ?? '';
+        _tipoGastoController.text = prefs.getString('draft_tipoGasto') ?? '';
+        _centroCostoController.text =
+            prefs.getString('draft_centroCosto') ?? '';
+        _rucProveedorController.text =
+            prefs.getString('draft_rucProveedor') ?? '';
+        _razonSocialController.text =
+            prefs.getString('draft_razonSocial') ?? '';
+        _rucClienteController.text = prefs.getString('draft_rucCliente') ?? '';
+        _tipoComprobanteController.text =
+            prefs.getString('draft_tipoComprobante') ?? '';
+        _fechaController.text = prefs.getString('draft_fecha') ?? '';
+        _serieFacturaController.text =
+            prefs.getString('draft_serieFactura') ?? '';
+        _numeroFacturaController.text =
+            prefs.getString('draft_numeroFactura') ?? '';
+        _igvController.text = prefs.getString('draft_igv') ?? '';
+        _totalController.text = prefs.getString('draft_total') ?? '';
+        _monedaController.text = prefs.getString('draft_moneda') ?? '';
+        _origenController.text = prefs.getString('draft_origen') ?? '';
+        _destinoController.text = prefs.getString('draft_destino') ?? '';
+        _motivoViajeController.text =
+            prefs.getString('draft_motivoViaje') ?? '';
+        _movilidadController.text = prefs.getString('draft_movilidad') ?? '';
+        _placaController.text = prefs.getString('draft_placa') ?? '';
+        _notaController.text = prefs.getString('draft_nota') ?? '';
+      });
+
+      // Mostrar mensaje de recuperación
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📝 Datos recuperados del borrador'),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // Silencioso, no afecta la experiencia del usuario
+    }
+  }
+
+  /// 🗑️ Limpiar borrador de SharedPreferences
+  Future<void> _clearDraft() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('draft_timestamp'); // ⏰ Limpiar timestamp
+      await prefs.remove('draft_categoria');
+      await prefs.remove('draft_tipoGasto');
+      await prefs.remove('draft_centroCosto');
+      await prefs.remove('draft_rucProveedor');
+      await prefs.remove('draft_razonSocial');
+      await prefs.remove('draft_rucCliente');
+      await prefs.remove('draft_tipoComprobante');
+      await prefs.remove('draft_fecha');
+      await prefs.remove('draft_serieFactura');
+      await prefs.remove('draft_numeroFactura');
+      await prefs.remove('draft_igv');
+      await prefs.remove('draft_total');
+      await prefs.remove('draft_moneda');
+      await prefs.remove('draft_origen');
+      await prefs.remove('draft_destino');
+      await prefs.remove('draft_motivoViaje');
+      await prefs.remove('draft_movilidad');
+      await prefs.remove('draft_placa');
+      await prefs.remove('draft_nota');
+    } catch (e) {
+      // Silencioso
+    }
   }
 
   /// Validar si todos los campos obligatorios están llenos
@@ -916,6 +1091,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         throw Exception('Error: Usuario o empresa no seleccionados');
       }
 
+      // ✅ Asegurar que el tipo de comprobante tenga un valor por defecto si está vacío
+      if (_tipoComprobanteController.text.trim().isEmpty) {
+        _tipoComprobanteController.text = 'FACTURA ELECTRONICA';
+        _selectedComprobante = 'FACTURA ELECTRONICA';
+      }
+
       // Preparar datos del gasto usando la lógica separada
       final gastoData = _logic.prepareGastoData(
         politica: _politicaController.text,
@@ -1020,6 +1201,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           ),
         ),
       );
+
+      // 🗑️ Limpiar borrador después de guardar exitosamente
+      await _clearDraft();
 
       // Cerrar el modal y navegar a la pantalla de gastos
       Navigator.of(context).pop(); // Cerrar modal
@@ -3416,7 +3600,10 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         children: [
           Expanded(
             child: OutlinedButton(
-              onPressed: widget.onCancel,
+              onPressed: () async {
+                await _clearDraft(); // 🗑️ Limpiar borrador al cancelar
+                widget.onCancel();
+              },
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 side: BorderSide(
@@ -3436,9 +3623,9 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
           const SizedBox(width: 18),
           Expanded(
             child: ElevatedButton(
-              onPressed: _guardarValidar,
+              onPressed: _boolMostrar ? _guardarValidar : null,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: _boolMostrar ? Colors.green : Colors.grey,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 8),
               ),
@@ -3631,7 +3818,7 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
         // Envolver las asignaciones en setState y escribir en ambos controladores
         if (mounted) {
           setState(() {
-            // RUC del emisor
+            // RUC del emisor (proveedor)
             if (parts[0].isNotEmpty) {
               _rucProveedorController.text = parts[0];
               _loadApiRuc(_rucProveedorController.text);
@@ -3657,6 +3844,8 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
                 case '09':
                   tipoTexto = 'GUIA DE REMISION';
                   break;
+                case '10':
+                  tipoTexto = 'RECIBO POR HONORARIOS';
                 default:
                   tipoTexto = 'COMPROBANTE';
               }
@@ -3687,6 +3876,12 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
             if (parts.length > 6 && parts[6].isNotEmpty) {
               final fechaNormalizada = _logic.normalizarFecha(parts[6]);
               _fechaController.text = fechaNormalizada;
+            }
+
+            // RUC del cliente/receptor (si está disponible)
+            // Formato QR SUNAT típico: RUC_Emisor|Tipo|Serie|Número|IGV|Total|Fecha|TipoDoc_Receptor|Doc_Receptor
+            if (parts.length > 8 && parts[8].isNotEmpty) {
+              _rucClienteController.text = parts[8];
             }
           });
         }
@@ -3756,9 +3951,13 @@ class _NuevoGastoModalState extends State<NuevoGastoModal> {
 
         // Limpiar los campos que se llenaron automáticamente
         _rucProveedorController.clear();
+        _rucClienteController.clear(); // ✅ Limpiar RUC del cliente
         _razonSocialController.clear();
         _serieFacturaController.clear();
-        _tipoComprobanteController.clear();
+        _tipoComprobanteController.text =
+            'FACTURA ELECTRONICA'; // ✅ Restaurar valor por defecto
+        _selectedComprobante =
+            'FACTURA ELECTRONICA'; // ✅ Restaurar también la variable de selección
         _numeroFacturaController.clear();
         _totalController.clear();
         _igvController.clear();

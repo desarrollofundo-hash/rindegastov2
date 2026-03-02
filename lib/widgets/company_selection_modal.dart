@@ -412,7 +412,7 @@ class _CompanySelectionModalState extends State<CompanySelectionModal> {
                       icon: Icon(
                         Icons.arrow_drop_down,
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? Theme.of(context).primaryColor
+                            ? Colors.white
                             : Colors.blue.shade700,
                         size: isSmallScreen ? 24 : 28,
                       ),

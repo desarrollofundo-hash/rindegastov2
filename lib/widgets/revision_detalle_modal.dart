@@ -170,6 +170,13 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
     }
   }
  */
+  // Colores base
+  static const bgDark = Color(0xFF0F172A); // azul-negro (mejor que gris 900)
+  static const bgLight = Color(0xFFF8FAFC); // blanco suave
+  static const primary = Color(0xFF3B82F6); // azul moderno
+  static const textMutedDark = Color(0xFF94A3B8);
+  static const cardDark = Color(0xFF020617);
+
   Future<void> _mostrarConfirmacionEnvio() async {
     final confirmar = await showDialog<bool>(
       context: context,
@@ -756,8 +763,6 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 4),
               ],
             ),
             centerTitle: true,
@@ -804,8 +809,6 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                                         fontSize: 20,
                                         fontWeight: FontWeight.w700,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ),
                                   const SizedBox(width: 8),
@@ -838,7 +841,7 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                                   const SizedBox(width: 8),
 
                                   Text(
-                                    '|',
+                                    '||',
                                     style: TextStyle(
                                       color: Colors.white.withOpacity(0.6),
                                       fontSize: 24,
@@ -961,14 +964,14 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
 
               // Tabs mejoradas
               Container(
-                color: isDark ? Colors.grey[850] : Colors.white,
+                color: isDark ? Colors.grey[900] : Colors.white,
                 child: TabBar(
                   controller: _tabController,
-                  labelColor: Colors.indigo,
+                  labelColor: Colors.cyan,
                   unselectedLabelColor: isDark
                       ? Colors.grey[400]
                       : Colors.grey[600],
-                  indicatorColor: Colors.indigo,
+                  indicatorColor: Colors.cyan,
                   indicatorWeight: 3,
                   dividerColor: Colors.grey.withOpacity(0.4),
                   dividerHeight: 0.5,
@@ -1004,12 +1007,10 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                           if (_isLoading) {
                             return Center(
                               child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.blue,
-                                ),
+                                color: primary,
                                 backgroundColor: isDark
-                                    ? Colors.grey[700]
-                                    : null,
+                                    ? Colors.white12
+                                    : Colors.black12,
                               ),
                             );
                           }
@@ -1053,16 +1054,17 @@ class RevisionDetalleModalState extends State<RevisionDetalleModal>
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blue,
+                                      backgroundColor: primary,
                                       foregroundColor: Colors.white,
+                                      elevation: 4,
+                                      shadowColor: primary.withOpacity(0.4),
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 24,
                                         vertical: 12,
                                       ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
+                                        borderRadius: BorderRadius.circular(14),
                                       ),
-                                      elevation: 2,
                                     ),
                                   ),
                                 ],

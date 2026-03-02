@@ -103,6 +103,7 @@ class FacturaData {
       '07': 'NOTA DE CREDITO',
       '08': 'NOTA DE DEBITO',
       '09': 'GUÍA DE REMISION',
+      '10': 'RECIBO POR HONORARIOS',
     };
     return tipos[codigo] ?? 'COMPROBANTE ($codigo)';
   }

@@ -46,6 +46,14 @@ dependencies:
   network_info_plus: ^5.0.3
   flutter_keyboard_visibility: ^6.0.0
   pdfx: ^2.9.2
+  url_launcher: ^6.3.1
+  flutter_dotenv: ^5.2.1
+  lucide_icons: ^0.257.0
+  phosphor_flutter: ^2.1.0
+  iconsax: ^0.0.8
+  iconify_flutter: ^0.0.5
+  iconly: ^1.0.1
+  flutter_tabler_icons: ^1.37.0
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +64,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/icon/f.png
     - assets/riv/moneda.riv
     - assets/riv/load.riv
